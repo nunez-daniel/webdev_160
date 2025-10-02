@@ -2,6 +2,7 @@ package com.ofs_160.webdev.Controller;
 
 import com.ofs_160.webdev.Model.Customer;
 import com.ofs_160.webdev.Model.CustomerDetails;
+import com.ofs_160.webdev.Service.CustomerDetailsService;
 import com.ofs_160.webdev.Service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
