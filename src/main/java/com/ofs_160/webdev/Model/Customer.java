@@ -18,7 +18,7 @@ public class Customer {
     private String first_name;
     private String last_name;
     private String email;
-    private String phone_number;
+    // private String phone_number;
 
     @Column(unique = true)
     private String username;
