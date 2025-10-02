@@ -6,9 +6,9 @@ import com.ofs_160.webdev.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -39,6 +39,7 @@ public class ProductController {
 
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @DeleteMapping("/product-manager-access/{id}")
     public ResponseEntity<String> deleteProductById(@PathVariable int id)
     {
@@ -53,6 +54,7 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/product-manager-access")
     public ResponseEntity<String> insertProduct(@RequestBody Product product)
     {
@@ -60,6 +62,7 @@ public class ProductController {
         return new ResponseEntity<>("Product Saved", HttpStatus.CREATED);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/product-manager-access")
     public ResponseEntity<String> updateProduct(@RequestBody Product product)
     {
