@@ -25,7 +25,6 @@ public class CustomerDetailsService  implements UserDetailsService {
         if(customer == null)
         {
             // here would would redirect to register or confirm inputs is rights
-            System.out.println("404");
             throw  new UsernameNotFoundException("404 not found in cd");
         }
 

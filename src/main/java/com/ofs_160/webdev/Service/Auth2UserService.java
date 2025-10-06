@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class Auth2UserService extends DefaultOAuth2UserService {
 
     private final CustomerService customerService;
     Customer customer;
 
-    public CustomOAuth2UserService(CustomerService customerService) {
+    public Auth2UserService(CustomerService customerService) {
         this.customerService = customerService;
     }
 

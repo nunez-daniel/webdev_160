@@ -1,9 +1,6 @@
 package com.ofs_160.webdev.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +21,7 @@ public class Product {
     private BigDecimal product_cost;
     private int product_stock;
     private BigDecimal product_weight;
+
 
 }
 

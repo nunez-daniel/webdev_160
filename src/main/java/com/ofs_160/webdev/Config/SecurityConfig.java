@@ -34,13 +34,11 @@ public class SecurityConfig {
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-
+            // temp config for development
             httpSecurity
                     .csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(req -> req
-
-
-
+                            .requestMatchers(HttpMethod.POST, "/add/**").permitAll()
                             .requestMatchers(HttpMethod.POST, "/product-manager-access")
                             .hasAnyAuthority("ADMIN")
                             .anyRequest().authenticated()

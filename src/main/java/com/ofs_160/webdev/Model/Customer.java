@@ -1,14 +1,14 @@
 package com.ofs_160.webdev.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
+@EqualsAndHashCode(exclude = {"virtualCart"})
 public class Customer {
 
     @Id
@@ -25,5 +25,12 @@ public class Customer {
 
     private String passcode;
     private String role;
+
+
+
+    @OneToOne(mappedBy = "customer",  cascade = CascadeType.ALL)
+    @JsonBackReference
+    private VirtualCart virtualCart;
+
 
 }
