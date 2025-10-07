@@ -1,5 +1,6 @@
 package com.ofs_160.webdev.Model;
 
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,7 +21,6 @@ public class CartItem {
 
     private int quantity;
 
-
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
@@ -29,11 +29,5 @@ public class CartItem {
     @JoinColumn(name = "virtual_cart_id")
     @JsonBackReference
     private VirtualCart virtualCart;
-
-
-
-
-
-
 
 }

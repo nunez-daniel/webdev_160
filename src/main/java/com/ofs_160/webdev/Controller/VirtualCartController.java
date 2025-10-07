@@ -1,5 +1,6 @@
 package com.ofs_160.webdev.Controller;
 
+import com.ofs_160.webdev.Model.CartItem;
 import com.ofs_160.webdev.Model.VirtualCartRequestBody;
 import com.ofs_160.webdev.Model.CustomerDetails;
 import com.ofs_160.webdev.Model.VirtualCart;
@@ -8,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 
 @RestController
@@ -27,5 +30,16 @@ public class VirtualCartController {
         // will be used temporary for debugging soley response when ready
         return ResponseEntity.ok(updatedCart);
     }
+
+
+    @GetMapping("/getCart")
+    public ResponseEntity<Set<CartItem>> getCart(@AuthenticationPrincipal CustomerDetails principal)
+    {
+        String username = principal.getUsername();
+        Set<CartItem> userCart = cartService.getCart(username);
+
+        return ResponseEntity.ok(userCart);
+    }
+
 
 }
