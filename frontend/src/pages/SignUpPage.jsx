@@ -58,7 +58,7 @@ export default function SignUpPage() {
             >
               Create account
             </button>
-            <Link to="/login" className="w-max h-max text-sm text-indigo-600 hover:underline">
+            <Link to="/" className="w-max h-max text-sm text-indigo-600 hover:underline">
               Already have an account?
             </Link>
           </div>
