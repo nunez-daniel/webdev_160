@@ -10,6 +10,20 @@ export default function LoginPage() {
     e.preventDefault();
     console.log("login", { email, password });
     navigate("/catalog");
+    /**   try {
+    const response = await fetch("http://localhost:8080/somelink", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) throw new Error("Login failed");
+    const data = await response.json();
+    console.log("Logged in user:", data);
+    navigate("/catalog");
+  } catch (err) {
+    console.error(err.message);
+  } */
   }
 
   return (

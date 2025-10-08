@@ -11,6 +11,19 @@ export default function SignUpPage() {
     e.preventDefault();
     console.log("signup", { name, email, password });
     navigate("/login");
+    /**  try {
+    const response = await fetch("http://localhost:8080/somelink", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    if (!response.ok) throw new Error("Signup failed");
+    const data = await response.json();
+    console.log("Signed up user:", data);
+    navigate("/catalog");
+  } catch (err) {
+    console.error(err.message);
+  } */ 
   }
 
   return (
