@@ -57,7 +57,7 @@ export default function ProductDetailPage() {
               href="/"
               onClick={(e) => {
                 e.preventDefault();
-                navigate("/");
+                navigate("/catalog");
               }}
             >
               Home
