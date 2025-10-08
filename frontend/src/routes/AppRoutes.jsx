@@ -5,9 +5,9 @@ import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
 
 const router = createBrowserRouter([
-  { path: "/", element: <CatalogPage /> },
+  { path: "/catalog", element: <CatalogPage /> },
   { path: "/products/:id", element: <ProductDetailPage /> },
-  { path: "/login", element: <LoginPage /> },
+  { path: "/", element: <LoginPage /> },
   { path: "/signup", element: <SignUpPage /> },
 ]);
 

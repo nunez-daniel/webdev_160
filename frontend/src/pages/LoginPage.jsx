@@ -9,7 +9,7 @@ export default function LoginPage() {
   function submit(e) {
     e.preventDefault();
     console.log("login", { email, password });
-    navigate("/");
+    navigate("/catalog");
   }
 
   return (
