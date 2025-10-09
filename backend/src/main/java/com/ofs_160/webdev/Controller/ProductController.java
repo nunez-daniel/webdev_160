@@ -12,19 +12,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 public class ProductController {
 
     @Autowired
     ProductService productService;
 
     // Need... Implement ResponseEntity to return 200 or 404
-    @GetMapping("/product")
+    @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts()
     {
         return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable int id)
     {
 

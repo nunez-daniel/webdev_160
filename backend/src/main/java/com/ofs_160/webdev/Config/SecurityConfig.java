@@ -13,6 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -32,6 +35,8 @@ public class SecurityConfig {
     }
 
 
+
+
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
@@ -39,8 +44,9 @@ public class SecurityConfig {
                     .csrf(csrf -> csrf.disable())
                     .authorizeHttpRequests(req -> req
 
+                            .requestMatchers(HttpMethod.GET, "/products", "/products/{id}").permitAll()
 
-
+                            .requestMatchers(HttpMethod.GET, "/product", "/product/*").permitAll()
                             .requestMatchers(HttpMethod.POST, "/product-manager-access")
                             .hasAnyAuthority("ADMIN")
                             .anyRequest().authenticated()
