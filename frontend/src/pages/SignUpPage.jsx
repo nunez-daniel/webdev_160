@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { signupUser } from "@/lib/mock"; // Import localStorage-based users
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -7,29 +8,31 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    console.log("signup", { name, email, password });
-    navigate("/login");
-    /**  try {
-    const response = await fetch("http://localhost:8080/somelink", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
-    });
-    if (!response.ok) throw new Error("Signup failed");
-    const data = await response.json();
-    console.log("Signed up user:", data);
-    navigate("/catalog");
-  } catch (err) {
-    console.error(err.message);
-  } */ 
+    console.log("signup attempt", { name, email, password });
+
+    try {
+      const user = await signupUser({ name, email, password });
+      if (user) {
+        console.log("Signed up user:", user);
+        alert("Account created successfully! Please login.");
+        navigate("/");
+      } else {
+        alert("Username already taken");
+      }
+    } catch (err) {
+      console.error(err.message);
+      alert("Signup failed");
+    }
   }
 
   return (
-  <div className="min-h-screen w-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">Create Account</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">
+          Create Account
+        </h2>
         <form onSubmit={submit} className="space-y-4">
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">Full name</span>
@@ -64,14 +67,14 @@ export default function SignUpPage() {
             />
           </label>
 
-          <div className="flex items-center justify-between contain-items">
+          <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="w-max h-max px-2 mr-2 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              className="w-max px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
             >
               Create account
             </button>
-            <Link to="/" className="w-max h-max text-sm text-indigo-600 hover:underline">
+            <Link to="/login" className="text-sm text-indigo-600 hover:underline">
               Already have an account?
             </Link>
           </div>

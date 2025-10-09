@@ -132,3 +132,5 @@ export async function fetchProductByIdMock(id) {
   if (!found) throw new Error("Product not found");
   return found;
 }
+
+export { fetchUserByCredentials, signupUser } from "./mockUsers";

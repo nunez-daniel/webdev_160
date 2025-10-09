@@ -1,35 +1,36 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { fetchUserByCredentials } from "@/lib/mock"; 
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
-    console.log("login", { email, password });
-    navigate("/catalog");
-    /**   try {
-    const response = await fetch("http://localhost:8080/somelink", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
+    console.log("login attempt", { email, password });
 
-    if (!response.ok) throw new Error("Login failed");
-    const data = await response.json();
-    console.log("Logged in user:", data);
-    navigate("/catalog");
-  } catch (err) {
-    console.error(err.message);
-  } */
+    try {
+      const user = await fetchUserByCredentials({ email, password });
+      if (user) {
+        console.log("Logged in user:", user);
+        navigate("/catalog");
+      } else {
+        alert("User not found");
+      }
+    } catch (err) {
+      console.error(err.message);
+      alert("Login failed");
+    }
   }
 
   return (
-  <div className="min-h-screen w-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">Login</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">
+          Login
+        </h2>
         <form onSubmit={submit} className="space-y-4">
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">Email</span>
