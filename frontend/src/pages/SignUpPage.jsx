@@ -1,19 +1,19 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signupUser } from "@/lib/mock"; // Import localStorage-based users
+import { registerUser } from "@/lib/api"; // Import localStorage-based users
 
 export default function SignUpPage() {
-  const [name, setName] = useState("");
+  const [full_name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   async function submit(e) {
     e.preventDefault();
-    console.log("signup attempt", { name, email, password });
+    console.log("signup attempt", { full_name, email, password });
 
     try {
-      const user = await signupUser({ name, email, password });
+      const user = await registerUser({ full_name, email, password });
       if (user) {
         console.log("Signed up user:", user);
         alert("Account created successfully! Please login.");
@@ -38,7 +38,7 @@ export default function SignUpPage() {
             <span className="text-sm text-gray-700 dark:text-gray-300">Full name</span>
             <input
               type="text"
-              value={name}
+              value={full_name}
               onChange={(e) => setName(e.target.value)}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"

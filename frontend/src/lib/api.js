@@ -38,8 +38,6 @@
 
 
 
-
-
  /** @param {string} id */
  export async function fetchProductById(id) {
    const res = await fetch(`${BASE}/products/${id}`, {
@@ -59,6 +57,69 @@
 
    };
  }
+
+
+/** @param {string} email
+ * @param {string} password */
+export async function authenticateUser({ email, password }) {
+    const url = `${BASE}/login`;
+
+    const body = new URLSearchParams();
+    body.append("username", email); // note usernames -> email
+    body.append("password", password);
+
+    const response = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Requested-With": "XMLHttpRequest"},
+        body: body.toString(),
+        credentials: 'include',
+    });
+
+    const responseText = await response.text();
+
+    if (responseText.includes("Invalid credentials") || responseText.includes('<form class="login-form"')) {
+        console.log("bag login attempt")
+        return false;
+    }
+
+    if (response.ok && !responseText.includes("Invalid credentials")) {
+        console.log("good login attempt")
+        return true;
+    }
+
+    throw new Error(`Login Request failed with status: ${response.status}`);
+}
+
+
+export async function registerUser({ full_name, email, password }) {
+    const url = `${BASE}/signup`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({
+            full_name: full_name,
+            email: email,
+            password: password,
+        }),
+
+    });
+
+    if (response.ok) {
+         return true;
+    }
+
+    // TODO... email taken etc
+    if (response.status === 409) {
+        throw new Error("Registration Failed: Email address is already registered.");
+    }
+
+    throw new Error(`Registration Request failed with status: ${response.status}`);
+}
+
+
+
 
 // MOCK IMPLEMENTATIONS
 /*
