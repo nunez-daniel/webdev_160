@@ -47,27 +47,27 @@ public class Auth2UserService extends DefaultOAuth2UserService {
         return new CustomerDetails(customer, oauth2User);
     }
 
-    private Customer updateCustomerInfo(Customer customer, String firstName, String lastName)
+    private Customer updateCustomerInfo(Customer customer, String fullName, String lastName)
     {
 
         // check for account changes
-        customer.setFirst_name(firstName);
-        customer.setLast_name(lastName);
+        customer.setFull_name(fullName);
+        //customer.setLast_name(lastName);
         customerService.save(customer);
 
         return customer;
     }
 
-    private Customer registerCustomer(String email, String first_name, String last_name)
+    private Customer registerCustomer(String email, String full_name, String last_name)
     {
         Customer newCustomer = new Customer();
         // Both username, email with be same utilized value -> oauth2
         newCustomer.setEmail(email);
-        newCustomer.setFirst_name(first_name);
-        newCustomer.setLast_name(last_name);
+        newCustomer.setFull_name(full_name);
+        //newCustomer.setLast_name(last_name);
         newCustomer.setRole("CUSTOMER");
         newCustomer.setUsername(email);
-        newCustomer.setPasscode(null); // Not needed in db
+        //newCustomer.setPassword(null); // Not needed in db
         return customerService.save(newCustomer);
     }
 }

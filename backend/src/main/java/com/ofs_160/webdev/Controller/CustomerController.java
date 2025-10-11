@@ -1,5 +1,6 @@
 package com.ofs_160.webdev.Controller;
 
+import com.ofs_160.webdev.ExceptionHandler.DuplicateCustomerException;
 import com.ofs_160.webdev.Model.Customer;
 import com.ofs_160.webdev.Model.CustomerDetails;
 import com.ofs_160.webdev.Service.CustomerDetailsService;
@@ -63,7 +64,7 @@ public class CustomerController {
 
 
     // Use "/register" this will add to db without spring security
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    //@PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/customer")
     public ResponseEntity<String> insertCustomer(@RequestBody Customer customer)
     {
@@ -89,12 +90,22 @@ public class CustomerController {
     }
 
     // Need response entity pattern
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
-    @PostMapping("/register")
-    public Customer register(@RequestBody Customer customer)
+    //@PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PostMapping("/signup")
+    public ResponseEntity<Customer> register(@RequestBody Customer customer)
     {
-        return customerService.registerCustomer(customer);
+
+        // handle dup names before logging in customer
+        try
+        {
+            customerService.registerCustomer(customer);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } catch (DuplicateCustomerException ex) {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
     }
+
 
 
     // purely a testing api just wanted to see if any difference in call type
@@ -102,8 +113,8 @@ public class CustomerController {
     public String getPrincipalInfo(@AuthenticationPrincipal CustomerDetails principal) {
 
         String username = principal.getUsername();
-        String first_name = principal.getCustomer().getFirst_name();
-        String last_name = principal.getCustomer().getLast_name();
+        String full_name = principal.getCustomer().getFull_name();
+        //String last_name = principal.getCustomer().getLast_name();
         String email = principal.getCustomer().getEmail();
         String role = principal.getCustomer().getRole();
         int id = principal.getCustomer().getCustomer_id();
@@ -113,12 +124,9 @@ public class CustomerController {
                 " id: " + id +
                 " username: " + username +
                 " role: " + role +
-                " first_name: " + first_name +
-                " last_name: " + last_name +
+                " first_name: " + full_name +
+                //" last_name: " + last_name +
                 " email: " + email;
-
-
-
 
 
     }

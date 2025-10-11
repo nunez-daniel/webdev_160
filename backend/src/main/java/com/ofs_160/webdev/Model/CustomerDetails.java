@@ -44,7 +44,7 @@ public class CustomerDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getPassword() {
-        return customer.getPasscode();
+        return customer.getPassword();
     }
 
     @Override

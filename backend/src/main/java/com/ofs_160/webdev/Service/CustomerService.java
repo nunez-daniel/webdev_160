@@ -1,5 +1,6 @@
 package com.ofs_160.webdev.Service;
 
+import com.ofs_160.webdev.ExceptionHandler.DuplicateCustomerException;
 import com.ofs_160.webdev.Model.Customer;
 import com.ofs_160.webdev.Repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +38,21 @@ public class CustomerService {
         customerRepository.save(customer);
     }
 
-    public Customer registerCustomer(Customer customer)
+    public void registerCustomer(Customer customer)
     {
-        customer.setPasscode(bCryptPasswordEncoder.encode(customer.getPasscode()));
+
+        Customer existingCustomer = customerRepository.findByEmail(customer.getEmail());
+
+        if (existingCustomer != null) {
+            throw new DuplicateCustomerException("This email " + customer.getEmail() + " is already registered login using account or google");
+        }
+
+        customer.setPassword(bCryptPasswordEncoder.encode(customer.getPassword()));
         customer.setRole("CUSTOMER");
-        return customerRepository.save(customer);
+        customer.setFull_name(customer.getFull_name());
+        customer.setUsername(customer.getUsername());
+        customer.setUsername(customer.getEmail());
+        customerRepository.save(customer);
     }
 
     public Customer findByEmail(String username) {
@@ -52,4 +63,6 @@ public class CustomerService {
         // repeated code for save, register, signup check for dupes
         return customerRepository.save(customer);
     }
+
+
 }
