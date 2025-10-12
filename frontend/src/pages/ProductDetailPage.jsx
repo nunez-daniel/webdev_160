@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
           <div className="w-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={p.imageUrl}
+              src={`http://localhost:8080/products/${p.id}/image`}
               alt={p.name}
               className="w-full rounded-xl object-cover"
             />

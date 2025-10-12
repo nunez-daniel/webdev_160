@@ -25,6 +25,7 @@
      price: p.product_cost,
      stock: p.product_stock,
      weight: p.product_weight,
+     // imageUrl : p.image_url,
 
    }));
 
@@ -54,6 +55,7 @@
        stock: springBootProduct.product_stock,
        inStock: springBootProduct.product_stock > 0,
        weight: springBootProduct.product_weight,
+       // imageUrl : springBootProduct.image_url,
 
    };
  }

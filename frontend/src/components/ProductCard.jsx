@@ -14,6 +14,8 @@ export default function ProductCard({ product }) {
   const navigate = useNavigate();
   const go = () => navigate(`/products/${product.id}`);
 
+  const imageUrl = `http://localhost:8080/products/${product.id}/image`;
+
   return (
     <Card
       className="hover:shadow-lg transition-shadow cursor-pointer"
@@ -23,8 +25,9 @@ export default function ProductCard({ product }) {
         <div className="aspect-[4/3] w-full overflow-hidden rounded-t-xl bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.imageUrl}
-            alt={product.name}
+            // src={product.imageUrl}
+              src={imageUrl}
+              alt={product.name}
             className="h-full w-full object-cover"
             loading="lazy"
           />

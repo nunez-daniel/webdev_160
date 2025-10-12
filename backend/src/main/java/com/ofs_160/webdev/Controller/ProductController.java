@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -79,5 +81,31 @@ public class ProductController {
             return new ResponseEntity<>("Product NOT Updated", HttpStatus.NOT_FOUND);
         }
 
+    }
+
+    @PostMapping("/products")
+    public ResponseEntity<?> addProductImage(@RequestPart Product product, @RequestPart MultipartFile imageFile) {
+        try {
+            Product productImage = productService.addProductImage(product, imageFile);
+            return new ResponseEntity<>(productImage, HttpStatus.CREATED);
+
+        } catch (IOException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INSUFFICIENT_STORAGE);
+        }
+    }
+
+    @GetMapping("products/{productId}/image")
+    public ResponseEntity<byte[]> getImageByProductId(@PathVariable int productId)
+    {
+        Product product = productService.findProductById(productId);
+
+        if(product.getProduct_id() > 0)
+        {
+            return new ResponseEntity<>(product.getImageData(), HttpStatus.OK);
+        }
+        else
+        {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
     }
 }
