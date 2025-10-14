@@ -4,6 +4,8 @@ import { fetchProductById } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCart } from "@/lib/cartStore";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,6 +35,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [p, setP] = useState(null);
+  const { add } = useCart();
 
   useEffect(() => {
     let mounted = true;
@@ -110,14 +113,18 @@ export default function ProductDetailPage() {
             <div className="flex gap-3 pt-2">
               <Button
                 size="lg"
-                onClick={() => alert("Add to cart: wire up later")}
+                onClick={() => add(p, 1)} // add product with quantity 1
               >
                 Add to Cart
               </Button>
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => alert("Buy now: wire up later")}
+                onClick={() => {
+                  add(p, 1);
+                  // navigate to cart page right after
+                  navigate("/cart");
+                }}
               >
                 Buy Now
               </Button>

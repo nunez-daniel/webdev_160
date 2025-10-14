@@ -3,12 +3,21 @@ import CatalogPage from "@/pages/CatalogPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
 import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
+import CartPage from "@/pages/CartPage";
+import AppLayout from "@/layouts/AppLayout";
 
 const router = createBrowserRouter([
-  { path: "/catalog", element: <CatalogPage /> },
-  { path: "/products/:id", element: <ProductDetailPage /> },
   { path: "/", element: <LoginPage /> },
   { path: "/signup", element: <SignUpPage /> },
+  {
+    path: "/",
+    element: <AppLayout />,
+    children: [
+      { path: "catalog", element: <CatalogPage /> },
+      { path: "products/:id", element: <ProductDetailPage /> },
+      { path: "cart", element: <CartPage /> },
+    ],
+  },
 ]);
 
 export default function AppRoutes() {

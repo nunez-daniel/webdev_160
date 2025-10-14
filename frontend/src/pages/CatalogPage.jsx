@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchProducts } from "@/lib/api";
-import TopNav from "@/components/TopNav";
 import ProductGrid, { ProductGridSkeleton } from "@/components/ProductGrid";
 import {
   Pagination,
@@ -38,7 +37,7 @@ export default function CatalogPage() {
   }
 
   useEffect(() => {
-    load(); /* eslint-disable-next-line */
+    load(); // eslint-disable-next-line
   }, [page, search]);
 
   const pages = useMemo(
@@ -47,70 +46,61 @@ export default function CatalogPage() {
   );
 
   return (
-    <>
-      <TopNav
-        search={search}
-        onSearch={(q) => {
-          setPage(1);
-          setSearch(q ?? "");
-        }}
-      />
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        <h1 className="text-2xl font-semibold">Browse</h1>
+    <main className="container mx-auto px-4 py-6 space-y-6">
+      <h1 className="text-2xl font-semibold">Browse</h1>
 
-        {error && (
-          <div className="rounded-lg border p-4 text-sm text-red-600">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="rounded-lg border p-4 text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
-        {loading ? <ProductGridSkeleton /> : <ProductGrid products={items} />}
+      {loading ? <ProductGridSkeleton /> : <ProductGrid products={items} />}
 
-        {pages > 1 && (
-          <div className="pt-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage((p) => Math.max(1, p - 1));
-                    }}
-                  />
-                </PaginationItem>
+      {pages > 1 && (
+        <div className="pt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage((p) => Math.max(1, p - 1));
+                  }}
+                />
+              </PaginationItem>
 
-                {Array.from({ length: pages })
-                  .slice(0, 5)
-                  .map((_, i) => {
-                    const n = i + 1;
-                    return (
-                      <PaginationItem key={n}>
-                        <PaginationLink
-                          isActive={n === page}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setPage(n);
-                          }}
-                        >
-                          {n}
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  })}
+              {Array.from({ length: pages })
+                .slice(0, 5)
+                .map((_, i) => {
+                  const n = i + 1;
+                  return (
+                    <PaginationItem key={n}>
+                      <PaginationLink
+                        isActive={n === page}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setPage(n);
+                        }}
+                      >
+                        {n}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
 
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage((p) => Math.min(pages, p + 1));
-                    }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
-      </main>
-    </>
+              <PaginationItem>
+                <PaginationNext
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage((p) => Math.min(pages, p + 1));
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </main>
   );
 }

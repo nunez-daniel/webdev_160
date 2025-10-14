@@ -1,130 +1,128 @@
 // UNCOMMENT WHEN REAL API LINKED
 
- const BASE = "http://localhost:8080";
+// const BASE = "http://localhost:8080";
 
- /** @param {{page?:number, limit?:number, search?:string}} params */
- export async function fetchProducts(params = {}) {
-   //const { page = 1, limit = 12, search = "" } = params;
-   const url = new URL(`${BASE}/products`, window.location.origin);
-   const { page = 1, limit = 12, search = "" } = params;
+// /** @param {{page?:number, limit?:number, search?:string}} params */
+// export async function fetchProducts(params = {}) {
+//   //const { page = 1, limit = 12, search = "" } = params;
+//   const url = new URL(`${BASE}/products`, window.location.origin);
+//   const { page = 1, limit = 12, search = "" } = params;
 
-   url.searchParams.set("page", page);
-   url.searchParams.set("limit", limit);
-   if (search) url.searchParams.set("search", search);
+//   url.searchParams.set("page", page);
+//   url.searchParams.set("limit", limit);
+//   if (search) url.searchParams.set("search", search);
 
-   const res = await fetch(url.toString(), {
-     headers: { Accept: "application/json" },
-   });
+//   const res = await fetch(url.toString(), {
+//     headers: { Accept: "application/json" },
+//   });
 
-   const productArray = await res.json();
+//   const productArray = await res.json();
 
-   const transformedArray = productArray.map(p => ({
-     // Map Spring names to our Frontend names
-     id: p.product_id,
-     name: p.product_name,
-     price: p.product_cost,
-     stock: p.product_stock,
-     weight: p.product_weight,
-     // imageUrl : p.image_url,
+//   const transformedArray = productArray.map((p) => ({
+//     // Map Spring names to our Frontend names
+//     id: p.product_id,
+//     name: p.product_name,
+//     price: p.product_cost,
+//     stock: p.product_stock,
+//     weight: p.product_weight,
+//     // imageUrl : p.image_url,
+//   }));
 
-   }));
+//   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
+//   return /** @type {{items: any[], total: number}} */ ({
+//     items: transformedArray,
+//     total: transformedArray.length,
+//   });
+// }
 
-   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
-   return /** @type {{items: any[], total: number}} */ ({
-       items: transformedArray,
-       total: transformedArray.length
-   });
- }
+// /** @param {string} id */
+// export async function fetchProductById(id) {
+//   const res = await fetch(`${BASE}/products/${id}`, {
+//     headers: { Accept: "application/json" },
+//   });
+//   if (!res.ok) throw new Error(`Product not found`);
+//   const springBootProduct = await res.json();
 
+//   return {
+//     id: springBootProduct.product_id,
+//     name: springBootProduct.product_name,
+//     price: springBootProduct.product_cost,
+//     stock: springBootProduct.product_stock,
+//     inStock: springBootProduct.product_stock > 0,
+//     weight: springBootProduct.product_weight,
+//     // imageUrl : springBootProduct.image_url,
+//   };
+// }
 
+// /** @param {string} email
+//  * @param {string} password */
+// export async function authenticateUser({ email, password }) {
+//   const url = `${BASE}/login`;
 
+//   const body = new URLSearchParams();
+//   body.append("username", email); // note usernames -> email
+//   body.append("password", password);
 
- /** @param {string} id */
- export async function fetchProductById(id) {
-   const res = await fetch(`${BASE}/products/${id}`, {
-     headers: { Accept: "application/json" },
-   });
-   if (!res.ok) throw new Error(`Product not found`);
-   const springBootProduct = await res.json();
+//   const response = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/x-www-form-urlencoded",
+//       "X-Requested-With": "XMLHttpRequest",
+//     },
+//     body: body.toString(),
+//     credentials: "include",
+//   });
 
-    return {
+//   const responseText = await response.text();
 
-       id: springBootProduct.product_id,
-       name: springBootProduct.product_name,
-       price: springBootProduct.product_cost,
-       stock: springBootProduct.product_stock,
-       inStock: springBootProduct.product_stock > 0,
-       weight: springBootProduct.product_weight,
-       // imageUrl : springBootProduct.image_url,
+//   if (
+//     responseText.includes("Invalid credentials") ||
+//     responseText.includes('<form class="login-form"')
+//   ) {
+//     console.log("bag login attempt");
+//     return false;
+//   }
 
-   };
- }
+//   if (response.ok && !responseText.includes("Invalid credentials")) {
+//     console.log("good login attempt");
+//     return true;
+//   }
 
+//   throw new Error(`Login Request failed with status: ${response.status}`);
+// }
 
-/** @param {string} email
- * @param {string} password */
-export async function authenticateUser({ email, password }) {
-    const url = `${BASE}/login`;
+// export async function registerUser({ full_name, email, password }) {
+//   const url = `${BASE}/signup`;
+//   const response = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Accept: "application/json",
+//     },
+//     body: JSON.stringify({
+//       full_name: full_name,
+//       email: email,
+//       password: password,
+//     }),
+//   });
 
-    const body = new URLSearchParams();
-    body.append("username", email); // note usernames -> email
-    body.append("password", password);
+//   if (response.ok) {
+//     return true;
+//   }
 
-    const response = await fetch(url, {
-        method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Requested-With": "XMLHttpRequest"},
-        body: body.toString(),
-        credentials: 'include',
-    });
+//   // TODO... email taken etc
+//   if (response.status === 409) {
+//     throw new Error(
+//       "Registration Failed: Email address is already registered."
+//     );
+//   }
 
-    const responseText = await response.text();
-
-    if (responseText.includes("Invalid credentials") || responseText.includes('<form class="login-form"')) {
-        console.log("bag login attempt")
-        return false;
-    }
-
-    if (response.ok && !responseText.includes("Invalid credentials")) {
-        console.log("good login attempt")
-        return true;
-    }
-
-    throw new Error(`Login Request failed with status: ${response.status}`);
-}
-
-
-export async function registerUser({ full_name, email, password }) {
-    const url = `${BASE}/signup`;
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify({
-            full_name: full_name,
-            email: email,
-            password: password,
-        }),
-
-    });
-
-    if (response.ok) {
-         return true;
-    }
-
-    // TODO... email taken etc
-    if (response.status === 409) {
-        throw new Error("Registration Failed: Email address is already registered.");
-    }
-
-    throw new Error(`Registration Request failed with status: ${response.status}`);
-}
-
-
-
+//   throw new Error(
+//     `Registration Request failed with status: ${response.status}`
+//   );
+// }
 
 // MOCK IMPLEMENTATIONS
-/*
 
 import { fetchProductsMock, fetchProductByIdMock } from "./mock";
 
@@ -144,7 +142,7 @@ export async function fetchProducts(params = {}) {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
-  return /!** @type {{items:any[], total:number}} *!/ (await res.json());
+  return res.json();
 }
 
 export async function fetchProductById(id) {
@@ -154,6 +152,20 @@ export async function fetchProductById(id) {
     headers: { Accept: "application/json" },
   });
   if (!res.ok) throw new Error("Product not found");
-  return /!** @type {any} *!/ (await res.json());
+  return res.json();
 }
-*/
+
+export async function authenticateUser({ email, password }) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 200));
+    return Boolean(email && password);
+  }
+}
+
+export async function registerUser({ full_name, email, password }) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 200));
+    if (!full_name || !email || !password) throw new Error("Missing fields");
+    return true;
+  }
+}
