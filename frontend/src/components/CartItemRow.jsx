@@ -62,7 +62,7 @@ export default function CartItemRow({ item }) {
         </div>
         <div className="mt-2 flex gap-2">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             onClick={() => saveForLater(item.id)}
           >
@@ -76,7 +76,7 @@ export default function CartItemRow({ item }) {
       </TableCell>
 
       <TableCell className="w-[60px] text-right">
-        <Button variant="ghost" size="icon" onClick={() => remove(item.id)}>
+        <Button variant="secondary" size="icon" onClick={() => remove(item.id)}>
           <X className="h-4 w-4" />
         </Button>
       </TableCell>

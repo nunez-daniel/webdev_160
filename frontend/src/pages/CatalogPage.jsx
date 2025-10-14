@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchProducts } from "@/lib/api";
 import ProductGrid, { ProductGridSkeleton } from "@/components/ProductGrid";
 import {
@@ -20,7 +21,8 @@ export default function CatalogPage() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get("q") || "";
 
   async function load() {
     try {
@@ -35,6 +37,10 @@ export default function CatalogPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   useEffect(() => {
     load(); // eslint-disable-next-line

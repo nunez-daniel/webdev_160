@@ -31,7 +31,10 @@ export default function CartPage() {
             {items.length === 0 ? (
               <div className="p-6 text-muted-foreground">
                 Your cart is empty.{" "}
-                <Button variant="link" onClick={() => navigate("/")}>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate("/catalog")}
+                >
                   Browse products
                 </Button>
               </div>
@@ -89,8 +92,7 @@ export default function CartPage() {
               Checkout
             </Button>
             <Button
-              variant="ghost"
-              className="w-full mt-2"
+              className="w-full mt-4"
               onClick={clear}
               disabled={t.count === 0}
             >
