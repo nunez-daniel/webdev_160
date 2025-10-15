@@ -83,7 +83,6 @@ export default function ProductDetailPage() {
       {p && !loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="w-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`http://localhost:8080/products/${p.id}/image`}
               alt={p.name}
@@ -104,8 +103,7 @@ export default function ProductDetailPage() {
             <p className="text-sm text-muted-foreground">
               {p.brand} • {p.category}
             </p>
-
-            <div className="text-2xl font-bold">${p.price.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${p.cost.toFixed(2)}</div>
             <p className="text-muted-foreground leading-relaxed">
               {p.description}
             </p>

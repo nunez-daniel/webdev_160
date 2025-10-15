@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/lib/cartStore";
+import mapIcon from '../assets/mapIcon.svg'
 
 function CartSummary() {
   const { items, totals } = useCart();
@@ -147,9 +148,7 @@ export default function TopNav() {
                         <div className="h-16 w-20 overflow-hidden rounded bg-white">
                           <img
                             src={
-                            // shows in sidebar
-                              'http://localhost:8080/products/' + it.id + '/image'
-                                  ||
+                              it.imageUrl ||
                               `data:image/svg+xml;utf8,${encodeURIComponent(
                                 `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>
           <rect width='100%' height='100%' fill='white'/>
@@ -250,6 +249,7 @@ export default function TopNav() {
             </SheetContent>
           </Sheet>
         </div>
+        <Link to='/map'><img src={mapIcon} alt="Track robot" title="Track robot" style={{height:50,width:100}}/></Link>
       </div>
     </header>
   );

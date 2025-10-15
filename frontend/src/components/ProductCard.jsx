@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
   const { add } = useCart();
 
   const goToDetail = () => navigate(`/products/${product.id}`);
-  const price = Number(product.price ?? 0);
+  const price = Number(product.cost ?? 0);
 
   return (
     <Card
@@ -32,12 +32,7 @@ export default function ProductCard({ product }) {
         <div className="aspect-[4/3] w-full overflow-hidden rounded-t-xl bg-muted">
           {/* eslint-disable-next-line */}
           <img
-            src={
-              product.imageUrl ||
-              `data:image/svg+xml;utf8,${encodeURIComponent(
-                `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='100%' height='100%' fill='#f1f5f9'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Segoe UI, Arial' font-size='20' fill='#0f172a'>No Image</text></svg>`
-              )}`
-            }
+              src={`http://localhost:8080/products/${product.id}/image`}
             alt={product.name}
             className="h-full w-full object-cover"
             loading="lazy"
