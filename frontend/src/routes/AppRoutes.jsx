@@ -5,6 +5,7 @@ import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
 import CartPage from "@/pages/CartPage";
 import AppLayout from "@/layouts/AppLayout";
+import Map from '@/pages/Map'
 
 const router = createBrowserRouter([
   { path: "/", element: <LoginPage /> },
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
       { path: "catalog", element: <CatalogPage /> },
       { path: "products/:id", element: <ProductDetailPage /> },
       { path: "cart", element: <CartPage /> },
+      {path:'map',element:<Map/>},
     ],
   },
 ]);
