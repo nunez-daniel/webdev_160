@@ -70,7 +70,7 @@ public class ProductController {
     public ResponseEntity<String> updateProduct(@RequestBody Product product)
     {
 
-        Product p = productService.findProductById(product.getProduct_id());
+        Product p = productService.findProductById(product.getId());
         if(p != null)
         {
             productService.updateProduct(product);
@@ -99,7 +99,7 @@ public class ProductController {
     {
         Product product = productService.findProductById(productId);
 
-        if(product.getProduct_id() > 0)
+        if(product.getId() > 0)
         {
             return new ResponseEntity<>(product.getImageData(), HttpStatus.OK);
         }
