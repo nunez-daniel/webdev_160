@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(req -> req
 
-                        .requestMatchers(HttpMethod.GET, "/products", "/products/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/products", "/products/{id}", "products/{productId}/image").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/signup").permitAll()
