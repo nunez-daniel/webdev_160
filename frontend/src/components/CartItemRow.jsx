@@ -14,8 +14,10 @@ export default function CartItemRow({ item }) {
         <div className="h-20 w-24 overflow-hidden rounded bg-muted">
           {/* eslint-disable-next-line */}
           <img
-            src={item.imageUrl}
-            alt={item.name}
+
+              // cart shows
+              src={'http://localhost:8080/products/' + item.id + '/image'}
+              alt={item.name}
             className="h-full w-full object-cover"
           />
         </div>

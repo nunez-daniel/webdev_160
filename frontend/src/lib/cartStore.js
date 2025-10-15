@@ -1,71 +1,156 @@
-// A tiny cart store with "saved for later" support.
-// npm i zustand
 import { create } from "zustand";
 
+const API_BASE_URL = "http://localhost:8080";
+
 function money(n) {
-  return Math.round((Number(n) || 0) * 100) / 100;
+    return Math.round((Number(n) || 0) * 100) / 100;
 }
 
+
 export const useCart = create((set, get) => ({
-  items:
-    /** @type {Array<{id:string,name:string,price:number,imageUrl:string,qty:number,brand?:string,category?:string}>} */ ([]),
-  saved:
-    /** @type {Array<{id:string,name:string,price:number,imageUrl:string,brand?:string,category?:string}>} */ ([]),
+    items: [],
+    saved: [],
 
-  add: (product, qty = 1) => {
-    set((state) => {
-      const existing = state.items.find((i) => i.id === product.id);
-      if (existing) {
+    isLoading: false,
+    error: null,
+
+    backendTotals: {
+        subtotal: 0,
+        total: 0,
+        weight: 0,
+        under_twenty_lbs: false
+    },
+
+
+    apiFetch: async (endpoint, options = {}) => {
+        set({ isLoading: true, error: null });
+        try {
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...options,
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {}),
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error("User please login");
+                }
+            }
+
+            const data = await response.json();
+            get().setItemsFromBackend(data);
+
+            return data;
+        } catch (err) {
+            console.error("Cart API Error:", err);
+            set({ error: err.message, isLoading: false });
+            throw err;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+
+    initializeCart: async () => {
+        await get().apiFetch('', { method: 'GET' });
+    },
+
+    setItemsFromBackend: (perfectlyMappedCartDTO) => {
+        const safeDTO = perfectlyMappedCartDTO || {};
+
+        set({
+            items: safeDTO.items || [],
+
+            backendTotals: {
+                subtotal: safeDTO.subtotal || 0,
+                total: safeDTO.total || safeDTO.subtotal || 0,
+                weight: safeDTO.weight || 0,
+                under_twenty_lbs: safeDTO.under_twenty_lbs || false
+            }
+        });
+    },
+
+    add: async (product, qty = 1) => {
+        await get().apiFetch('/cart/add', {
+            method: 'POST',
+            body: JSON.stringify({
+                productId: Number(product.id),
+                quantity: qty,
+            }),
+        });
+    },
+
+    remove: async (id) => {
+        await get().apiFetch(`/delete/${id}`, { method: 'DELETE' });
+    },
+
+    updateQty: async (id, qty) => {
+        const safeQty = Math.max(1, Math.min(99, qty));
+
+        // remove if 0
+        if (qty === 0) {
+            return get().remove(id);
+        }
+
+        await get().apiFetch('/changeStock', {
+            method: 'PUT',
+            body: JSON.stringify({
+                productId: Number(id),
+                quantity: safeQty,
+            }),
+        });
+    },
+
+    clear: async () => {
+        await get().apiFetch('/clear', { method: 'DELETE' });
+    },
+
+    saveForLater: (id) =>
+        set((s) => {
+            const item = s.items.find((i) => i.id === id);
+            if (!item) return {};
+            return {
+                items: s.items.filter((i) => i.id !== id),
+                saved: [{ ...item }, ...s.saved],
+            };
+        }),
+
+    moveToCart: (id) => {
+        const prod = get().saved.find((x) => x.id === id);
+        if (!prod) return {};
+
+        // page default is add to cart not ATC quantity which I think we prefer
+        get().add(prod, 1)
+            .then(() => {
+                set((s) => ({
+                    saved: s.saved.filter((x) => x.id !== id),
+                }));
+            })
+            .catch(() => {
+                console.error("Error adding to cart");
+            });
+    },
+
+    // TODO... to implement the use of Boolean for over 20 or not
+    totals: () => {
+        const { items, backendTotals } = get();
+        const count = items.reduce((n, i) => n + i.qty, 0);
+
+        const subtotal = money(backendTotals.subtotal);
+        const total = money(backendTotals.total);
+        const fees = money(Math.max(0, total - subtotal));
+
         return {
-          items: state.items.map((i) =>
-            i.id === product.id ? { ...i, qty: Math.min(99, i.qty + qty) } : i
-          ),
+            count,
+            subtotal,
+            fees,
+            total,
+            weight: backendTotals.weight,
+            under_twenty_lbs: backendTotals.under_twenty_lbs
         };
-      }
-      return { items: [...state.items, { ...product, qty }] };
-    });
-  },
-
-  remove: (id) => set((s) => ({ items: s.items.filter((i) => i.id !== id) })),
-  updateQty: (id, qty) =>
-    set((s) => ({
-      items: s.items.map((i) =>
-        i.id === id ? { ...i, qty: Math.max(1, Math.min(99, qty)) } : i
-      ),
-    })),
-  clear: () => set({ items: [] }),
-
-  saveForLater: (id) =>
-    set((s) => {
-      const item = s.items.find((i) => i.id === id);
-      if (!item) return {};
-      return {
-        items: s.items.filter((i) => i.id !== id),
-        saved: [{ ...item }, ...s.saved],
-      };
-    }),
-
-  moveToCart: (id) =>
-    set((s) => {
-      const prod = s.saved.find((x) => x.id === id);
-      if (!prod) return {};
-      const already = s.items.find((i) => i.id === id);
-      return {
-        saved: s.saved.filter((x) => x.id !== id),
-        items: already
-          ? s.items.map((i) =>
-              i.id === id ? { ...i, qty: Math.min(99, i.qty + 1) } : i
-            )
-          : [{ ...prod, qty: 1 }, ...s.items],
-      };
-    }),
-
-  totals: () => {
-    const items = get().items;
-    const count = items.reduce((n, i) => n + i.qty, 0);
-    const subtotal = money(items.reduce((n, i) => n + i.price * i.qty, 0));
-    const fees = money(subtotal * 0.05); // sample service + taxes (5%)
-    const total = money(subtotal + fees);
-    return { count, subtotal, fees, total };
-  },
+    },
 }));
