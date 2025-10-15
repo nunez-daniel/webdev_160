@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/lib/cartStore";
+import mapIcon from '../assets/mapIcon.svg'
 
 function CartSummary() {
   const { items, totals } = useCart();
@@ -250,6 +251,7 @@ export default function TopNav() {
             </SheetContent>
           </Sheet>
         </div>
+        <Link to='/map'><img src={mapIcon} alt="Track robot" title="Track robot" style={{height:50,width:100}}/></Link>
       </div>
     </header>
   );
