@@ -15,18 +15,20 @@ public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int product_id;
+    private int id;
 
-    private String product_name;
-    private BigDecimal product_cost;
-    private int product_stock;
-    private BigDecimal product_weight;
+    private String name;
+    private BigDecimal cost;
+    private int stock;
+    private BigDecimal weight;
     // private String image_url;
 
 
 
     private String imageName;
     private String imageType;
+
+    // private String imageUrl;
 
     @Lob
     private byte[] imageData;

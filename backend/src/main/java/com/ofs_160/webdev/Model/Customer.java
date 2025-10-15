@@ -1,9 +1,11 @@
 package com.ofs_160.webdev.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -26,5 +28,10 @@ public class Customer {
 
     private String password;
     private String role;
+
+    @OneToOne(mappedBy = "customer",  cascade = CascadeType.ALL)
+    @EqualsAndHashCode.Exclude
+    @JsonBackReference
+    private VirtualCart virtualCart;
 
 }
