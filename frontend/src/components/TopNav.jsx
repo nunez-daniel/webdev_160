@@ -8,7 +8,6 @@ import {
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import mic from '../assets/mic.svg'
 import {
   Sheet,
   SheetContent,
@@ -81,8 +80,27 @@ export default function TopNav() {
     navigate(url);
   };
 
+  const [recording,setRecording]=useState(false)
   function handleClick(e) {
-    
+    if (!('webkitSpeechRecognition' in window)) {
+      alert('Your browser does not support voice recognition');
+    }
+    const recognition=new window.webkitSpeechRecognition()
+    recognition.interimResults=false;
+    recognition.lang='en-US'
+    recognition.onresult=(event)=>{
+      const transcript = event.results[0][0].transcript;
+      console.log('Voice input:', transcript);
+      setValue('')
+      setValue(transcript); 
+    }
+    if (!recording) {
+    recognition.start()
+    setRecording(true)
+    } else {
+    recognition.stop()
+    setRecording(false)
+    }
   }
 
   // cart state
