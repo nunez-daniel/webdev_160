@@ -102,6 +102,7 @@ export default function TopNav() {
             className="hidden md:block"
           >
             <Input
+              id="searchProducts"
               placeholder="Search products…"
               value={value}
               onChange={(e) => setValue(e.target.value)}
