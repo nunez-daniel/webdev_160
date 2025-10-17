@@ -16,11 +16,15 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [visible,setVisible]=useState(false)
   const [passwordShown,setPasswordShown]=useState(false)
+  const [submittable,setSubmittable]=useState(false)
 
   async function submit(e) {
     e.preventDefault();
+    if (!submittable) {
+      console.log('form not submitted. error.')
+      return;
+    }
     console.log("login attempt", { email, password });
-
     try {
       const user = await authenticateUser({ email, password });
       if (user) {
@@ -97,12 +101,16 @@ export default function LoginPage() {
       performCheck("noSpaceCheck",'green')
       noSpaceCheck=true;
     }
-    if (lengthCheck && numberCheck && noSpaceCheck && capitalLetterCheck)
+    if (lengthCheck && numberCheck && noSpaceCheck && capitalLetterCheck) {
+      setSubmittable(true)
       setTimeout(()=>{
         setVisible(false)
       }, 200)
-    else
+    }
+    else {
+      setSubmittable(false)
       setVisible(true)
+    }
   }
 
   return (
