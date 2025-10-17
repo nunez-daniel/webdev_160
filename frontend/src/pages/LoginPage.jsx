@@ -145,7 +145,7 @@ export default function LoginPage() {
             <label className="block">
               <div style={{display:'flex',flexDirection:'row',justifyContent:'space-between'}}>
               <span className="text-sm text-gray-700 dark:text-gray-300">Password</span>
-              <span><img id='thebutton' onClick={()=>setPasswordShown(prev=>!prev)} width={20} height={20} src={view}/></span>
+              <span><img id='thebutton' onClick={()=>setPasswordShown(prev=>!prev)} width={20} height={20} src={passwordShown?hide:view}/></span>
               </div>
               <input
                 type={passwordShown?"text":"password"}
