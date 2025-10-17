@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "@/lib/api"; // Import localStorage-based users
 
+
 export default function SignUpPage() {
   const [full_name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,7 +29,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-black">
       <div className="w-full max-w-md p-8 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">
           Create Account
