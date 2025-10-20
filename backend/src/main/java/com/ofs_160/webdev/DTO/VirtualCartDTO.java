@@ -15,11 +15,17 @@ public class VirtualCartDTO {
     private BigDecimal weight;
     private boolean under_twenty_lbs;
 
+    private Long customerId;
 
     private List<CartItemDTO> items;
 
     public VirtualCartDTO(VirtualCart cart)
     {
+        if (cart.getCustomer() != null)
+        {
+            this.customerId = (long) cart.getCustomer().getCustomer_id();
+        }
+
         this.subtotal = cart.getSubtotal();
         this.total = cart.getSubtotal();
         this.weight = cart.getWeight();

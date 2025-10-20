@@ -46,6 +46,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/signup").permitAll()
                         .requestMatchers(HttpMethod.POST,"/products").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/webhook").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/webhook").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/product-manager-access")
                         .hasAnyAuthority("ADMIN")
                         .anyRequest().authenticated()
