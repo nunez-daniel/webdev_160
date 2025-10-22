@@ -13,10 +13,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(false);
-  const [passwordShown, setPasswordShown] = useState(false);
   const [submittable, setSubmittable] = useState(false);
-
+  const [passwordShown, setPasswordShown] = useState(false);
   async function submit(e) {
     e.preventDefault();
     if (!submittable) {
@@ -41,23 +39,6 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     window.location.href = google_auth_url;
   };
-
-  function toggleCheck(id) {
-    document.getElementById(id).classList.toggle("text-red-600");
-    document.getElementById(id).classList.toggle("text-green-600");
-  }
-
-  function checkColor(id) {
-    if (document.getElementById(id).classList.contains("text-red-600"))
-      return "red";
-    else return "green";
-  }
-
-  function performCheck(id, colorNeeded) {
-    if (checkColor(id) != colorNeeded) {
-      toggleCheck(id);
-    }
-  }
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-background">
@@ -125,52 +106,11 @@ export default function LoginPage() {
                 onChange={(e) => {
                   setPassword(e.target.value);
                 }}
-                onBlur={(e) => setVisible(false)}
                 id="userEnteredPassword"
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </label>
-            <Collapse in={visible} sx={{ display: "block" }}>
-              <Paper
-                className="w-full max-w-sm"
-                sx={{
-                  marginTop: 2,
-                  position: "absolute",
-                  padding: 1,
-                  zIndex: 1300,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                {/**<span onClick={()=>setVisible(false)} style={{marginLeft:'90%'}}>X</span>**/}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <p id="lengthCheck" className="text-red-600">
-                    8-20 characters
-                  </p>
-                  <p id="capitalLetterCheck" className="text-red-600">
-                    At least one capital letter
-                  </p>
-                  <p id="numberCheck" className="text-red-600">
-                    At least one number
-                  </p>
-                  <p
-                    id="noSpaceCheck"
-                    className="text-green-600"
-                    style={{ display: "none" }}
-                  >
-                    No spaces
-                  </p>
-                </div>
-              </Paper>
-            </Collapse>
           </div>
 
           <div className="flex items-center justify-between">
