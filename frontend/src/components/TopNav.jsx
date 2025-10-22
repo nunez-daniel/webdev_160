@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/lib/cartStore";
-import mapIcon from '../assets/mapIcon.svg'
+import mapIcon from "../assets/mapIcon.svg";
 
 function CartSummary() {
   const { items, totals } = useCart();
@@ -79,26 +79,26 @@ export default function TopNav() {
     navigate(url);
   };
 
-  const [recording,setRecording]=useState(false)
+  const [recording, setRecording] = useState(false);
   function handleClick(e) {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert('Your browser does not support voice recognition');
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Your browser does not support voice recognition");
     }
-    const recognition=new window.webkitSpeechRecognition()
-    recognition.interimResults=false;
-    recognition.lang='en-US'
-    recognition.onresult=(event)=>{
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      console.log('Voice input:', transcript);
-      setValue('')
-      setValue(transcript); 
-    }
+      console.log("Voice input:", transcript);
+      setValue("");
+      setValue(transcript);
+    };
     if (!recording) {
-    recognition.start()
-    setRecording(true)
+      recognition.start();
+      setRecording(true);
     } else {
-    recognition.stop()
-    setRecording(false)
+      recognition.stop();
+      setRecording(false);
     }
   }
 
@@ -124,21 +124,27 @@ export default function TopNav() {
             className="hidden md:block"
           >
             <div className="relative w-[320px]">
-            <Input
-              id="searchProducts"
-              placeholder="Search products…"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              className="w-[320px]"
-            />
-             <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-black bg-white hover:bg-white h-5 w-5"
-              onClick={handleClick}
-            >
-              <svg fill="currentColor" className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2" viewBox="0 0 19 19" xmlns="http://www.w3.org/2000/svg" ><path d="M11.665 7.915v1.31a5.257 5.257 0 0 1-1.514 3.694 5.174 5.174 0 0 1-1.641 1.126 5.04 5.04 0 0 1-1.456.384v1.899h2.312a.554.554 0 0 1 0 1.108H3.634a.554.554 0 0 1 0-1.108h2.312v-1.899a5.045 5.045 0 0 1-1.456-.384 5.174 5.174 0 0 1-1.641-1.126 5.257 5.257 0 0 1-1.514-3.695v-1.31a.554.554 0 1 1 1.109 0v1.31a4.131 4.131 0 0 0 1.195 2.917 3.989 3.989 0 0 0 5.722 0 4.133 4.133 0 0 0 1.195-2.917v-1.31a.554.554 0 1 1 1.109 0zM3.77 10.37a2.875 2.875 0 0 1-.233-1.146V4.738A2.905 2.905 0 0 1 3.77 3.58a3 3 0 0 1 1.59-1.59 2.902 2.902 0 0 1 1.158-.233 2.865 2.865 0 0 1 1.152.233 2.977 2.977 0 0 1 1.793 2.748l-.012 4.487a2.958 2.958 0 0 1-.856 2.09 3.025 3.025 0 0 1-.937.634 2.865 2.865 0 0 1-1.152.233 2.905 2.905 0 0 1-1.158-.233A2.957 2.957 0 0 1 3.77 10.37z"/></svg>
-            </button>
-
+              <Input
+                id="searchProducts"
+                placeholder="Search products…"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="w-[320px]"
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-black bg-white hover:bg-white h-5 w-5"
+                onClick={handleClick}
+              >
+                <svg
+                  fill="currentColor"
+                  className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2"
+                  viewBox="0 0 19 19"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M11.665 7.915v1.31a5.257 5.257 0 0 1-1.514 3.694 5.174 5.174 0 0 1-1.641 1.126 5.04 5.04 0 0 1-1.456.384v1.899h2.312a.554.554 0 0 1 0 1.108H3.634a.554.554 0 0 1 0-1.108h2.312v-1.899a5.045 5.045 0 0 1-1.456-.384 5.174 5.174 0 0 1-1.641-1.126 5.257 5.257 0 0 1-1.514-3.695v-1.31a.554.554 0 1 1 1.109 0v1.31a4.131 4.131 0 0 0 1.195 2.917 3.989 3.989 0 0 0 5.722 0 4.133 4.133 0 0 0 1.195-2.917v-1.31a.554.554 0 1 1 1.109 0zM3.77 10.37a2.875 2.875 0 0 1-.233-1.146V4.738A2.905 2.905 0 0 1 3.77 3.58a3 3 0 0 1 1.59-1.59 2.902 2.902 0 0 1 1.158-.233 2.865 2.865 0 0 1 1.152.233 2.977 2.977 0 0 1 1.793 2.748l-.012 4.487a2.958 2.958 0 0 1-.856 2.09 3.025 3.025 0 0 1-.937.634 2.865 2.865 0 0 1-1.152.233 2.905 2.905 0 0 1-1.158-.233A2.957 2.957 0 0 1 3.77 10.37z" />
+                </svg>
+              </button>
             </div>
           </form>
           <Button className="md:hidden" onClick={goSearch}>
@@ -181,9 +187,10 @@ export default function TopNav() {
                         <div className="h-16 w-20 overflow-hidden rounded bg-white">
                           <img
                             src={
-                            // shows in sidebar
-                              'http://localhost:8080/products/' + it.id + '/image'
-                                  ||
+                              // shows in sidebar
+                              "http://localhost:8080/products/" +
+                                it.id +
+                                "/image" ||
                               `data:image/svg+xml;utf8,${encodeURIComponent(
                                 `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>
           <rect width='100%' height='100%' fill='white'/>
@@ -284,7 +291,14 @@ export default function TopNav() {
             </SheetContent>
           </Sheet>
         </div>
-        <Link to='/map'><img src={mapIcon} alt="Track robot" title="Track robot" style={{height:50,width:100}}/></Link>
+        <Link to="/map">
+          <img
+            src={mapIcon}
+            alt="Track robot"
+            title="Track robot"
+            style={{ height: 50, width: 100 }}
+          />
+        </Link>
       </div>
     </header>
   );

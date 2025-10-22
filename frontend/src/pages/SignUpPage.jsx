@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "@/lib/api"; // Import localStorage-based users
 
-
 export default function SignUpPage() {
   const [full_name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,6 +27,53 @@ export default function SignUpPage() {
     }
   }
 
+  function checkPassword(password) {
+    let lengthCheck = false;
+    let numberCheck = false;
+    let noSpaceCheck = false;
+    let capitalLetterCheck = false;
+    if (password.length >= 8 && password.length < 20) {
+      performCheck("lengthCheck", "green");
+      lengthCheck = true;
+    } else {
+      performCheck("lengthCheck", "red");
+      lengthCheck = false;
+    }
+    if (/[A-Z]+/.test(password)) {
+      performCheck("capitalLetterCheck", "green");
+      capitalLetterCheck = true;
+    } else {
+      performCheck("capitalLetterCheck", "red");
+      capitalLetterCheck = false;
+    }
+    if (/\d+/.test(password)) {
+      performCheck("numberCheck", "green");
+      numberCheck = true;
+    } else {
+      performCheck("numberCheck", "red");
+      numberCheck = false;
+    }
+    if (password.includes(" ")) {
+      if (document.getElementById("noSpaceCheck").style.display == "none") {
+        document.getElementById("noSpaceCheck").style.display = "block";
+      }
+      performCheck("noSpaceCheck", "red");
+      noSpaceCheck = false;
+    } else {
+      performCheck("noSpaceCheck", "green");
+      noSpaceCheck = true;
+    }
+    if (lengthCheck && numberCheck && noSpaceCheck && capitalLetterCheck) {
+      setSubmittable(true);
+      setTimeout(() => {
+        setVisible(false);
+      }, 200);
+    } else {
+      setSubmittable(false);
+      setVisible(true);
+    }
+  }
+
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-black">
       <div className="w-full max-w-md p-8 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-lg">
@@ -36,7 +82,9 @@ export default function SignUpPage() {
         </h2>
         <form onSubmit={submit} className="space-y-4">
           <label className="block">
-            <span className="text-sm text-gray-700 dark:text-gray-300">Full name</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Full name
+            </span>
             <input
               type="text"
               value={full_name}
@@ -47,7 +95,9 @@ export default function SignUpPage() {
           </label>
 
           <label className="block">
-            <span className="text-sm text-gray-700 dark:text-gray-300">Email</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Email
+            </span>
             <input
               type="email"
               value={email}
@@ -58,11 +108,14 @@ export default function SignUpPage() {
           </label>
 
           <label className="block">
-            <span className="text-sm text-gray-700 dark:text-gray-300">Password</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Password
+            </span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onInput={(e) => checkPassword(e.target.value)}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
@@ -75,7 +128,10 @@ export default function SignUpPage() {
             >
               Create account
             </button>
-            <Link to="/login" className="text-sm text-indigo-600 hover:underline">
+            <Link
+              to="/login"
+              className="text-sm text-indigo-600 hover:underline"
+            >
               Already have an account?
             </Link>
           </div>
