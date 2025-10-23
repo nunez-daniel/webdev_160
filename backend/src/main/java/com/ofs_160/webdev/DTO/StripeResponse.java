@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor@Builder
+@NoArgsConstructor
+@Builder
 public class StripeResponse {
     private String status;
     private String message;

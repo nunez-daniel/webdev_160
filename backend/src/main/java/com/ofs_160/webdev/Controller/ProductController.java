@@ -66,8 +66,7 @@ public class ProductController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
-    @PostMapping("/product-manager-access")
+    @PostMapping("/products")
     public ResponseEntity<String> insertProduct(@RequestBody Product product)
     {
         productService.insertProduct(product);
@@ -92,7 +91,7 @@ public class ProductController {
 
     }
 
-    @PostMapping("/products")
+    /*@PostMapping("/productsWithImage")
     public ResponseEntity<?> addProductImage(@RequestPart Product product, @RequestPart MultipartFile imageFile) {
         try {
             Product productImage = productService.addProductImage(product, imageFile);
@@ -101,9 +100,9 @@ public class ProductController {
         } catch (IOException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INSUFFICIENT_STORAGE);
         }
-    }
+    }*/
 
-    @GetMapping("products/{productId}/image")
+    /*@GetMapping("products/{productId}/image")
     public ResponseEntity<byte[]> getImageByProductId(@PathVariable int productId)
     {
         Product product = productService.findProductById(productId);
@@ -116,5 +115,11 @@ public class ProductController {
         {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+    }*/
+
+    @GetMapping("/search")
+    public List<Product> searchProducts(@RequestParam String keyword)
+    {
+        return productService.searchProducts(keyword);
     }
 }

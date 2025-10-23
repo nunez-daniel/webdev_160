@@ -5,6 +5,7 @@ import com.ofs_160.webdev.DTO.VirtualCartDTO;
 import com.ofs_160.webdev.Model.CustomerDetails;
 import com.ofs_160.webdev.Model.VirtualCart;
 import com.ofs_160.webdev.Service.CartService;
+import com.ofs_160.webdev.Service.ProductService;
 import com.ofs_160.webdev.Service.StripeService;
 import com.ofs_160.webdev.Service.WebhookService;
 import com.stripe.exception.StripeException;
@@ -34,14 +35,29 @@ public class CheckOutController {
 
     @Value("${stripe.webhook}")
     private String webhookKey;
+    @Autowired
+    private ProductService productService;
 
     @GetMapping({"/new-cart"})
     public ResponseEntity<StripeResponse> handleEvent(@AuthenticationPrincipal CustomerDetails principal) {
         String username = principal.getUsername();
         VirtualCart userCart = this.cartService.getVirtualCart(username);
-        VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
-        StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
-        return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
+
+        // stock check before checkout
+        if(productService.checkStock(userCart))
+        {
+            VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
+            StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
+            return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
+        }else
+        {
+            // Need to make this for not stock count there
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+
+
+
     }
 
     @PostMapping({"/webhook"})

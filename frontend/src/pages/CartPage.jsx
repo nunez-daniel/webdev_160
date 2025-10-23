@@ -14,9 +14,19 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export default function CartPage() {
-  const { items, saved, totals, clear, moveToCart} = useCart();
+  const { items, saved, totals, clear, moveToCart, checkoutLink, initializeCart} = useCart();
   const t = useMemo(() => totals(), [items]);
   const navigate = useNavigate();
+
+
+
+
+  useEffect(() => {
+    initializeCart();
+  }, [initializeCart]);
+
+
+
 
 
 
@@ -90,7 +100,11 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <Button className="w-full mt-4" disabled={t.count === 0}>
+              <Button
+                  className="w-full mt-4"
+                  onClick={checkoutLink}
+                  disabled={t.count === 0}
+              >
                 Checkout
               </Button>
               <Button

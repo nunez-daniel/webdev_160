@@ -182,7 +182,7 @@ export default function TopNav() {
                           <img
                             src={
                             // shows in sidebar
-                              'http://localhost:8080/products/' + it.id + '/image'
+                              it.imageUrl
                                   ||
                               `data:image/svg+xml;utf8,${encodeURIComponent(
                                 `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>

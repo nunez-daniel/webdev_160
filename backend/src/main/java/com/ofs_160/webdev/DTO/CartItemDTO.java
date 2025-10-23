@@ -22,6 +22,6 @@ public class CartItemDTO {
         this.name = item.getProduct().getName();
         this.price = item.getProduct().getCost();
         this.qty = item.getQty();
-        this.imageUrl = "http://localhost:8080/products/" + item.getCart_item_id() + "/image";
+        this.imageUrl = item.getProduct().getImageUrl();
     }
 }
