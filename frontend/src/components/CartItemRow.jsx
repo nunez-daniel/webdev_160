@@ -16,7 +16,7 @@ export default function CartItemRow({ item }) {
           <img
 
               // cart shows
-              src={'http://localhost:8080/products/' + item.id + '/image'}
+              src={item.imageUrl}
               alt={item.name}
             className="h-full w-full object-cover"
           />

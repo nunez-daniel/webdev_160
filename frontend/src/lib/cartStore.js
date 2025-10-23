@@ -56,7 +56,7 @@ export const useCart = create((set, get) => ({
 
 
     initializeCart: async () => {
-        await get().apiFetch('', { method: 'GET' });
+        await get().apiFetch("/cart", { method: 'GET' });
     },
 
     setItemsFromBackend: (perfectlyMappedCartDTO) => {
@@ -69,7 +69,8 @@ export const useCart = create((set, get) => ({
                 subtotal: safeDTO.subtotal || 0,
                 total: safeDTO.total || safeDTO.subtotal || 0,
                 weight: safeDTO.weight || 0,
-                under_twenty_lbs: safeDTO.under_twenty_lbs || false
+                under_twenty_lbs: safeDTO.under_twenty_lbs || false,
+                imageUrl: safeDTO.imageUrl
             }
         });
     },
@@ -107,6 +108,21 @@ export const useCart = create((set, get) => ({
 
     clear: async () => {
         await get().apiFetch('/clear', { method: 'DELETE' });
+    },
+
+    checkoutLink: async () => {
+        const { totals } = get();
+        if (totals().count === 0) return;
+
+        const data = await get().apiFetch('/new-cart', { method: 'GET' });
+        if (data.status === "SUCCESS" && data.sessionUrl)
+        {
+            window.location.href = data.sessionUrl;
+        } else
+        {
+            throw new Error(data.message);
+        }
+
     },
 
     saveForLater: (id) =>

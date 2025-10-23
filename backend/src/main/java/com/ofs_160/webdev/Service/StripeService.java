@@ -20,9 +20,13 @@ import java.util.List;
 public class StripeService {
 
 
-
+    private final ProductService productService;
     @Value("${stripe.secretKey}")
     private String secretKey;
+
+    public StripeService(ProductService productService) {
+        this.productService = productService;
+    }
 
 
     public StripeResponse checkoutProducts(VirtualCartDTO virtualCartDTO)
@@ -35,12 +39,10 @@ public class StripeService {
             long priceInCents = cartItemDTO.getPrice().multiply(new java.math.BigDecimal(100))
                     .longValueExact();
 
-
-
             SessionCreateParams.LineItem.PriceData.ProductData productData =
                     SessionCreateParams.LineItem.PriceData.ProductData.builder()
                             .setName(cartItemDTO.getName())
-                            .addAllImage(List.of("https://img.freepik.com/premium-psd/png-cursor-arrow-purple-symbol-pastel_53876-517524.jpg"))
+                            .addAllImage(List.of(cartItemDTO.getImageUrl()))
                             .build();
 
             SessionCreateParams.LineItem.PriceData priceData =
@@ -61,9 +63,23 @@ public class StripeService {
         String customerId = virtualCartDTO.getCustomerId().toString();
 
         SessionCreateParams params  = SessionCreateParams.builder()
+                .setShippingAddressCollection(SessionCreateParams.ShippingAddressCollection.builder()
+                        .addAllowedCountry(SessionCreateParams.ShippingAddressCollection.AllowedCountry.US)
+                        .build())
+                .setCustomText(
+                     SessionCreateParams.CustomText.builder()
+                        .setShippingAddress(
+                                SessionCreateParams.CustomText.ShippingAddress.builder()
+                        .setMessage(
+                                "Address grocery items will be delivered to :)").build()
+                )
+                     .build()
+                )
+
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:8080/success")
-                .setCancelUrl("http://localhost:8080/cancel")
+                .setSuccessUrl("http://localhost:5173/catalog")
+                .setCancelUrl("http://localhost:5173/cart")
+
                 .putMetadata("customer_id", customerId)
                 .addAllLineItem(lineItems)
                 .build();

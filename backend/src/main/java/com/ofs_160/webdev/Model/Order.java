@@ -21,10 +21,22 @@ public class Order {
     private LocalDateTime orderDate;
     private String paymentStatus;
 
+    //private String address;
+    //private String time;
+
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
+
+    private String shippingName;
+    private String shippingAddressLine1;
+    private String shippingAddressLine2;
+    private String shippingCity;
+    private String shippingState;
+    private String shippingPostalCode;
+    private String shippingCountry;
+
 }

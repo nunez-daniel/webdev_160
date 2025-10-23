@@ -21,16 +21,13 @@ public class Product {
     private BigDecimal cost;
     private int stock;
     private BigDecimal weight;
-    // private String image_url;
 
-
-
-    private String imageName;
+    /*private String imageName;
     private String imageType;
-
-    // private String imageUrl;
 
     @Lob
     private byte[] imageData;
+*/
+    private String imageUrl;
 
 }

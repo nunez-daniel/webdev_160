@@ -32,7 +32,7 @@ export default function ProductCard({ product }) {
         <div className="aspect-[4/3] w-full overflow-hidden rounded-t-xl bg-muted">
           {/* eslint-disable-next-line */}
           <img
-              src={`http://localhost:8080/products/${product.id}/image`}
+              src={product.imageUrl}
             alt={product.name}
             className="h-full w-full object-cover"
             loading="lazy"

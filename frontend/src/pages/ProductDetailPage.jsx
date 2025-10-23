@@ -84,7 +84,7 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="w-full">
             <img
-              src={`http://localhost:8080/products/${p.id}/image`}
+              src={p.imageUrl}
               alt={p.name}
               className="w-full rounded-xl object-cover"
             />
