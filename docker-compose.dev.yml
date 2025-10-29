@@ -1,0 +1,67 @@
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: vite-dev
+    ports:
+      - "5173:5173" 
+    volumes:
+      - ./frontend:/app 
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+      - CHOKIDAR_USEPOLLING=true 
+      - WATCHPACK_POLLING=true  
+    networks:
+      - app-network
+    command: npm run dev -- --host
+
+
+  backend:
+    build: 
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=mysql://localhost:3306/ofs_db?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Password123
+      - SPRING.DATASOURCE.driver-class-name=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_PROFILES_ACTIVE=dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-network
+    
+  database:
+    image: mysql:latest
+    container_name: mysql_db
+    environment:
+      - MYSQL_DATABASE=ofc
+      - MYSQL_ROOT_PASSWORD=mysecret
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    
+volumes:
+  db_data:
+  
+networks:
+  app-network:
+    driver: bridge
