@@ -1,13 +1,14 @@
 package com.ofs_160.webdev.Service;
 
-import com.ofs_160.webdev.ExceptionHandler.DuplicateCustomerException;
-import com.ofs_160.webdev.Model.Customer;
-import com.ofs_160.webdev.Repository.CustomerRepository;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.ofs_160.webdev.ExceptionHandler.DuplicateCustomerException;
+import com.ofs_160.webdev.Model.Customer;
+import com.ofs_160.webdev.Repository.CustomerRepository;
 
 
 @Service
@@ -53,6 +54,10 @@ public class CustomerService {
         customer.setUsername(customer.getUsername());
         customer.setUsername(customer.getEmail());
         customerRepository.save(customer);
+    }
+
+    public Customer findByUsername(String username) {
+        return customerRepository.findByUsername(username);
     }
 
     public Customer findByEmail(String username) {
