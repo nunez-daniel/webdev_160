@@ -114,13 +114,36 @@ export const useCart = create((set, get) => ({
         const { totals } = get();
         if (totals().count === 0) return;
 
-        const data = await get().apiFetch('/new-cart', { method: 'GET' });
-        if (data.status === "SUCCESS" && data.sessionUrl)
+        try
         {
-            window.location.href = data.sessionUrl;
-        } else
-        {
-            throw new Error(data.message);
+            const response = await fetch(`${API_BASE_URL}/new-cart`, {
+                method : 'GET',
+                credentials : 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error("User please login");
+                }
+            }
+
+            const data = await response.json();
+
+            if (data.status === "SUCCESS" && data.sessionUrl)
+            {
+                window.location.href = data.sessionUrl;
+            } else
+            {
+                throw new Error(data.message);
+            }
+
+
+        }catch (err) {
+            // TODO logging to user temp ...
+            console.error("Checkout error:", err);
         }
 
     },

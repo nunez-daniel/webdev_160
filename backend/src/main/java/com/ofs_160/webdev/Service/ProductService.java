@@ -15,6 +15,9 @@ public class ProductService {
     @Autowired
     ProductRepository productRepository;
 
+    @Autowired
+    CartService cartService;
+
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
@@ -51,6 +54,8 @@ public class ProductService {
         return productRepository.findByNameContainingIgnoreCase(keyword);
     }
 
+    // checkout finally stock checker
+    // TODO... NOT WORKING WIH PUT
     public boolean checkStock(VirtualCart userCart) {
         boolean allInStock = true;
 
@@ -62,7 +67,7 @@ public class ProductService {
             if (requestedQuantity > currentStock)
             {
                 allInStock = false;
-                 break;
+                break;
             }
         }
 
@@ -71,4 +76,31 @@ public class ProductService {
 
 
     }
+
+
+    public boolean productCheckStock(String username, int productId, int quantity) {
+
+        // temp null
+        Product product = productRepository.findById(productId).orElse(null);
+
+        if(product == null)
+        {
+            System.out.println("productCheck Stock error");
+            return false;
+        }
+
+        int quantityAlreadyInCart = cartService.getQuantityInCart(productId, username);
+        int newTotalQuantity = quantityAlreadyInCart + quantity;
+
+        if(product.getStock() < newTotalQuantity)
+        {
+            System.out.println("Not enough stock");
+            return false;
+        }
+
+
+
+        return true;
+    }
+
 }

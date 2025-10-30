@@ -25,6 +25,7 @@ public class CartService {
 
     @Autowired
     private VirtualCartRepository virtualCartRepository;
+    
 
 
     @Transactional
@@ -233,4 +234,27 @@ public class CartService {
         }
     }
 
+    public int getQuantityInCart(int productId, String username) {
+        Customer customer = customerRepository.findByUsername(username);
+        if (customer == null) {
+            // NTS: allow users to view products once they click on individual product ask them to nicely login
+            throw new RuntimeException("Customer not found for username: " + username);
+        }
+
+        VirtualCart virtualCart = customer.getVirtualCart();
+
+        if (virtualCart == null) {
+            return 0; // new cart should be empty
+        }
+
+        int count = 0;
+        for (CartItem item : virtualCart.getItemsInCart())
+        {
+            if (item.getProduct().getId()  == productId)
+            {
+                count = count + item.getQty();
+            }
+        }
+        return count;
+    }
 }
