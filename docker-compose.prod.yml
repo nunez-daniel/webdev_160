@@ -1,0 +1,66 @@
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: nginx-frontend
+    ports:
+      - "80:80" 
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spring-backend
+
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/ofs_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Password123
+      - SPRING.DATASOURCE.DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-network
+    
+  database:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: ofs_db
+      MYSQL_ROOT_PASSWORD: Password123
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test_pass
+    command: 
+    - --bind-address=0.0.0.0
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pPassword123"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    
+volumes:
+  db_data:
+  
+networks:
+  app-network:
+    driver: bridge
