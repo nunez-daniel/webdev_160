@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   useNavigate,
   useLocation,
@@ -16,23 +18,43 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { useCart } from "@/lib/cartStore";
+import { fetchSuggestions } from "@/lib/api"; // <-- missing import fixed
 import mapIcon from "../assets/mapIcon.svg";
 
+/** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
-  const { items, totals } = useCart();
-  const t = totals();
-  const fees = t.subtotal * 0.08; // est. 8% fees/tax (adjust as needed)
-  const total = t.subtotal + fees;
+  const { items = [], remove, updateQty } = useCart();
+
+  const subtotal = Array.isArray(items)
+    ? items.reduce(
+        (sum, it) => sum + Number(it?.price || 0) * Number(it?.qty || 0),
+        0
+      )
+    : 0;
+
+  const fees = subtotal * 0.08; // example rate; adjust as needed
+  const total = subtotal + fees;
+
   const navigate = useNavigate();
 
   return (
     <div className="p-4 space-y-3">
       <div className="flex justify-between text-sm">
         <span>Subtotal</span>
-        <span className="font-medium">${t.subtotal.toFixed(2)}</span>
+        <span className="font-medium">${subtotal.toFixed(2)}</span>
       </div>
       <div className="flex justify-between text-sm">
         <span>Fees & taxes (est.)</span>
@@ -65,7 +87,7 @@ export default function TopNav() {
   const [params] = useSearchParams();
   const currentQ = params.get("q") || "";
 
-  // show current query in the input when you're on /catalog
+  // Keep input in sync with URL on catalog/home
   const [value, setValue] = useState(currentQ);
   useEffect(() => {
     if (location.pathname.startsWith("/catalog") || location.pathname === "/") {
@@ -73,39 +95,67 @@ export default function TopNav() {
     }
   }, [currentQ, location.pathname]);
 
-  const goSearch = () => {
-    const q = value.trim();
+  const goSearch = (qOverride) => {
+    const q = (qOverride ?? value).trim();
     const url = q ? `/catalog?q=${encodeURIComponent(q)}` : `/catalog`;
     navigate(url);
+    setOpen(false);
   };
 
-  const [recording, setRecording] = useState(false);
-  function handleClick(e) {
-    if (!("webkitSpeechRecognition" in window)) {
-      alert("Your browser does not support voice recognition");
-    }
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      console.log("Voice input:", transcript);
-      setValue("");
-      setValue(transcript);
-    };
-    if (!recording) {
-      recognition.start();
-      setRecording(true);
-    } else {
-      recognition.stop();
-      setRecording(false);
-    }
-  }
+  // --- cart values used by the header badge and list ---
+  const { items = [], remove, updateQty } = useCart();
+  const count = Array.isArray(items)
+    ? items.reduce((n, it) => n + (Number(it?.qty) || 0), 0)
+    : 0;
 
-  // cart state
-  const { items, remove, updateQty, totals } = useCart();
-  const t = totals();
-  const count = t.count;
+  // --- typeahead state ---
+  const [open, setOpen] = useState(false);
+  const [suggests, setSuggests] = useState([]);
+  const [active, setActive] = useState(-1);
+  const debounceRef = useRef(0);
+
+  useEffect(() => {
+    window.clearTimeout(debounceRef.current);
+    if (!value?.trim()) {
+      setSuggests([]);
+      setOpen(false);
+      return;
+    }
+    debounceRef.current = window.setTimeout(async () => {
+      try {
+        const s = await fetchSuggestions(value);
+        setSuggests(s);
+        setOpen(s.length > 0);
+        setActive(-1);
+      } catch {
+        setSuggests([]);
+        setOpen(false);
+      }
+    }, 150);
+    return () => window.clearTimeout(debounceRef.current);
+  }, [value]);
+
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowDown" && open) {
+      e.preventDefault();
+      setActive((i) => Math.min(i + 1, suggests.length - 1));
+    } else if (e.key === "ArrowUp" && open) {
+      e.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault(); // ensure the form/command doesn't steal it
+      if (open && active >= 0 && suggests[active]) {
+        // choose highlighted suggestion
+        goSearch(suggests[active].name);
+      } else {
+        // search with current input
+        goSearch();
+      }
+    } else if (e.key === "Escape" && open) {
+      e.preventDefault();
+      setOpen(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur">
@@ -115,7 +165,6 @@ export default function TopNav() {
         </Link>
 
         <div className="ml-auto flex items-center gap-3">
-          {/* search */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -123,43 +172,49 @@ export default function TopNav() {
             }}
             className="hidden md:block"
           >
-            <div className="relative w-[320px]">
-              <Input
-                id="searchProducts"
-                placeholder="Search products…"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="w-[320px]"
-              />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-black bg-white hover:bg-white h-5 w-5"
-                onClick={handleClick}
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <div className="relative w-[320px]">
+                  <Input
+                    id="searchProducts"
+                    placeholder="Search products…"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onKeyDown={onKeyDown}
+                    className="w-[320px]"
+                    autoComplete="off"
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                className="p-0 w-[320px]"
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                onCloseAutoFocus={(e) => e.preventDefault()}
               >
-                {recording ? (
-                  <svg
-                    fill="currentColor"
-                    className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2"
-                    viewBox="0 0 19 19"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M6.5 5A1.5 1.5 0 0 0 5 6.5v3A1.5 1.5 0 0 0 6.5 11h3A1.5 1.5 0 0 0 11 9.5v-3A1.5 1.5 0 0 0 9.5 5z" />
-                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z" />
-                  </svg>
-                ) : (
-                  <svg
-                    fill="currentColor"
-                    className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2"
-                    viewBox="0 0 19 19"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M11.665 7.915v1.31a5.257 5.257 0 0 1-1.514 3.694 5.174 5.174 0 0 1-1.641 1.126 5.04 5.04 0 0 1-1.456.384v1.899h2.312a.554.554 0 0 1 0 1.108H3.634a.554.554 0 0 1 0-1.108h2.312v-1.899a5.045 5.045 0 0 1-1.456-.384 5.174 5.174 0 0 1-1.641-1.126 5.257 5.257 0 0 1-1.514-3.695v-1.31a.554.554 0 1 1 1.109 0v1.31a4.131 4.131 0 0 0 1.195 2.917 3.989 3.989 0 0 0 5.722 0 4.133 4.133 0 0 0 1.195-2.917v-1.31a.554.554 0 1 1 1.109 0zM3.77 10.37a2.875 2.875 0 0 1-.233-1.146V4.738A2.905 2.905 0 0 1 3.77 3.58a3 3 0 0 1 1.59-1.59 2.902 2.902 0 0 1 1.158-.233 2.865 2.865 0 0 1 1.152.233 2.977 2.977 0 0 1 1.793 2.748l-.012 4.487a2.958 2.958 0 0 1-.856 2.09 3.025 3.025 0 0 1-.937.634 2.865 2.865 0 0 1-1.152.233 2.905 2.905 0 0 1-1.158-.233A2.957 2.957 0 0 1 3.77 10.37z" />
-                  </svg>
-                )}
-              </button>
-            </div>
+                <Command shouldFilter={false}>
+                  <CommandList>
+                    <CommandEmpty>No matches</CommandEmpty>
+                    <CommandGroup heading="Suggestions">
+                      {suggests.map((s, idx) => (
+                        <CommandItem
+                          key={s.id}
+                          value={s.name}
+                          onMouseEnter={() => setActive(idx)}
+                          onSelect={() => goSearch(s.name)}
+                          className={idx === active ? "bg-accent" : ""}
+                        >
+                          {s.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </form>
-          <Button className="md:hidden" onClick={goSearch}>
+
+          <Button className="md:hidden" onClick={() => goSearch()}>
             Search
           </Button>
 
@@ -199,26 +254,24 @@ export default function TopNav() {
                         <div className="h-16 w-20 overflow-hidden rounded bg-white">
                           <img
                             src={
-                              // shows in sidebar
                               it.imageUrl ||
                               `data:image/svg+xml;utf8,${encodeURIComponent(
                                 `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>
-          <rect width='100%' height='100%' fill='white'/>
-          <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-            font-family='Segoe UI, Arial' font-size='32' fill='black'>✕</text>
-        </svg>`
+                                  <rect width='100%' height='100%' fill='white'/>
+                                  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+                                    font-family='Segoe UI, Arial' font-size='32' fill='black'>✕</text>
+                                </svg>`
                               )}`
                             }
                             alt={it.name}
                             className="h-full w-full object-cover"
                             onError={(e) => {
-                              // swap to fallback if the image fails to load
                               const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>
-        <rect width='100%' height='100%' fill='white'/>
-        <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-          font-family='Segoe UI, Arial' font-size='32' fill='black'>✕</text>
-      </svg>`;
-                              e.currentTarget.onerror = null; // prevent loop
+                                <rect width='100%' height='100%' fill='white'/>
+                                <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+                                  font-family='Segoe UI, Arial' font-size='32' fill='black'>✕</text>
+                              </svg>`;
+                              e.currentTarget.onerror = null;
                               e.currentTarget.src = `data:image/svg+xml;base64,${btoa(
                                 svg
                               )}`;
@@ -254,7 +307,7 @@ export default function TopNav() {
                                 size="icon"
                                 onClick={() =>
                                   updateQty(it.id, Math.max(1, it.qty - 1))
-                                } // clamp
+                                }
                               >
                                 -
                               </Button>
@@ -301,6 +354,7 @@ export default function TopNav() {
             </SheetContent>
           </Sheet>
         </div>
+
         <Link to="/map">
           <img
             src={mapIcon}

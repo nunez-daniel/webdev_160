@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchProducts } from "@/lib/api";
 import ProductGrid, { ProductGridSkeleton } from "@/components/ProductGrid";
@@ -22,15 +22,31 @@ export default function CatalogPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [searchParams] = useSearchParams();
+  const rawSearch = searchParams.get("q") || "";
+  const [notice, setNotice] = useState("");
+  const updatedOnceRef = useRef(false);
   const search = searchParams.get("q") || "";
 
   async function load() {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchProducts({ page, limit: PAGE_SIZE, search });
+      const data = await fetchProducts({
+        page,
+        limit: PAGE_SIZE,
+        search: rawSearch,
+      });
       setItems(data.items);
-      setTotal(data.total);
+      setTotal(Number(data.total || 0));
+
+      if (data.corrected && !updatedOnceRef.current) {
+        setNotice(
+          `Showing results for “${data.corrected}” (corrected from “${rawSearch}”).`
+        );
+        updatedOnceRef.current = true;
+      } else {
+        setNotice("");
+      }
     } catch (e) {
       setError(e.message || "Failed loading products");
     } finally {
@@ -54,6 +70,7 @@ export default function CatalogPage() {
   return (
     <main className="container mx-auto px-4 py-6 space-y-6">
       <h1 className="text-2xl font-semibold">Browse</h1>
+      {notice && <div className="text-sm text-muted-foreground">{notice}</div>}
 
       {error && (
         <div className="rounded-lg border p-4 text-sm text-red-600">
