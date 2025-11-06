@@ -25,6 +25,15 @@ export default function SignUpPage() {
     e.preventDefault();
     console.log("signup attempt", { full_name, email, password });
 
+    const isPasswordValid = Object.values(checks).every(c => c === true);
+
+    if (!isPasswordValid)
+    {
+      alert("Please ensure your password meets all requirements before submitting.");
+      setVisible(true);
+      return;
+    }
+
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
@@ -52,7 +61,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-black">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-white">
       <div className="w-full max-w-md p-8 bg-white/80 dark:bg-slate-900/80 rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">
           Create Account
