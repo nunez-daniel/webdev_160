@@ -20,8 +20,25 @@ public class ProductController {
     @Autowired
     ProductService productService;
 
-    // Need... Implement ResponseEntity to return 200 or 404
+
+
+
+
     @GetMapping("/products")
+    public ResponseEntity<List<Product>> getProducts()
+    {
+        return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
+    }
+
+
+
+
+
+
+
+
+    // Need... Implement ResponseEntity to return 200 or 404
+    @GetMapping("/products2")
     public ResponseEntity<Map<String, Object>> getProducts(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int limit,
@@ -37,7 +54,7 @@ public class ProductController {
     }
 
     // typeahead suggestions
-    @GetMapping("/products/suggest")
+    @GetMapping("/products2/suggest")
     public ResponseEntity<List<Map<String, Object>>> suggest(@RequestParam("q") String q) {
         return ResponseEntity.ok(productService.suggest(q));
     }
@@ -97,31 +114,7 @@ public class ProductController {
 
     }
 
-    /*@PostMapping("/productsWithImage")
-    public ResponseEntity<?> addProductImage(@RequestPart Product product, @RequestPart MultipartFile imageFile) {
-        try {
-            Product productImage = productService.addProductImage(product, imageFile);
-            return new ResponseEntity<>(productImage, HttpStatus.CREATED);
 
-        } catch (IOException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INSUFFICIENT_STORAGE);
-        }
-    }*/
-
-    /*@GetMapping("products/{productId}/image")
-    public ResponseEntity<byte[]> getImageByProductId(@PathVariable int productId)
-    {
-        Product product = productService.findProductById(productId);
-
-        if(product.getId() > 0)
-        {
-            return new ResponseEntity<>(product.getImageData(), HttpStatus.OK);
-        }
-        else
-        {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-    }*/
 
     @GetMapping("/search")
     public List<Product> searchProducts(@RequestParam String keyword)

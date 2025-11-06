@@ -4,12 +4,17 @@ import com.ofs_160.webdev.Model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-
     List<Product> findByNameContainingIgnoreCase(String keyword);
+
+    Product findByName(String name);
+
+
 
     // Primary search: exact/partial + phonetic match
     @Query(value = """
@@ -27,7 +32,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
         p.stock DESC
       LIMIT :limit OFFSET :offset
       """,
-      nativeQuery = true)
+            nativeQuery = true)
     List<Product> smartSearch(@Param("q") String q,
                               @Param("limit") int limit,
                               @Param("offset") int offset);
@@ -51,4 +56,5 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       LIMIT 10
       """, nativeQuery = true)
     List<Object[]> suggest(@Param("q") String q);
+
 }

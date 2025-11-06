@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -18,6 +20,8 @@ public class CartItem {
     private int cart_item_id;
 
     private int qty;
+
+    private BigDecimal weight;
 
 
     @ManyToOne

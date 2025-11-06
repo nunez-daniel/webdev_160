@@ -6,9 +6,7 @@ import com.ofs_160.webdev.Model.Order;
 import com.ofs_160.webdev.Repository.CustomerRepository;
 import com.ofs_160.webdev.Repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,5 +24,19 @@ public class OrderService {
         Customer customer = customerRepository.findByEmail(principalName);
 
         return orderRepository.findByCustomer(customer);
+    }
+
+    public Order getOrderByNameAndId(String principalName, Long orderId) {
+
+        return orderRepository.findByIdAndCustomerUsername(orderId, principalName);
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+
+    public List<Order> getAllOrdersStatus(String status) {
+
+        return orderRepository.findByPaymentStatus(status);
     }
 }

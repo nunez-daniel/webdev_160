@@ -75,6 +75,7 @@ public class CartService {
             CartItem newItem = new CartItem();
             newItem.setQty(quantity);
             newItem.setProduct(product);
+            newItem.setWeight(product.getWeight());
             newItem.setVirtualCart(virtualCart);
             itemsInCart.add(newItem);
         }

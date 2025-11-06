@@ -14,6 +14,7 @@ public class CartItemDTO {
     private String imageUrl;
     private String brand;
     private String category;
+    private BigDecimal weight;
 
     public CartItemDTO(CartItem item)
     {
@@ -22,6 +23,7 @@ public class CartItemDTO {
         this.name = item.getProduct().getName();
         this.price = item.getProduct().getCost();
         this.qty = item.getQty();
+        this.weight = item.getWeight();
         this.imageUrl = item.getProduct().getImageUrl();
     }
 }
