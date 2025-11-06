@@ -20,7 +20,7 @@ export default function UserSettings() {
       setLoading(true);
       // const orderId = localStorage.getItem("customerId") || "1";
       const response = await fetch(`http://localhost:8080/orders`, {
-        credentials: 'include'
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error("Failed to fetch order history");
