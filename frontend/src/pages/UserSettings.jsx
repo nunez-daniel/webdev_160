@@ -18,16 +18,31 @@ export default function UserSettings() {
   const fetchOrderHistory = async () => {
     try {
       setLoading(true);
-      // const orderId = localStorage.getItem("customerId") || "1";
       const response = await fetch(`http://localhost:8080/orders`, {
         credentials: "include",
       });
+
       if (!response.ok) {
         throw new Error("Failed to fetch order history");
       }
 
-      const data = await response.json();
-      setOrders(data);
+      // Check if response has content before parsing JSON
+      const text = await response.text();
+
+      // If empty response, return empty array
+      if (!text || text.trim() === "") {
+        setOrders([]);
+        return;
+      }
+
+      // Try to parse JSON
+      try {
+        const data = JSON.parse(text);
+        setOrders(data || []);
+      } catch (jsonError) {
+        console.error("JSON parse error:", jsonError);
+        setOrders([]);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
