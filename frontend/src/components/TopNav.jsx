@@ -34,7 +34,7 @@ import { fetchSuggestions } from "@/lib/api";
 
 /** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
-  const { items = [], remove, updateQty } = useCart();
+  const { items = [], remove, updateQty, checkoutLink } = useCart();
 
   const subtotal = Array.isArray(items)
     ? items.reduce(
@@ -66,7 +66,7 @@ function CartSummary() {
 
       <Button
         className="w-full mt-4 bg-green-600 hover:bg-green-700"
-        onClick={() => navigate("/checkout")}
+        onClick={checkoutLink}
       >
         Proceed to Checkout
       </Button>
