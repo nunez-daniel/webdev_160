@@ -63,7 +63,7 @@ export default function ChatWidget() {
       {!isOpen ? (
         <Button
           onMouseDown={handleMouseDown}
-          onClick={() => setIsOpen(true)}
+          /*onClick={() => setIsOpen(true)}*/
           className="h-14 w-14 rounded-full bg-green-600 hover:bg-green-700 focus:bg-green-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-lg hover:shadow-xl transition-all duration-200 border-0"
           title="Chat with us"
         >
