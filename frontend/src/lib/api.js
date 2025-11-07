@@ -1,10 +1,6 @@
-// UNCOMMENT WHEN REAL API LINKED
-
 const BASE = "http://localhost:8080";
 
-/** @param {{page?:number, limit?:number, search?:string}} params */
 export async function fetchProducts(params = {}) {
-  //const { page = 1, limit = 12, search = "" } = params;
   const url = new URL(`${BASE}/products`, window.location.origin);
   const { page = 1, limit = 12, search = "" } = params;
 
@@ -20,7 +16,7 @@ export async function fetchProducts(params = {}) {
 
 
   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
-  return /** @type {{items: any[], total: number}} */ ({
+  return  ({
     items: productArray,
     total: productArray.length
   });
@@ -37,12 +33,10 @@ export async function fetchSuggestions(q) {
       }
   );
   if (!res.ok) return [];
-  return /** @type {{id:string, name:string}[]} */ (await res.json());
+  return (await res.json());
 }
 
 
-
-/** @param {string} id */
 export async function fetchProductById(id) {
   const res = await fetch(`${BASE}/products/${id}`, {
     headers: { Accept: "application/json" },
@@ -57,13 +51,11 @@ export async function fetchProductById(id) {
 }
 
 
-/** @param {string} email
- * @param {string} password */
 export async function authenticateUser({ email, password }) {
   const url = `${BASE}/login`;
 
   const body = new URLSearchParams();
-  body.append("username", email); // note usernames -> email
+  body.append("username", email); 
   body.append("password", password);
 
   const response = await fetch(url, {

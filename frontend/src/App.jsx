@@ -1,11 +1,10 @@
 import AppRoutes from "@/routes/AppRoutes";
-
+import "./App.css";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div>
       <AppRoutes />
     </div>
-
   );
 }

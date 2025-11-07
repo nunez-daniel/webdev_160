@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -7,7 +7,7 @@ import {
   useSearchParams,
   Link,
 } from "react-router-dom";
-import { ShoppingCart, Trash2, Settings } from "lucide-react";
+import { ShoppingCart, Trash2, Settings, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,7 +16,6 @@ import {
   SheetTrigger,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import {
   Popover,
@@ -31,8 +30,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useCart } from "@/lib/cartStore";
-import { fetchSuggestions } from "@/lib/api"; // <-- missing import fixed
-import mapIcon from "../assets/mapIcon.svg";
+import { fetchSuggestions } from "@/lib/api";
 
 /** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
@@ -45,7 +43,7 @@ function CartSummary() {
       )
     : 0;
 
-  const fees = subtotal * 0.08; // example rate; adjust as needed
+  const fees = subtotal * 0.08;
   const total = subtotal + fees;
 
   const navigate = useNavigate();
@@ -60,323 +58,260 @@ function CartSummary() {
         <span>Fees & taxes (est.)</span>
         <span className="font-medium">${fees.toFixed(2)}</span>
       </div>
-      <div className="flex justify-between text-base font-semibold">
+      <Separator />
+      <div className="flex justify-between font-semibold">
         <span>Total</span>
         <span>${total.toFixed(2)}</span>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button className="flex-1" onClick={() => navigate("/cart")}>
-          View Cart
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1"
-          disabled={items.length === 0}
+      <Button
+        className="w-full mt-4 bg-green-600 hover:bg-green-700"
+        onClick={() => navigate("/checkout")}
+      >
+        Proceed to Checkout
+      </Button>
+    </div>
+  );
+}
+
+function VirtualCartComponent() {
+  const { items = [], remove, updateQty } = useCart();
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-500">Your cart is empty</div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      {items.map((item) => (
+        <div
+          key={item.id}
+          className="flex justify-between items-center py-2 border-b"
         >
-          Checkout
-        </Button>
-      </div>
+          <div className="flex-1">
+            <h4 className="font-medium text-sm">{item.name}</h4>
+            <p className="text-xs text-gray-500">${item.price}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateQty(item.id, Math.max(0, item.qty - 1))}
+            >
+              -
+            </Button>
+            <span className="px-2">{item.qty}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateQty(item.id, item.qty + 1)}
+            >
+              +
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => remove(item.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
+      <CartSummary />
     </div>
   );
 }
 
 export default function TopNav() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [params] = useSearchParams();
-  const currentQ = params.get("q") || "";
-
-  // Keep input in sync with URL on catalog/home
-  const [value, setValue] = useState(currentQ);
-  useEffect(() => {
-    if (location.pathname.startsWith("/catalog") || location.pathname === "/") {
-      setValue(currentQ);
-    }
-  }, [currentQ, location.pathname]);
-
-  const goSearch = (qOverride) => {
-    const q = (qOverride ?? value).trim();
-    const url = q ? `/catalog?q=${encodeURIComponent(q)}` : `/catalog`;
-    navigate(url);
-    setOpen(false);
-  };
-
-  // --- cart values used by the header badge and list ---
-  const { items = [], remove, updateQty } = useCart();
-  const count = Array.isArray(items)
-    ? items.reduce((n, it) => n + (Number(it?.qty) || 0), 0)
+  const { items = [] } = useCart();
+  const totalItems = Array.isArray(items)
+    ? items.reduce((sum, it) => sum + Number(it?.qty || 0), 0)
     : 0;
 
-  // --- typeahead state ---
+  const [cartOpen, setCartOpen] = useState(false);
+  const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const [suggests, setSuggests] = useState([]);
-  const [active, setActive] = useState(-1);
-  const debounceRef = useRef(0);
+  const [active, setActive] = useState(0);
 
-  useEffect(() => {
-    window.clearTimeout(debounceRef.current);
-    if (!value?.trim()) {
-      setSuggests([]);
-      setOpen(false);
-      return;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  function goSearch(term) {
+    const finalTerm = term || value;
+    if (!finalTerm.trim()) return;
+
+    if (location.pathname !== "/catalog") {
+      navigate(`/catalog?q=${encodeURIComponent(finalTerm)}`);
+    } else {
+      setSearchParams({ q: finalTerm });
     }
-    debounceRef.current = window.setTimeout(async () => {
-      try {
-        const s = await fetchSuggestions(value);
-        setSuggests(s);
-        setOpen(s.length > 0);
-        setActive(-1);
-      } catch {
-        setSuggests([]);
-        setOpen(false);
-      }
-    }, 150);
-    return () => window.clearTimeout(debounceRef.current);
-  }, [value]);
+    setValue("");
+    setOpen(false);
+  }
 
-  const onKeyDown = (e) => {
-    if (e.key === "ArrowDown" && open) {
+  function onKeyDown(e) {
+    if (e.key === "Enter") {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, suggests.length - 1));
-    } else if (e.key === "ArrowUp" && open) {
-      e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault(); // ensure the form/command doesn't steal it
-      if (open && active >= 0 && suggests[active]) {
-        // choose highlighted suggestion
+      if (suggests[active]) {
         goSearch(suggests[active].name);
       } else {
-        // search with current input
         goSearch();
       }
-    } else if (e.key === "Escape" && open) {
+    } else if (e.key === "ArrowDown") {
       e.preventDefault();
+      setActive(Math.min(active + 1, suggests.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(Math.max(active - 1, 0));
+    } else if (e.key === "Escape") {
       setOpen(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (value.trim()) {
+      setOpen(true);
+      fetchSuggestions(value.trim())
+        .then(setSuggests)
+        .catch(() => setSuggests([]));
+    } else {
+      setOpen(false);
+      setSuggests([]);
+    }
+  }, [value]);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur">
-      <div className="container mx-auto flex h-16 items-center gap-3 px-4">
-        <Link to="/catalog" className="text-xl font-bold">
-          OFSGrocery
-        </Link>
-
-        <div className="ml-auto flex items-center gap-3">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              goSearch();
-            }}
-            className="hidden md:block"
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md shadow-sm">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link
+            to="/catalog"
+            className="text-2xl font-bold text-green-600 hover:text-green-700 transition-colors"
           >
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <div className="relative w-[320px]">
-                  <Input
-                    id="searchProducts"
-                    placeholder="Search products…"
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    onKeyDown={onKeyDown}
-                    className="w-[320px]"
-                    autoComplete="off"
-                  />
-                </div>
-              </PopoverTrigger>
-              <PopoverContent
-                className="p-0 w-[320px]"
-                align="start"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-                onCloseAutoFocus={(e) => e.preventDefault()}
-              >
-                <Command shouldFilter={false}>
-                  <CommandList>
-                    <CommandEmpty>No matches</CommandEmpty>
-                    <CommandGroup heading="Suggestions">
-                      {suggests.map((s, idx) => (
-                        <CommandItem
-                          key={s.id}
-                          value={s.name}
-                          onMouseEnter={() => setActive(idx)}
-                          onSelect={() => goSearch(s.name)}
-                          className={idx === active ? "bg-accent" : ""}
-                        >
-                          {s.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </form>
+            OFSGrocery
+          </Link>
 
-          <Button className="md:hidden" onClick={() => goSearch()}>
-            Search
-          </Button>
+          <div className="hidden md:flex flex-1 max-w-lg mx-8">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                goSearch();
+              }}
+              className="w-full"
+            >
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <Input
+                      id="searchProducts"
+                      placeholder="Search fresh groceries..."
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      onKeyDown={onKeyDown}
+                      className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-full focus:border-green-500 focus:ring-0 transition-colors"
+                      autoComplete="off"
+                    />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-full" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandList>
+                      <CommandEmpty>No matches</CommandEmpty>
+                      <CommandGroup heading="Suggestions">
+                        {suggests.map((s, idx) => (
+                          <CommandItem
+                            key={s.id}
+                            value={s.name}
+                            onMouseEnter={() => setActive(idx)}
+                            onSelect={() => goSearch(s.name)}
+                            className={`${
+                              idx === active ? "bg-green-50" : ""
+                            } hover:bg-green-50`}
+                          >
+                            {s.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </form>
+          </div>
 
-          {/* CART SHEET */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="relative">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Cart
-                {count > 0 && (
-                  <span className="absolute -right-2 -top-2">
-                    <Badge className="rounded-full px-2">{count}</Badge>
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
+          <div className="flex items-center gap-4">
+            <Button className="md:hidden" variant="ghost" onClick={goSearch}>
+              <Search className="h-4 w-4" />
+            </Button>
 
-            <SheetContent side="right" className="w-[380px] sm:w-[420px] p-0">
-              <SheetHeader>
-                <SheetTitle>Your Cart</SheetTitle>
-                <SheetDescription>
-                  Review items and update quantities.
-                </SheetDescription>
-              </SheetHeader>
+            {/* Mobile Map Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/map")}
+              className="sm:hidden text-gray-600 hover:text-green-600 transition-colors"
+              title="Track Delivery Robot"
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
 
-              <Separator />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/order-history")}
+              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Orders</span>
+            </Button>
 
-              <div className="flex h-[calc(100%-5rem)] flex-col">
-                <div className="flex-1 overflow-y-auto">
-                  {items.length === 0 ? (
-                    <div className="p-4 text-sm text-muted-foreground">
-                      Start by adding items from the catalog.
-                    </div>
-                  ) : (
-                    items.map((it) => (
-                      <div key={it.id} className="flex items-center gap-3 p-4">
-                        <div className="h-16 w-20 overflow-hidden rounded bg-white">
-                          <img
-                            src={
-                              it.imageUrl ||
-                              `data:image/svg+xml;utf8,${encodeURIComponent(
-                                `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>
-                                  <rect width='100%' height='100%' fill='white'/>
-                                  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-                                    font-family='Segoe UI, Arial' font-size='32' fill='black'>✕</text>
-                                </svg>`
-                              )}`
-                            }
-                            alt={it.name}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='90'>
-                                <rect width='100%' height='100%' fill='white'/>
-                                <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-                                  font-family='Segoe UI, Arial' font-size='32' fill='black'>✕</text>
-                              </svg>`;
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = `data:image/svg+xml;base64,${btoa(
-                                svg
-                              )}`;
-                            }}
-                          />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="truncate">
-                              <div className="font-medium truncate">
-                                {it.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {it.brand || "Food"} • {it.category || "Item"}
-                              </div>
-                            </div>
-
-                            <Button
-                              variant="secondary"
-                              size="icon"
-                              onClick={() => remove(it.id)}
-                              aria-label={`Remove ${it.name}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          <div className="mt-2 flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() =>
-                                  updateQty(it.id, Math.max(1, it.qty - 1))
-                                }
-                              >
-                                -
-                              </Button>
-                              <Input
-                                className="w-14 text-center"
-                                type="number"
-                                min={1}
-                                max={99}
-                                value={it.qty}
-                                onChange={(e) => {
-                                  const n = Math.max(
-                                    1,
-                                    parseInt(e.target.value || "1", 10) || 1
-                                  );
-                                  updateQty(it.id, n);
-                                }}
-                              />
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() =>
-                                  updateQty(it.id, Math.min(99, it.qty + 1))
-                                }
-                              >
-                                +
-                              </Button>
-                            </div>
-
-                            <div className="font-semibold">
-                              ${(Number(it.price || 0) * it.qty).toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
+            <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative text-gray-600 hover:text-green-600 transition-colors"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {totalItems > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-green-500 hover:bg-green-600 text-white text-xs">
+                      {totalItems}
+                    </Badge>
                   )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[400px] flex flex-col">
+                <SheetHeader className="text-left">
+                  <SheetTitle>Cart ({totalItems})</SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto">
+                  <VirtualCartComponent />
                 </div>
+              </SheetContent>
+            </Sheet>
 
-                <Separator />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/order-history")}
+              className="text-gray-600 hover:text-green-600 transition-colors sm:hidden"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
 
-                {/* summary */}
-                <CartSummary />
-              </div>
-            </SheetContent>
-          </Sheet>
+            {/* Map/Robot Tracking */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/map")}
+              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
+              title="Track Delivery Robot"
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-
-        <Link to="/map">
-          <img
-            src={mapIcon}
-            alt="Track robot"
-            title="Track robot"
-            style={{ height: 50, width: 100 }}
-          />
-        </Link>
-
-        {/* ORDER HISTORY BUTTON */}
-        <Button
-          className="border-none bg-transparent hover:bg-transparent flex items-center justify-center"
-          variant="outline"
-          onClick={() => navigate("/order-history")}
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
-
-        {/* LOG OUT BUTTON */}
-        <Button className="border-none bg-transparent hover:bg-transparent flex items-center justify-center">
-          <Link to="/logout">Log Out</Link>
-        </Button>
       </div>
     </header>
   );
