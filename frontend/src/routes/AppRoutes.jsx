@@ -18,10 +18,10 @@ const router = createBrowserRouter([
       { path: "catalog", element: <CatalogPage /> },
       { path: "products/:id", element: <ProductDetailPage /> },
       { path: "cart", element: <CartPage /> },
-      { path: "map", element: <Map /> },
     ],
   },
   { path: "/order-history", element: <UserSettings /> },
+  { path: "/map", element: <Map /> },
 ]);
 
 export default function AppRoutes() {

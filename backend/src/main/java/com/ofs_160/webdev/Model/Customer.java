@@ -19,7 +19,7 @@ public class Customer {
     private int customer_id;
 
     private String full_name;
-    //private String last_name;
+    // private String last_name;
     private String email;
     // private String phone_number;
 
@@ -29,7 +29,7 @@ public class Customer {
     private String password;
     private String role;
 
-    @OneToOne(mappedBy = "customer",  cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     @EqualsAndHashCode.Exclude
     @JsonBackReference
     private VirtualCart virtualCart;
