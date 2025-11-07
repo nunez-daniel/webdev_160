@@ -101,7 +101,7 @@ export default function UserSettings() {
   }
 
   return (
-    <div className="w-full h-full px-10 py-10 flex flex-col overflow-auto">
+    <div className="w-full h-full px-10 py-4 flex flex-col overflow-auto">
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ChevronLeft className="h-4 w-4 mr-2" />
