@@ -13,10 +13,11 @@ import { useCart } from "@/lib/cartStore";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { add } = useCart();
+  const { add, getProductQuantity } = useCart();
 
   const goToDetail = () => navigate(`/products/${product.id}`);
   const price = Number(product.cost ?? 0);
+  const quantityInCart = getProductQuantity(product.id);
 
   return (
     <Card
@@ -130,12 +131,32 @@ export default function ProductCard({ product }) {
         <Button
           className="w-full bg-green-600 hover:bg-green-700 text-white border-0 rounded-lg py-2.5 font-medium transition-colors"
           disabled={product.inStock === false}
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
-            add(product, 1);
+            try {
+              await add(product, 1);
+              console.log(`✅ Successfully added ${product.name} to cart`);
+            } catch (error) {
+              console.error(`❌ Failed to add ${product.name} to cart:`, error);
+              if (
+                error.message.includes("login") ||
+                error.message.includes("401") ||
+                error.message.includes("403")
+              ) {
+                alert("Please log in to add items to your cart");
+              } else {
+                alert(
+                  `Failed to add ${product.name} to cart. Please try again.`
+                );
+              }
+            }
           }}
         >
-          {product.inStock === false ? "Out of Stock" : "Add to Cart"}
+          {product.inStock === false
+            ? "Out of Stock"
+            : quantityInCart > 0
+            ? `Add to Cart (${quantityInCart} in cart)`
+            : "Add to Cart"}
         </Button>
       </div>
     </Card>
