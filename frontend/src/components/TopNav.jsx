@@ -285,15 +285,6 @@ export default function TopNav() {
               variant="ghost"
               size="sm"
               onClick={() => navigate("/order-history")}
-              className="text-gray-600 hover:text-green-600 transition-colors sm:hidden"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/order-history")}
               className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
             >
               <Settings className="h-4 w-4" />
