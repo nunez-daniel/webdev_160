@@ -22,8 +22,6 @@ export default function CartPage() {
     moveToCart,
     checkoutLink,
     initializeCart,
-    isLoading,
-    error,
   } = useCart();
   const t = useMemo(() => totals(), [items]);
   const navigate = useNavigate();
@@ -105,20 +103,14 @@ export default function CartPage() {
             <Button
               className="w-full mt-4"
               onClick={checkoutLink}
-              disabled={t.count === 0 || isLoading}
+              disabled={t.count === 0}
             >
-              {isLoading ? "Redirecting to Stripe..." : "Checkout with Stripe"}
+              Checkout
             </Button>
-            {error && (
-              <div className="text-red-600 text-sm mt-2 text-center">
-                {error}
-              </div>
-            )}
             <Button
               className="w-full mt-4"
               onClick={clear}
-              disabled={t.count === 0 || isLoading}
-              variant="outline"
+              disabled={t.count === 0}
             >
               Clear cart
             </Button>

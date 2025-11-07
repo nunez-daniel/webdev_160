@@ -112,17 +112,13 @@ export const useCart = create((set, get) => ({
 
     checkoutLink: async () => {
         const { totals } = get();
-        if (totals().count === 0) {
-            alert("Your cart is empty!");
-            return;
-        }
+        if (totals().count === 0) return;
 
-        set({ isLoading: true, error: null });
-
-        try {
+        try
+        {
             const response = await fetch(`${API_BASE_URL}/new-cart`, {
-                method: 'GET',
-                credentials: 'include',
+                method : 'GET',
+                credentials : 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -130,27 +126,26 @@ export const useCart = create((set, get) => ({
 
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
-                    throw new Error("Please login to continue checkout");
+                    throw new Error("User please login");
                 }
-                throw new Error(`Checkout failed: ${response.status}`);
             }
 
             const data = await response.json();
 
-            if (data.status === "SUCCESS" && data.sessionUrl) {
-                // Redirect to Stripe checkout automatically
+            if (data.status === "SUCCESS" && data.sessionUrl)
+            {
                 window.location.href = data.sessionUrl;
-            } else {
-                throw new Error(data.message || "Failed to create checkout session");
+            } else
+            {
+                throw new Error(data.message);
             }
 
-        } catch (err) {
+
+        }catch (err) {
+            // TODO logging to user temp ...
             console.error("Checkout error:", err);
-            set({ error: err.message });
-            alert(`Checkout Error: ${err.message}`);
-        } finally {
-            set({ isLoading: false });
         }
+
     },
 
     saveForLater: (id) =>

@@ -34,16 +34,25 @@ import { fetchSuggestions } from "@/lib/api";
 
 /** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
-  const { totals, checkoutLink } = useCart();
-  const t = totals();
-  const fees = t.subtotal * 0.08; // est. 8% fees/tax (adjust as needed)
-  const total = t.subtotal + fees;
+  const { items = [], remove, updateQty } = useCart();
+
+  const subtotal = Array.isArray(items)
+    ? items.reduce(
+        (sum, it) => sum + Number(it?.price || 0) * Number(it?.qty || 0),
+        0
+      )
+    : 0;
+
+  const fees = subtotal * 0.08;
+  const total = subtotal + fees;
+
+  const navigate = useNavigate();
 
   return (
     <div className="p-4 space-y-3">
       <div className="flex justify-between text-sm">
         <span>Subtotal</span>
-        <span className="font-medium">${t.subtotal.toFixed(2)}</span>
+        <span className="font-medium">${subtotal.toFixed(2)}</span>
       </div>
       <div className="flex justify-between text-sm">
         <span>Fees & taxes (est.)</span>
@@ -57,10 +66,9 @@ function CartSummary() {
 
       <Button
         className="w-full mt-4 bg-green-600 hover:bg-green-700"
-        onClick={checkoutLink}
-        disabled={t.count === 0}
+        onClick={() => navigate("/checkout")}
       >
-        Checkout with Stripe
+        Proceed to Checkout
       </Button>
     </div>
   );
@@ -272,6 +280,15 @@ export default function TopNav() {
                 </div>
               </SheetContent>
             </Sheet>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/order-history")}
+              className="text-gray-600 hover:text-green-600 transition-colors sm:hidden"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
 
             <Button
               variant="ghost"
