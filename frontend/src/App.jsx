@@ -1,6 +1,7 @@
 import AppRoutes from "@/routes/AppRoutes";
 import { useEffect } from "react";
 import { useCart } from "@/lib/cartStore";
+import ChatWidget from "@/components/ChatWidget";
 import "./App.css";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
   return (
     <div className="h-screen w-screen">
       <AppRoutes />
+      <ChatWidget />
     </div>
   );
 }
