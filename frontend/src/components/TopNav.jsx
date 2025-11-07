@@ -131,7 +131,7 @@ export default function TopNav() {
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const [suggests, setSuggests] = useState([]);
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(-1);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -153,19 +153,26 @@ export default function TopNav() {
   function onKeyDown(e) {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (suggests[active]) {
+      if (active >= 0 && suggests[active]) {
         goSearch(suggests[active].name);
       } else {
         goSearch();
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive(Math.min(active + 1, suggests.length - 1));
+      if (suggests.length > 0) {
+        setActive(Math.min(active + 1, suggests.length - 1));
+      }
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActive(Math.max(active - 1, 0));
+      if (active > 0) {
+        setActive(active - 1);
+      } else if (active === 0) {
+        setActive(-1);
+      }
     } else if (e.key === "Escape") {
       setOpen(false);
+      setActive(-1);
     }
   }
 
@@ -195,12 +202,14 @@ export default function TopNav() {
   useEffect(() => {
     if (value.trim().length > 0) {
       setOpen(true);
+      setActive(-1);
       fetchSuggestions(value.trim())
-        .then(setSuggests)
+        .then((results) => setSuggests(Array.isArray(results) ? results : []))
         .catch(() => setSuggests([]));
     } else {
       setOpen(false);
       setSuggests([]);
+      setActive(-1);
     }
   }, [value]);
 
@@ -275,7 +284,7 @@ export default function TopNav() {
                   onCloseAutoFocus={(e) => e.preventDefault()}
                   avoidCollisions={false}
                 >
-                  <Command shouldFilter={false}>
+                  <Command shouldFilter={false} value="" defaultValue="">
                     <CommandList>
                       <CommandEmpty>No matches</CommandEmpty>
                       <CommandGroup heading="Suggestions">
@@ -284,9 +293,10 @@ export default function TopNav() {
                             key={s.id}
                             value={s.name}
                             onMouseEnter={() => setActive(idx)}
+                            onMouseLeave={() => setActive(-1)}
                             onSelect={() => goSearch(s.name)}
                             className={`${
-                              idx === active ? "bg-green-50" : ""
+                              active >= 0 && idx === active ? "bg-green-50" : ""
                             } hover:bg-green-50`}
                           >
                             {s.name}
