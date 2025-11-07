@@ -169,6 +169,29 @@ export default function TopNav() {
     }
   }
 
+  const [recording, setRecording] = useState(false);
+  function handleClick(e) {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Your browser does not support voice recognition");
+    }
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      console.log("Voice input:", transcript);
+      setValue("");
+      setValue(transcript);
+    };
+    if (!recording) {
+      recognition.start();
+      setRecording(true);
+    } else {
+      recognition.stop();
+      setRecording(false);
+    }
+  }
+
   useEffect(() => {
     if (value.trim().length > 0) {
       setOpen(true);
@@ -216,6 +239,32 @@ export default function TopNav() {
                       autoComplete="off"
                     />
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-black bg-white hover:bg-white h-5 w-5"
+                      onClick={handleClick}
+                    >
+                      {recording ? (
+                        <svg
+                          fill="currentColor"
+                          className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2"
+                          viewBox="0 0 19 19"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M6.5 5A1.5 1.5 0 0 0 5 6.5v3A1.5 1.5 0 0 0 6.5 11h3A1.5 1.5 0 0 0 11 9.5v-3A1.5 1.5 0 0 0 9.5 5z" />
+                          <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm15 0a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z" />
+                        </svg>
+                      ) : (
+                        <svg
+                          fill="currentColor"
+                          className="h-4 w-4 absolute right-2 top-1/2 -translate-y-1/2"
+                          viewBox="0 0 19 19"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path d="M11.665 7.915v1.31a5.257 5.257 0 0 1-1.514 3.694 5.174 5.174 0 0 1-1.641 1.126 5.04 5.04 0 0 1-1.456.384v1.899h2.312a.554.554 0 0 1 0 1.108H3.634a.554.554 0 0 1 0-1.108h2.312v-1.899a5.045 5.045 0 0 1-1.456-.384 5.174 5.174 0 0 1-1.641-1.126 5.257 5.257 0 0 1-1.514-3.695v-1.31a.554.554 0 1 1 1.109 0v1.31a4.131 4.131 0 0 0 1.195 2.917 3.989 3.989 0 0 0 5.722 0 4.133 4.133 0 0 0 1.195-2.917v-1.31a.554.554 0 1 1 1.109 0zM3.77 10.37a2.875 2.875 0 0 1-.233-1.146V4.738A2.905 2.905 0 0 1 3.77 3.58a3 3 0 0 1 1.59-1.59 2.902 2.902 0 0 1 1.158-.233 2.865 2.865 0 0 1 1.152.233 2.977 2.977 0 0 1 1.793 2.748l-.012 4.487a2.958 2.958 0 0 1-.856 2.09 3.025 3.025 0 0 1-.937.634 2.865 2.865 0 0 1-1.152.233 2.905 2.905 0 0 1-1.158-.233A2.957 2.957 0 0 1 3.77 10.37z" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </PopoverTrigger>
                 <PopoverContent
