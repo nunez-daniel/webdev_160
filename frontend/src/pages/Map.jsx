@@ -46,7 +46,12 @@ const RobotTrackerMock = ({ updateInterval = 2000 }) => {
   return (
     <div
       ref={mapRef}
-      style={{ width: "100%", height: "500px", border: "1px solid #ccc" }}
+      style={{
+        width: "100%",
+        height: "500px",
+        border: "1px solid #ccc",
+        marginTop: "20px",
+      }}
     />
   );
 };

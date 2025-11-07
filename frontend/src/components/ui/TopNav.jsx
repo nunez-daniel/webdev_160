@@ -109,7 +109,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur">
-      <div className="container mx-auto flex h-16 items-center gap-3 px-4">
+      <div className="w-full flex h-16 items-center gap-3 px-4">
         <Link to="/catalog" className="text-xl font-bold">
           OFSGrocery
         </Link>

@@ -183,7 +183,7 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md shadow-sm">
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             to="/catalog"
@@ -257,16 +257,6 @@ export default function TopNav() {
               <MapPin className="h-4 w-4" />
             </Button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/order-history")}
-              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-              <span>Orders</span>
-            </Button>
-
             <Sheet open={cartOpen} onOpenChange={setCartOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -296,6 +286,15 @@ export default function TopNav() {
               size="sm"
               onClick={() => navigate("/order-history")}
               className="text-gray-600 hover:text-green-600 transition-colors sm:hidden"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/order-history")}
+              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
             >
               <Settings className="h-4 w-4" />
             </Button>

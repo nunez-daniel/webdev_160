@@ -72,18 +72,18 @@ export default function CatalogPage() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="w-full space-y-8">
       <div className="text-center py-12 bg-gradient-to-r from-green-50 to-blue-50 rounded-3xl">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           Fresh Groceries Delivered
         </h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto px-4">
           Discover organic, sustainable products for a healthier lifestyle
         </p>
         {notice && <div className="text-sm text-green-600 mt-2">{notice}</div>}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm">
+      <div className="w-full flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-4">
           <h2 className="text-xl font-semibold text-gray-900">
             {search ? `Search results for "${search}"` : "All Products"}
