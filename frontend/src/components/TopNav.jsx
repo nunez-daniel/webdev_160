@@ -170,7 +170,7 @@ export default function TopNav() {
   }
 
   useEffect(() => {
-    if (value.trim()) {
+    if (value.trim().length > 0) {
       setOpen(true);
       fetchSuggestions(value.trim())
         .then(setSuggests)
@@ -200,7 +200,10 @@ export default function TopNav() {
               }}
               className="w-full"
             >
-              <Popover open={open} onOpenChange={setOpen}>
+              <Popover
+                open={open && suggests.length > 0}
+                onOpenChange={setOpen}
+              >
                 <PopoverTrigger asChild>
                   <div className="relative">
                     <Input
@@ -215,7 +218,14 @@ export default function TopNav() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="p-0 w-full" align="start">
+                <PopoverContent
+                  className="p-0 w-[--radix-popover-trigger-width]"
+                  align="start"
+                  sideOffset={4}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  avoidCollisions={false}
+                >
                   <Command shouldFilter={false}>
                     <CommandList>
                       <CommandEmpty>No matches</CommandEmpty>
