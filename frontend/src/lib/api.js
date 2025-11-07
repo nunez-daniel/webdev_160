@@ -14,11 +14,21 @@ export async function fetchProducts(params = {}) {
 
   const productArray = await res.json();
 
-
   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
-  return  ({
-    items: productArray,
-    total: productArray.length
+  let filteredProducts = productArray;
+  if (search && search.trim()) {
+    const searchTerm = search.trim().toLowerCase();
+    filteredProducts = productArray.filter(product => 
+      product.name?.toLowerCase().includes(searchTerm) ||
+      product.brand?.toLowerCase().includes(searchTerm) ||
+      product.category?.toLowerCase().includes(searchTerm) ||
+      product.description?.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  return ({
+    items: filteredProducts,
+    total: filteredProducts.length
   });
 }
 
