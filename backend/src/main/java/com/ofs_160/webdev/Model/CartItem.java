@@ -23,7 +23,6 @@ public class CartItem {
 
     private BigDecimal weight;
 
-
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
@@ -33,11 +32,5 @@ public class CartItem {
     @EqualsAndHashCode.Exclude
     @JsonBackReference
     private VirtualCart virtualCart;
-
-
-
-
-
-
 
 }

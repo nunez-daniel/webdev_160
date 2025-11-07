@@ -52,7 +52,7 @@ export default function ProductDetailPage() {
   }, [id]);
 
   return (
-    <main className="container mx-auto px-4 py-6 space-y-6">
+    <main className="w-full px-4 py-6 space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

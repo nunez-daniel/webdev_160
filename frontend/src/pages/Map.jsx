@@ -1,11 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const RobotTrackerMock = ({ updateInterval = 2000 }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const navigate = useNavigate();
 
   // Starting position for the robot
   const robotPosRef = useRef({ lat: 37.7749, lng: -122.4194 });
@@ -44,10 +48,21 @@ const RobotTrackerMock = ({ updateInterval = 2000 }) => {
   }, [updateInterval]);
 
   return (
-    <div
-      ref={mapRef}
-      style={{ width: "100%", height: "500px", border: "1px solid #ccc" }}
-    />
+    <div className="flex flex-col items-start px-4 py-4">
+      <Button variant="ghost" onClick={() => navigate(-1)}>
+        <ChevronLeft className="h-4 w-4" />
+        Back
+      </Button>
+      <div
+        ref={mapRef}
+        style={{
+          width: "100%",
+          height: "500px",
+          border: "1px solid #ccc",
+          marginTop: "20px",
+        }}
+      />
+    </div>
   );
 };
 
