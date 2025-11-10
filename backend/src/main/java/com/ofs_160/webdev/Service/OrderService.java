@@ -39,4 +39,8 @@ public class OrderService {
 
         return orderRepository.findByPaymentStatus(status);
     }
+
+    public Order findByStripeSessionId(String sessionId) {
+        return orderRepository.findByStripeSessionId(sessionId);
+    }
 }
