@@ -32,6 +32,10 @@ public class WebhookService {
     private CustomerService customerService;
 
     @Autowired
+    private ProductService productService;
+
+
+    @Autowired
     private CartService cartService;
 
     @Autowired
@@ -55,6 +59,9 @@ public class WebhookService {
 
             List<OrderItem> orderItems = getOrderItems(session, newOrder);
             newOrder.setItems(orderItems);
+
+
+            productService.deductStock(orderItems);
             orderRepository.save(newOrder);
             cartService.clearVirtualCart(customer.getUsername());
 
