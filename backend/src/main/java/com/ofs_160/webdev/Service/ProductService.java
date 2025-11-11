@@ -1,12 +1,15 @@
 package com.ofs_160.webdev.Service;
 
 import com.ofs_160.webdev.Model.CartItem;
+import com.ofs_160.webdev.Model.OrderItem;
 import com.ofs_160.webdev.Model.Product;
 import com.ofs_160.webdev.Model.VirtualCart;
 import org.apache.commons.text.similarity.FuzzyScore;
 import com.ofs_160.webdev.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -161,6 +164,33 @@ public class ProductService {
             return best;
         }
         return null;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void deductStock(List<OrderItem> orderItems) {
+        for (OrderItem item : orderItems)
+        {
+
+            Product product = productRepository.findByNameWithLock(item.getProductName());
+
+            if (product == null)
+            {
+                // check is inside db
+                throw new RuntimeException("Product is not found: " + item.getProductName());
+            }
+
+            int requestedQuantity = Math.toIntExact(item.getQuantity());
+            int currentStock = product.getStock();
+
+            if (currentStock < requestedQuantity)
+            {
+                throw new RuntimeException("INSUFFICIENT STOCK: " +  product.getName());
+            }
+
+            product.setStock(currentStock - requestedQuantity);
+            productRepository.save(product);
+
+        }
     }
 
 
