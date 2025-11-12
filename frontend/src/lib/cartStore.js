@@ -38,6 +38,11 @@ export const useCart = create((set, get) => ({
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
                     throw new Error("User please login");
+                } else if (response.status === 400) {
+                    const errorText = await response.text();
+                    throw new Error(`Bad request: ${errorText}`);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
             }
 
@@ -191,5 +196,12 @@ export const useCart = create((set, get) => ({
             weight: backendTotals.weight,
             under_twenty_lbs: backendTotals.under_twenty_lbs
         };
+    },
+
+    // Get quantity of a specific product in cart
+    getProductQuantity: (productId) => {
+        const { items } = get();
+        const item = items.find(item => item.productId === Number(productId) || item.product?.id === Number(productId));
+        return item ? item.qty : 0;
     },
 }));

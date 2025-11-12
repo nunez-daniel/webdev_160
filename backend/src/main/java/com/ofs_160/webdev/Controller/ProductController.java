@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.ofs_160.webdev.Model.Product;
-import com.ofs_160.webdev.Service.ProductService;
+import java.io.IOException;
+import java.util.*;
 
 @RestController
 @CrossOrigin(origins = "http://localhost")
@@ -29,11 +29,43 @@ public class ProductController {
     @Autowired
     ProductService productService;
 
-    // Need... Implement ResponseEntity to return 200 or 404
+
+
+
+
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts()
     {
         return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
+    }
+
+
+
+
+
+
+
+
+    // Need... Implement ResponseEntity to return 200 or 404
+    @GetMapping("/products2")
+    public ResponseEntity<Map<String, Object>> getProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int limit,
+            @RequestParam(name = "search", required = false) String search) {
+
+        if (search == null || search.isBlank()) {
+            // fall back to simple list, first page
+            Map<String, Object> data = productService.smartSearch("", page, limit);
+            return ResponseEntity.ok(data);
+        }
+        Map<String, Object> data = productService.smartSearch(search, page, limit);
+        return ResponseEntity.ok(data);
+    }
+
+    // typeahead suggestions
+    @GetMapping("/products2/suggest")
+    public ResponseEntity<List<Map<String, Object>>> suggest(@RequestParam("q") String q) {
+        return ResponseEntity.ok(productService.suggest(q));
     }
 
     @GetMapping("/products/{id}")
@@ -91,31 +123,7 @@ public class ProductController {
 
     }
 
-    /*@PostMapping("/productsWithImage")
-    public ResponseEntity<?> addProductImage(@RequestPart Product product, @RequestPart MultipartFile imageFile) {
-        try {
-            Product productImage = productService.addProductImage(product, imageFile);
-            return new ResponseEntity<>(productImage, HttpStatus.CREATED);
 
-        } catch (IOException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INSUFFICIENT_STORAGE);
-        }
-    }*/
-
-    /*@GetMapping("products/{productId}/image")
-    public ResponseEntity<byte[]> getImageByProductId(@PathVariable int productId)
-    {
-        Product product = productService.findProductById(productId);
-
-        if(product.getId() > 0)
-        {
-            return new ResponseEntity<>(product.getImageData(), HttpStatus.OK);
-        }
-        else
-        {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-    }*/
 
     @GetMapping("/search")
     public List<Product> searchProducts(@RequestParam String keyword)

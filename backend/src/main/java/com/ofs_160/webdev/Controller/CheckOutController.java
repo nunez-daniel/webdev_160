@@ -69,7 +69,25 @@ public class CheckOutController {
             return ResponseEntity.badRequest().body("Failed handle the request");
         }
 
-        this.webhookService.checkoutVirtualCart(event);
+        try
+        {
+            this.webhookService.checkoutVirtualCart(event);
+        } catch (RuntimeException e)
+        {
+            // check for handling errors temporary
+            if (e.getMessage().startsWith("INSUFFICIENT STOCK"))
+            {
+                System.err.println("STOCK ROLLBACK HANDLED: " + e.getMessage());
+                return ResponseEntity.ok().body("Stock rollback successful. Order not created.");
+            }
+
+            throw e;
+        }
+
+
+
+
+
         return ResponseEntity.ok().body("Success handling request");
     }
 

@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Entity
 @AllArgsConstructor
@@ -19,6 +21,7 @@ public class CartItem {
 
     private int qty;
 
+    private BigDecimal weight;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
@@ -29,11 +32,5 @@ public class CartItem {
     @EqualsAndHashCode.Exclude
     @JsonBackReference
     private VirtualCart virtualCart;
-
-
-
-
-
-
 
 }
