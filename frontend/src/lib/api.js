@@ -118,6 +118,39 @@ export async function registerUser({ full_name, email, password }) {
   throw new Error(`Registration Request failed with status: ${response.status}`);
 }
 
+export async function fetchAllOrders() {
+  const res = await fetch(`${BASE}/orders-all`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch orders (${res.status})`);
+  const text = await res.text();
+  if (!text || text.trim() === "") return [];
+  return JSON.parse(text);
+}
+
+export async function fetchOrdersByStatus(status = "PAID") {
+  const res = await fetch(`${BASE}/orders-all-status?status=${status}`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch orders (${res.status})`);
+  const text = await res.text();
+  if (!text || text.trim() === "") return [];
+  return JSON.parse(text);
+}
+
+export async function fetchOrdersInCar(carId) {
+  const res = await fetch(`${BASE}/loaded/${carId}`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch car orders (${res.status})`);
+  const text = await res.text();
+  if (!text || text.trim() === "") return [];
+  return JSON.parse(text);
+}
+
 
 
 
