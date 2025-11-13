@@ -40,18 +40,31 @@ public class CheckOutController {
 
     @GetMapping({"/new-cart"})
     public ResponseEntity<StripeResponse> handleEvent(@AuthenticationPrincipal CustomerDetails principal) {
+        // Return 401 if user is not authenticated
+        if (principal == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
         String username = principal.getUsername();
         VirtualCart userCart = this.cartService.getVirtualCart(username);
 
+        if (userCart == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
         // stock check before checkout
-        if(productService.checkStock(userCart))
-        {
+        if (productService.checkStock(userCart)) {
             VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
-            StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
-            return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
-        }else
-        {
-            // Need to make this for not stock count there
+            try {
+                StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
+                return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
+            } catch (Exception e) {
+                // Log and return internal server error with no stacktrace to client
+                System.err.println("Error creating Stripe checkout session: " + e.getMessage());
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            // Not enough stock available
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 

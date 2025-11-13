@@ -33,12 +33,18 @@ export default function ProductCard({ product }) {
         {/* Product Image */}
         <div className="relative mb-4">
           <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-50">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-200"
-              loading="lazy"
-            />
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-200"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-gray-300">
+                <span className="text-sm">No image</span>
+              </div>
+            )}
           </div>
           {product.inStock !== false ? (
             <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 text-white border-0">

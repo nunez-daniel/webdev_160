@@ -101,13 +101,14 @@ export default function CartPage() {
             </div>
 
             <Button
-              className="w-full mt-4"
+              className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white"
               onClick={checkoutLink}
               disabled={t.count === 0}
             >
               Checkout
             </Button>
             <Button
+              variant="outline"
               className="w-full mt-4"
               onClick={clear}
               disabled={t.count === 0}

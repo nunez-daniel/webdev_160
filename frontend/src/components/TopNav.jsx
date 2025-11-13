@@ -7,7 +7,7 @@ import {
   useSearchParams,
   Link,
 } from "react-router-dom";
-import { ShoppingCart, Trash2, Settings, Search, MapPin } from "lucide-react";
+import { ShoppingCart, Trash2, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -136,6 +136,7 @@ export default function TopNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   function goSearch(term) {
     const finalTerm = term || value;
@@ -212,6 +213,27 @@ export default function TopNav() {
       setActive(-1);
     }
   }, [value]);
+
+  // detect if current user has ADMIN role via backend /me endpoint
+  useEffect(() => {
+    let mounted = true;
+    fetch("http://localhost:8080/me", { credentials: "include" })
+      .then((res) => res.text())
+      .then((text) => {
+        if (!mounted) return;
+        // backend returns a string containing role or authorities; check for ADMIN
+        if (typeof text === "string" && text.toUpperCase().includes("ADMIN")) {
+          setIsAdmin(true);
+        }
+      })
+      .catch(() => {
+        /* ignore */
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md shadow-sm">
@@ -330,7 +352,7 @@ export default function TopNav() {
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative text-gray-600 hover:text-green-600 transition-colors"
+                  className="relative text-green-600 bg-white hover:text-white hover:bg-green-600 transition-colors"
                 >
                   <ShoppingCart className="h-5 w-5" />
                   {totalItems > 0 && (
@@ -350,25 +372,80 @@ export default function TopNav() {
               </SheetContent>
             </Sheet>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/order-history")}
-              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
+            {/* Map/Robot Tracking (mobile only) remains as a separate button for small screens */}
 
-            {/* Map/Robot Tracking */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/map")}
-              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
-              title="Track Delivery Robot"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
+            {/* Three-dash menu for extra actions */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                >
+                  {/* simple three-dash icon */}
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="3" y="4" width="14" height="2" rx="1"></rect>
+                    <rect x="3" y="9" width="14" height="2" rx="1"></rect>
+                    <rect x="3" y="14" width="14" height="2" rx="1"></rect>
+                  </svg>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2 bg-white text-gray-800">
+                <div className="flex flex-col">
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                    onClick={() => navigate("/order-history")}
+                  >
+                    Orders
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                    onClick={() => navigate("/map")}
+                  >
+                    Track Delivery
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                      onClick={() => navigate("/admin")}
+                    >
+                      Admin Dashboard
+                    </Button>
+                  )}
+                  <Separator />
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                    onClick={async () => {
+                      try {
+                        await fetch("/logout", {
+                          method: "POST",
+                          credentials: "include",
+                          headers: { "X-Requested-With": "XMLHttpRequest" },
+                        });
+                        window.location.href = "/";
+                      } catch (e) {
+                        window.location.href = "/logout";
+                      }
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
