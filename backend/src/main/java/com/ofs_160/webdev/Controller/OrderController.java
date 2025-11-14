@@ -75,10 +75,10 @@ public class OrderController {
 
 
     @GetMapping("/orders-all-status")
-    public ResponseEntity<List<Order>> getAllOrdersStatus()
+    public ResponseEntity<List<Order>> getAllOrdersStatus(@RequestParam(value = "status", defaultValue = "PAID") String status)
     {
 
-        List<Order> orders = orderService.getAllOrdersStatus("PAID");
+        List<Order> orders = orderService.getAllOrdersStatus(status);
 
         if (orders.isEmpty())
         {
