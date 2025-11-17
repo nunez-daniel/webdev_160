@@ -20,7 +20,7 @@ Insert example data by running `db_initialize_data.sql`. This loads the set of e
 
 ## Frontend Setup
 
-Using git clone or unpacking zip navivate to frontend folder  then run following commands terminal.
+Using git clone or unpacking zip navigate to frontend folder  then run following commands terminal.
 ```bash
 ## Frontend Setup
 $ cd frontend
