@@ -25,8 +25,8 @@ public class CartService {
 
     @Autowired
     private VirtualCartRepository virtualCartRepository;
-    
 
+    private int weightItemId = 65;
 
     @Transactional
     public VirtualCart addToCart(String username, int productId, int quantity) {
@@ -94,22 +94,68 @@ public class CartService {
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal fee_weight = new BigDecimal(20);
 
+        CartItem feeItem = null;
         for (CartItem cartItem : virtualCart.getItemsInCart())
         {
             Product product = cartItem.getProduct();
-            BigDecimal quantity = new BigDecimal(cartItem.getQty());
 
-            BigDecimal itemTotal = product.getCost().multiply(quantity);
-            total = total.add(itemTotal);
+            if (product != null) {
+                if (product.getId() == weightItemId) {
+                    feeItem = cartItem;
+                    continue;
+                }
 
-            BigDecimal itemWeight = product.getWeight().multiply(quantity);
-            weight = weight.add(itemWeight);
+                BigDecimal quantity = new BigDecimal(cartItem.getQty());
+
+                BigDecimal itemTotal = product.getCost().multiply(quantity);
+                total = total.add(itemTotal);
+
+                BigDecimal itemWeight = product.getWeight().multiply(quantity);
+                weight = weight.add(itemWeight);
+            }
         }
+
+
+
+        virtualCart.setWeight(weight);
 
         virtualCart.setUnder_twenty_lbs(weight.compareTo(fee_weight) >= 0);
 
+        // add the temp item to the cart since weight is greater 20
+        if(virtualCart.isUnder_twenty_lbs())
+        {
+            if (feeItem == null) {
+                Product feeProduct = getWeightFeeProduct(weightItemId);
+
+                CartItem newFeeItem = new CartItem();
+                newFeeItem.setQty(1);
+                newFeeItem.setProduct(feeProduct);
+                newFeeItem.setWeight(new BigDecimal(0));
+                newFeeItem.setVirtualCart(virtualCart);
+
+                virtualCart.getItemsInCart().add(newFeeItem);
+
+                total = total.add(feeProduct.getCost());
+
+            }else
+            {
+                total = total.add(feeItem.getProduct().getCost());
+            }
+        }else
+        {
+            if (feeItem != null)
+            {
+                virtualCart.getItemsInCart().remove(feeItem);
+                feeItem.setVirtualCart(null);
+            }
+        }
+
         virtualCart.setSubtotal(total);
-        virtualCart.setWeight(weight);
+
+    }
+
+    private Product getWeightFeeProduct(int weightItemId) {
+        return productRepository.findById(weightItemId).orElse(null);
     }
 
 
