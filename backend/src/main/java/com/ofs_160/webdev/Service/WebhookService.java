@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class WebhookService {
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(newOrder);
             orderItem.setProductName(item.getDescription());
-            orderItem.setImageUrl(item.getPrice().getProductObject().getImages().getFirst());
+            orderItem.setImageUrl(item.getPrice().getProductObject().getImages().get(0));
             orderItem.setQuantity(item.getQuantity());
 
             String name = item.getDescription();

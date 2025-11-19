@@ -103,10 +103,9 @@ class CartServiceTest {
           NullPointerException.class, 
           () -> cartService.addToCart("noone", 1, 1)
         ); 
-        assertTrue(thrown.getMessage().contains("Customer not found"));
+        assertTrue(thrown.getMessage().contains("customer not found in cs"));
     }
 
-    // getVirtualCart
     @Test
     void getVirtualCart_createsNewIfNoneExists() {
         customer.setVirtualCart(null);

@@ -112,6 +112,7 @@ public class CustomerController {
     @GetMapping("/me")
     public String getPrincipalInfo(@AuthenticationPrincipal CustomerDetails principal) {
 
+        
         String username = principal.getUsername();
         String full_name = principal.getCustomer().getFull_name();
         //String last_name = principal.getCustomer().getLast_name();

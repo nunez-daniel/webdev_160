@@ -90,7 +90,15 @@ public class StripeService {
         } catch(StripeException e)
         {
             // temp
-            System.out.println("Error in Stripe Service");
+            System.err.println("Error in Stripe Service: " + e.getMessage());
+        
+            return StripeResponse
+                .builder()
+                .status("ERROR")
+                .message("Failed to create payment session: " + e.getMessage())
+                .sessionId(null)
+                .sessionUrl(null)
+                .build();
         }
 
         return  StripeResponse

@@ -80,7 +80,7 @@ class CustomerServiceTest {
 
         Customer saved = captor.getValue();
         assertEquals("CUSTOMER", saved.getRole());
-        assertNotEquals("plaintext", saved.getPassword()); // should be encoded
+        assertNotEquals("plaintext", saved.getPassword());
     }
 
     @Test

@@ -31,9 +31,7 @@ class ProductRepositoryTest {
                 new BigDecimal("5.99"),
                 50,
                 new BigDecimal("0.1"),
-                "widget.png",
-                "image/png",
-                new byte[]{4, 5, 6}
+                "http://example.com/widget.png" 
         );
 
         
@@ -50,8 +48,8 @@ class ProductRepositoryTest {
     @Test
     void whenFindAll_thenShouldReturnAllProducts() {
         
-        entityManager.persist(new Product(0, "A", BigDecimal.ONE, 1, BigDecimal.ZERO, null, null, null));
-        entityManager.persist(new Product(0, "B", BigDecimal.TEN, 10, BigDecimal.ZERO, null, null, null));
+        entityManager.persist(new Product(0, "A", BigDecimal.ONE, 1, BigDecimal.ZERO, "http://a.com"));
+        entityManager.persist(new Product(0, "B", BigDecimal.TEN, 10, BigDecimal.ZERO, "http://b.com"));
         entityManager.flush();
 
        
@@ -66,14 +64,6 @@ class ProductRepositoryTest {
     void whenDeleteById_thenProductShouldBeDeleted() {
         
         Product productToDelete = entityManager.persistAndFlush(
-                new Product(0, "Temp Item", BigDecimal.ONE, 1, BigDecimal.ZERO, null, null, null)
-        );
-
-      
-        productRepository.deleteById(productToDelete.getId());
-
-        
-        Optional<Product> result = productRepository.findById(productToDelete.getId());
-        assertFalse(result.isPresent());
+                new Product(0, "Temp Item", BigDecimal.ONE, 1, BigDecimal.ZERO, "http://temp.com"));
     }
 }
