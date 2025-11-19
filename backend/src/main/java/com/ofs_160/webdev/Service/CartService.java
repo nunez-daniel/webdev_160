@@ -7,6 +7,7 @@ import com.ofs_160.webdev.Model.VirtualCart;
 import com.ofs_160.webdev.Repository.CustomerRepository;
 import com.ofs_160.webdev.Repository.ProductRepository;
 import com.ofs_160.webdev.Repository.VirtualCartRepository;
+import com.ofs_160.webdev.ExceptionHandler.CustomerNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -159,14 +160,14 @@ public class CartService {
     }
 
 
-    public VirtualCart getVirtualCart(String username) {
+    public VirtualCart getVirtualCart(String username) throws CustomerNotFoundException {
         Customer customer = customerRepository.findByUsername(username);
 
         if(customer == null)
         {
             // customers logged in and shouldn't have access
             System.out.println("404 cs");
-            throw new IllegalArgumentException("customer not found in cs");
+            throw new CustomerNotFoundException("Customer not found with username: " + username);
         }
 
         VirtualCart virtualCart = customer.getVirtualCart();

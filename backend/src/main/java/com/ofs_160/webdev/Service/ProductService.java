@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import com.ofs_160.webdev.ExceptionHandler.ProductNotFoundException;
+import com.ofs_160.webdev.ExceptionHandler.InsufficientStockException;
 
 import java.util.*;
 
@@ -82,24 +84,19 @@ public class ProductService {
     }
 
 
-    public boolean productCheckStock(String username, int productId, int quantity) {
+    public boolean productCheckStock(String username, int productId, int quantity) throws ProductNotFoundException, InsufficientStockException{
 
         // temp null
-        Product product = productRepository.findById(productId).orElse(null);
+        Product product = productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + productId));
 
-        if(product == null)
-        {
-            System.out.println("productCheck Stock error");
-            return false;
-        }
 
         int quantityAlreadyInCart = cartService.getQuantityInCart(productId, username);
         int newTotalQuantity = quantityAlreadyInCart + quantity;
 
         if(product.getStock() < newTotalQuantity)
         {
-            System.out.println("Not enough stock");
-            return false;
+            System.out.println("Not enough stock (Service Layer)");
+            throw new InsufficientStockException("Cannot add " + quantity + " items to cart.", product.getStock());
         }
 
 
