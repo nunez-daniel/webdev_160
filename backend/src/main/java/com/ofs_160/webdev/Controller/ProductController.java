@@ -24,16 +24,23 @@ public class ProductController {
 
 
 
-    @GetMapping("/products")
-    public ResponseEntity<List<Product>> getProducts()
+    @GetMapping("/products3")
+    public ResponseEntity<List<Product>> getProducts3()
     {
         return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
     }
 
+    @GetMapping("/products")
+    public ResponseEntity<List<Product>> getProducts()
+    {
+        List<Product> filteredProducts = productService.getAllProductsWithoutFeeItem();
+        if (filteredProducts.isEmpty())
+        {
+            return new ResponseEntity<>(filteredProducts, HttpStatus.NO_CONTENT);
+        }
 
-
-
-
+        return new ResponseEntity<>(filteredProducts, HttpStatus.OK);
+    }
 
 
 
@@ -98,20 +105,43 @@ public class ProductController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/product-manager-access")
-    public ResponseEntity<String> updateProduct(@RequestBody Product product)
+    public ResponseEntity<String> updateProduct(@RequestBody java.util.Map<String, Object> payload)
     {
+        // Expect payload to contain an 'id' and any fields to update. This is a defensive partial-update
+        Object idObj = payload.get("id");
+        if (idObj == null) return new ResponseEntity<>("Missing id", HttpStatus.BAD_REQUEST);
 
-        Product p = productService.findProductById(product.getId());
-        if(p != null)
-        {
-            productService.updateProduct(product);
-            return new ResponseEntity<>("Product Updated", HttpStatus.OK);
-        } else
-        {
-            // No product found to update
+        int id;
+        try {
+            id = ((Number) idObj).intValue();
+        } catch (ClassCastException ex) {
+            id = Integer.parseInt(idObj.toString());
+        }
+
+        Product existing = productService.findProductById(id);
+        if (existing == null) {
             return new ResponseEntity<>("Product NOT Updated", HttpStatus.NOT_FOUND);
         }
 
+        // Update only fields present in payload
+        if (payload.containsKey("name")) existing.setName((String) payload.get("name"));
+        if (payload.containsKey("imageUrl")) existing.setImageUrl((String) payload.get("imageUrl"));
+        if (payload.containsKey("cost") && payload.get("cost") != null) {
+            existing.setCost(new java.math.BigDecimal(payload.get("cost").toString()));
+        }
+        if (payload.containsKey("weight") && payload.get("weight") != null) {
+            existing.setWeight(new java.math.BigDecimal(payload.get("weight").toString()));
+        }
+        if (payload.containsKey("stock") && payload.get("stock") != null) {
+            try {
+                existing.setStock(((Number) payload.get("stock")).intValue());
+            } catch (ClassCastException ex) {
+                existing.setStock(Integer.parseInt(payload.get("stock").toString()));
+            }
+        }
+
+        productService.updateProduct(existing);
+        return new ResponseEntity<>("Product Updated", HttpStatus.OK);
     }
 
 

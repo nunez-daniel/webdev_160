@@ -194,4 +194,8 @@ public class ProductService {
     }
 
 
+    public List<Product> getAllProductsWithoutFeeItem() {
+        final int FEE_PRODUCT_ID = 65;
+        return productRepository.findByIdNot(FEE_PRODUCT_ID);
+    }
 }

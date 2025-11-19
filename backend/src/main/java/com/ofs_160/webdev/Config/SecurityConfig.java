@@ -42,13 +42,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(req -> req
 
+                        .requestMatchers(HttpMethod.GET, "/products/65").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{id}", "products/{productId}/image").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/signup").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/orders").hasAnyAuthority("CUSTOMER")
-                        .requestMatchers(HttpMethod.GET,"/orders-all").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/orders").hasAnyAuthority("CUSTOMER", "ADMIN")
                         .requestMatchers(HttpMethod.GET,"/products2").permitAll()
                         .requestMatchers(HttpMethod.GET,"/products2/suggest").permitAll()
 

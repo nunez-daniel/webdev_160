@@ -1,6 +1,7 @@
 package com.ofs_160.webdev.Model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,7 +27,9 @@ public class Customer {
     @Column(unique = true)
     private String username;
 
+    @JsonIgnore
     private String password;
+
     private String role;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)

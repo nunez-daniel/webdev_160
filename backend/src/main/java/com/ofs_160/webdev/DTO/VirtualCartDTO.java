@@ -5,6 +5,7 @@ import com.ofs_160.webdev.Model.VirtualCart;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Data
@@ -18,6 +19,9 @@ public class VirtualCartDTO {
     private Long customerId;
 
     private List<CartItemDTO> items;
+
+
+    private static final String FEE_ITEM_ID = "65";
 
     public VirtualCartDTO(VirtualCart cart)
     {
@@ -36,6 +40,11 @@ public class VirtualCartDTO {
         {
             dtoList.add(new CartItemDTO(item));
         }
+
+        dtoList.sort(Comparator.comparing(
+                item -> FEE_ITEM_ID.equals(item.getId()) ? 1 : 0
+        ));
+
         this.items = dtoList;
     }
 }

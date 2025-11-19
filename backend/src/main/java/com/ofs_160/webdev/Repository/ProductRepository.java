@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
 
+    // check for using public variables in project structure
+    int FEE_ITEM = 65;
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.name = :name")
     Product findByNameWithLock(@Param("name") String name);
@@ -25,9 +28,12 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     // Primary search: exact/partial + phonetic match
     @Query(value = """
       SELECT * FROM product p
-      WHERE 
+      WHERE
+        p.id <> FEE_ITEM
+        AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
+        )
       ORDER BY
         CASE 
           WHEN LOWER(p.name) = LOWER(:q) THEN 0
@@ -46,8 +52,11 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query(value = """
       SELECT COUNT(*) FROM product p
       WHERE 
+        p.id <> FEE_ITEM
+        AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
+        )      
       """, nativeQuery = true)
     long smartSearchCount(@Param("q") String q);
 
@@ -56,11 +65,15 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       SELECT p.id, p.name 
       FROM product p
       WHERE 
+        p.id <> FEE_ITEM
+        AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
+        )
       ORDER BY p.stock DESC, p.name ASC
       LIMIT 10
       """, nativeQuery = true)
     List<Object[]> suggest(@Param("q") String q);
 
+    List<Product> findByIdNot(int feeProductId);
 }
