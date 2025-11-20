@@ -1,8 +1,8 @@
 import { create } from "zustand";
+import { getFeeProductId } from "@/lib/config";
 
 const API_BASE_URL = "http://localhost:8080";
 
-const FEE_PRODUCT_ID = 65;
 
 
 function money(n) {
@@ -14,6 +14,8 @@ let toastFunction = null;
 export const setToastFunction = (fn) => {
   toastFunction = fn;
 };
+
+
 
 const showToast = (title, description, variant = "destructive") => {
   if (toastFunction) {
@@ -231,9 +233,11 @@ export const useCart = create((set, get) => ({
   totals: () => {
     const { items, backendTotals } = get();
 
-    const fixedFeeItem = items.find((i) => i.id === 65 || i.name === "Over 20 Lbs Robot Fee");
+    const feeProductId = getFeeProductId();
+
+    const fixedFeeItem = items.find((i) => i.id === feeProductId);
     const fixedFeeAmount = fixedFeeItem ? money(fixedFeeItem.price * fixedFeeItem.qty) : 0;
-    const count = items.filter(i => i.id !== FEE_PRODUCT_ID).reduce((n, i) => n + i.qty, 0);
+    const count = items.filter(i => i.id !== feeProductId).reduce((n, i) => n + i.qty, 0);
 
     const rawBackendSubtotal = money(backendTotals.subtotal);
     const displaySubtotal = money(rawBackendSubtotal - fixedFeeAmount);

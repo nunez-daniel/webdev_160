@@ -7,6 +7,7 @@ import com.ofs_160.webdev.Model.VirtualCart;
 import org.apache.commons.text.similarity.FuzzyScore;
 import com.ofs_160.webdev.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,9 @@ public class ProductService {
 
     @Autowired
     CartService cartService;
+
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -121,16 +125,16 @@ public class ProductService {
     public Map<String, Object> smartSearch(String q, int page, int limit) {
         int offset = (page - 1) * limit;
 
-        List<Product> items = productRepository.smartSearch(q, limit, offset);
-        long total = productRepository.smartSearchCount(q);
+        List<Product> items = productRepository.smartSearch(q, limit, offset, customFeeId);
+        long total = productRepository.smartSearchCount(q, customFeeId);
 
         // If we didn’t find much, try autocorrect
         String corrected = null;
         if (total == 0) {
             corrected = guessCorrection(q);
             if (corrected != null && !corrected.equalsIgnoreCase(q)) {
-                items = productRepository.smartSearch(corrected, limit, offset);
-                total = productRepository.smartSearchCount(corrected);
+                items = productRepository.smartSearch(corrected, limit, offset, customFeeId);
+                total = productRepository.smartSearchCount(corrected, customFeeId);
             }
         }
 
@@ -142,7 +146,7 @@ public class ProductService {
     }
 
     public List<Map<String, Object>> suggest(String q) {
-        List<Object[]> rows = productRepository.suggest(q);
+        List<Object[]> rows = productRepository.suggest(q, customFeeId);
         List<Map<String, Object>> out = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new HashMap<>();
@@ -155,7 +159,7 @@ public class ProductService {
 
     private String guessCorrection(String q) {
         // pull a small candidate pool to score against (cheap + good enough)
-        List<Object[]> candidates = productRepository.suggest(q);
+        List<Object[]> candidates = productRepository.suggest(q, customFeeId);
         if (candidates.isEmpty()) return null;
 
         FuzzyScore scorer = new FuzzyScore(Locale.ENGLISH);
@@ -205,9 +209,7 @@ public class ProductService {
         }
     }
 
-    public List<Product> getAllProductsWithoutFeeItem() {
-
-        final int FEE_PRODUCT_ID = 65;
+    public List<Product> getAllProductsWithoutFeeItem(int FEE_PRODUCT_ID) {
 
         return productRepository.findByIdNot(FEE_PRODUCT_ID);
 

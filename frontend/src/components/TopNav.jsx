@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { getFeeProductId } from "@/lib/config";
 import {
   useNavigate,
   useLocation,
@@ -49,6 +50,7 @@ function CartSummary() {
 
   const navigate = useNavigate();
 
+
   return (
       <div className="p-4 space-y-3">
         <div className="flex justify-between text-sm">
@@ -77,18 +79,19 @@ function CartSummary() {
 
 function VirtualCartComponent() {
   const { items = [], remove, updateQty } = useCart();
-
+  const feeId = getFeeProductId();
   if (!Array.isArray(items) || items.length === 0) {
     return (
         <div className="p-4 text-center text-gray-500">Your cart is empty</div>
     );
   }
 
+
   return (
       <div className="p-4">
         {items.map((item) => {
 
-          const isFeeProduct = item.id === 65 || item.name === "Over 20 Lbs Robot Fee";
+          const isFeeProduct = item.id === feeId;
           return (
               <div
                   key={item.id}

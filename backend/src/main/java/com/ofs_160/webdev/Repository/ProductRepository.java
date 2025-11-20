@@ -9,13 +9,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-
-    // check for using public variables in project structure
-    int FEE_ITEM = 65;
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.name = :name")
@@ -29,7 +25,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query(value = """
       SELECT * FROM product p
       WHERE
-        p.id <> 65
+        p.id <> :customFeeId
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -47,25 +43,25 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             nativeQuery = true)
     List<Product> smartSearch(@Param("q") String q,
                               @Param("limit") int limit,
-                              @Param("offset") int offset);
+                              @Param("offset") int offset, @Param("customFeeId") int customFeeId);
 
     @Query(value = """
       SELECT COUNT(*) FROM product p
       WHERE 
-        p.id <> 65
+        p.id <> :customFeeId
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
         )      
       """, nativeQuery = true)
-    long smartSearchCount(@Param("q") String q);
+    long smartSearchCount(@Param("q") String q, @Param("customFeeId") int customFeeId);
 
     // Lightweight suggest results for typeahead (top 10)
     @Query(value = """
       SELECT p.id, p.name 
       FROM product p
       WHERE 
-        p.id <> 65
+        p.id <> :customFeeId
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -73,7 +69,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       ORDER BY p.stock DESC, p.name ASC
       LIMIT 10
       """, nativeQuery = true)
-    List<Object[]> suggest(@Param("q") String q);
+    List<Object[]> suggest(@Param("q") String q, @Param("customFeeId") int customFeeId);
 
     List<Product> findByIdNot(int feeProductId);
 }

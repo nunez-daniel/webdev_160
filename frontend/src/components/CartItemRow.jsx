@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/lib/cartStore";
 import { X, Heart } from "lucide-react";
+import { getFeeProductId } from "@/lib/config";
 
 export default function CartItemRow({ item }) {
     const { updateQty, remove, saveForLater } = useCart();
 
-    const FEE_PRODUCT_ID = 65;
+    const FEE_PRODUCT_ID = getFeeProductId();
     const isFeeItem = item.id === FEE_PRODUCT_ID || item.name.includes("Robot Fee");
 
     return (

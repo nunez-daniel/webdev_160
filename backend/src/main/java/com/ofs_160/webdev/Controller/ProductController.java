@@ -4,11 +4,13 @@ package com.ofs_160.webdev.Controller;
 import com.ofs_160.webdev.Model.Product;
 import com.ofs_160.webdev.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,8 +22,8 @@ public class ProductController {
     @Autowired
     ProductService productService;
 
-
-
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
 
     @GetMapping("/products3")
@@ -33,7 +35,9 @@ public class ProductController {
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts()
     {
-        List<Product> filteredProducts = productService.getAllProductsWithoutFeeItem();
+        // System.out.println(customFeeId);
+
+        List<Product> filteredProducts = productService.getAllProductsWithoutFeeItem(customFeeId);
         if (filteredProducts.isEmpty())
         {
             return new ResponseEntity<>(filteredProducts, HttpStatus.NO_CONTENT);
@@ -69,6 +73,12 @@ public class ProductController {
     @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable int id)
     {
+
+        if (id == customFeeId)
+        {
+            // Dont let our people accesss the fee item
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found.");
+        }
 
         Product p = productService.findProductById(id);
         if(p == null)

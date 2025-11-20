@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 public class CheckOutController {
     @Autowired
@@ -51,6 +53,17 @@ public class CheckOutController {
 
         if (userCart == null)
         {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+
+        BigDecimal weightMax = cartService.getVirtualCart(username).getWeight();
+
+        int intWightMax = weightMax.intValue();
+
+        if (intWightMax > 200) {
+            // note this shouldnt happen due to hadnling weight of products in cart < 200 but to be redundant
+            System.err.println("Checkout failed: Cart weight (" + weightMax + " lbs) exceeds limit.");
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 

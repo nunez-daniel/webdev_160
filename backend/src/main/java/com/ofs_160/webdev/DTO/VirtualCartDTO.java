@@ -3,6 +3,8 @@ package com.ofs_160.webdev.DTO;
 import com.ofs_160.webdev.Model.CartItem;
 import com.ofs_160.webdev.Model.VirtualCart;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,7 +23,8 @@ public class VirtualCartDTO {
     private List<CartItemDTO> items;
 
 
-    private static final String FEE_ITEM_ID = "65";
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
     public VirtualCartDTO(VirtualCart cart)
     {
@@ -41,8 +44,9 @@ public class VirtualCartDTO {
             dtoList.add(new CartItemDTO(item));
         }
 
+        String val = Integer.toString(customFeeId);
         dtoList.sort(Comparator.comparing(
-                item -> FEE_ITEM_ID.equals(item.getId()) ? 1 : 0
+                item -> val.equals(item.getId()) ? 1 : 0
         ));
 
         this.items = dtoList;

@@ -267,7 +267,7 @@ export default function ProductDetailPage() {
                                     alert("Please log in to add items to your cart");
                                   } else if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
                                     const text = msg.replace(/^Bad request:\s*/i, "");
-                                    setDialogMessage(text || "Not enough stock");
+                                    setDialogMessage(text || "Not enough stock or weight of cart exceeded");
                                     setDialogOpen(true);
                                     setLocalQty(0);
                                   } else {
