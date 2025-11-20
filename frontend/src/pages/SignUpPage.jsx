@@ -27,9 +27,6 @@ export default function SignUpPage() {
     const isPasswordValid = Object.values(checks).every((c) => c === true);
 
     if (!isPasswordValid) {
-      alert(
-        "Please ensure your password meets all requirements before submitting."
-      );
       setVisible(true);
       return;
     }
@@ -37,14 +34,10 @@ export default function SignUpPage() {
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
-        alert("Account created successfully! Please login.");
         navigate("/");
       } else {
-        alert("Username already taken");
       }
-    } catch (err) {
-      alert("Signup failed");
-    }
+    } catch (err) {}
   }
 
   function checkPassword(pw) {

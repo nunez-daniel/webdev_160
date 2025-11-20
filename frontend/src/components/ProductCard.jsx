@@ -141,11 +141,7 @@ export default function ProductCard({ product }) {
                 error.message.includes("401") ||
                 error.message.includes("403")
               ) {
-                alert("Please log in to add items to your cart");
               } else {
-                alert(
-                  `Failed to add ${product.name} to cart. Please try again.`
-                );
               }
             }
           }}

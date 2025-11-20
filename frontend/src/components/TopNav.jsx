@@ -179,7 +179,7 @@ export default function TopNav() {
   const [recording, setRecording] = useState(false);
   function handleClick(e) {
     if (!("webkitSpeechRecognition" in window)) {
-      alert("Your browser does not support voice recognition");
+      return;
     }
     const recognition = new window.webkitSpeechRecognition();
     recognition.interimResults = false;

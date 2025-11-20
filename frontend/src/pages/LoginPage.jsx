@@ -25,11 +25,8 @@ export default function LoginPage() {
       if (user) {
         navigate("/catalog");
       } else {
-        alert("User not found");
       }
-    } catch (err) {
-      alert("Login failed");
-    }
+    } catch (err) {}
   }
 
   const handleGoogleLogin = () => {
