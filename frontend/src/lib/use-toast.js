@@ -2,6 +2,7 @@ import { useState } from "react"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
+const TOAST_AUTO_DISMISS_DELAY = 30000
 
 let count = 0
 
@@ -113,6 +114,10 @@ function toast({ ...props }) {
       },
     },
   })
+
+  setTimeout(() => {
+    dismiss()
+  }, TOAST_AUTO_DISMISS_DELAY)
 
   return {
     id: id,
