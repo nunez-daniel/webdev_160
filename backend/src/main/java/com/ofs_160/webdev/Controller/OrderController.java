@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.ofs_160.webdev.ExceptionHandler.OrderNotFoundException;
 
 import java.security.Principal;
 import java.util.List;
@@ -44,13 +45,8 @@ public class OrderController {
 
         String principalName = principal.getName();
         Order order = orderService.getOrderByNameAndId(principalName, orderId);
-
-        if (order == null)
-        {
             // need to handle error code to attempt to reach other users orders
             // temp build also need to check emails exists although ofc they should be logged in
-            return ResponseEntity.noContent().build();
-        }
 
         return ResponseEntity.ok(order);
     }
@@ -95,15 +91,16 @@ public class OrderController {
         // Check if a permanent order was created in the database
         Order order = orderService.findByStripeSessionId(sessionId);
 
-        if (order == null)
-        {
+        try {
+        orderService.findByStripeSessionId(sessionId);
+
+        return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
+                .header("Location", "http://localhost:5173/order-history")
+                .build();
+
+        } catch (OrderNotFoundException e) {
             return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
                     .header("Location", "http://localhost:5173/stock-insufficient")
-                    .build();
-        } else
-        {
-            return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
-                    .header("Location", "http://localhost:5173/order-history")
                     .build();
         }
     }

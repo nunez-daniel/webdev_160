@@ -62,15 +62,8 @@ public class ProductController {
     @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable int id)
     {
-
         Product p = productService.findProductById(id);
-        if(p == null)
-        {
-            return ResponseEntity.notFound().build(); // 404
-        }else
-        {
-            return ResponseEntity.ok(p);
-        }
+        return ResponseEntity.ok(p);
 
     }
 
@@ -78,15 +71,8 @@ public class ProductController {
     @DeleteMapping("/product-manager-access/{id}")
     public ResponseEntity<String> deleteProductById(@PathVariable int id)
     {
-        Product p = productService.findProductById(id);
-        if(p != null)
-        {
-            productService.deleteProductById(id);
-            return new ResponseEntity<>("Product Deleted", HttpStatus.OK);
-        } else
-        {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        productService.deleteProductById(id);
+        return new ResponseEntity<>("Product Deleted", HttpStatus.OK);
     }
 
     @PostMapping("/products")
@@ -99,18 +85,9 @@ public class ProductController {
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/product-manager-access")
     public ResponseEntity<String> updateProduct(@RequestBody Product product)
-    {
-
-        Product p = productService.findProductById(product.getId());
-        if(p != null)
-        {
-            productService.updateProduct(product);
-            return new ResponseEntity<>("Product Updated", HttpStatus.OK);
-        } else
-        {
-            // No product found to update
-            return new ResponseEntity<>("Product NOT Updated", HttpStatus.NOT_FOUND);
-        }
+    { 
+        productService.updateProduct(product);
+        return new ResponseEntity<>("Product Updated", HttpStatus.OK);
 
     }
 

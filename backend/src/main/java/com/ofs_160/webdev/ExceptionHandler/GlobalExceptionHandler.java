@@ -4,14 +4,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.ofs_160.webdev.DTO.ErrorResponse;
+import org.springframework.dao.DataAccessException;
 import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
     
-    @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCustomerNotFound(CustomerNotFoundException ex) {
-        ErrorResponse error = new ErrorResponse("CUSTOMER_NOT_FOUND", ex.getMessage());
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse("RESOURCE_NOT_FOUND", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
     
@@ -31,9 +32,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorDetails);
     }
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleProductNotFound(ProductNotFoundException ex) {
-        ErrorResponse error = new ErrorResponse("PRODUCT_NOT_FOUND", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException ex) {
+        System.err.println("Database Access Error: " + ex.getMessage()); 
+        
+        ErrorResponse error = new ErrorResponse("DB_OPERATION_FAILED", 
+                                      "An error occurred while processing the request against the database.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error); 
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAllUncaughtErrors(Exception ex) {
+        System.err.println("UNCAUGHT SERVER ERROR: " + ex.getMessage());
+        ex.printStackTrace();
+        
+        ErrorResponse error = new ErrorResponse("UNEXPECTED_ERROR", 
+                                                "An unexpected error occurred. Please contact support.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error); 
+    }
+
 }

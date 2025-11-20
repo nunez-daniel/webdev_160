@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.ofs_160.webdev.ExceptionHandler.OrderNotFoundException;
+import com.ofs_160.webdev.ExceptionHandler.DeliveryCarNotFoundException;
+
 
 import java.util.List;
 
@@ -24,11 +27,11 @@ public class DeliveryService {
 
         // TODO... Error handling
         Order order = orderRepository.findById(Math.toIntExact(orderId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found with ID: " + orderId));
+                .orElseThrow(() -> new OrderNotFoundException(Long.toString(orderId)));
 
         // This line throws the exception if deliveryCarId is invalid
         DeliveryCar deliveryCar = deliveryRepository.findById(Math.toIntExact(carId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Delivery Car not found with ID: " + carId));
+                .orElseThrow(() -> new DeliveryCarNotFoundException(carId));
         order.setDeliveryCar(deliveryCar);
 
         order.setPaymentStatus("In car now");

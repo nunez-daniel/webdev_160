@@ -30,10 +30,16 @@ public class ProductService {
 
     // Need to make this not return null if not found
     public Product findProductById(int id) {
+        if(!productRepository.existsById(id)) {
+            throw new ProductNotFoundException(Integer.toString(id));
+        }
         return productRepository.findById(id).orElse(null);
     }
 
     public void deleteProductById(int id) {
+        if(!productRepository.existsById(id)) {
+            throw new ProductNotFoundException(Integer.toString(id));
+        }
         productRepository.deleteById(id);
     }
 
@@ -42,6 +48,9 @@ public class ProductService {
     }
 
     public void updateProduct(Product product) {
+        if(!productRepository.existsById(product.getId())) {
+            throw new ProductNotFoundException(product.getName());
+        }
         productRepository.save(product);
     }
 
@@ -173,7 +182,7 @@ public class ProductService {
             if (product == null)
             {
                 // check is inside db
-                throw new RuntimeException("Product is not found: " + item.getProductName());
+                throw new ProductNotFoundException(item.getProductName());
             }
 
             int requestedQuantity = Math.toIntExact(item.getQuantity());
@@ -181,7 +190,7 @@ public class ProductService {
 
             if (currentStock < requestedQuantity)
             {
-                throw new RuntimeException("INSUFFICIENT STOCK: " +  product.getName());
+                throw new InsufficientStockException("INSUFFICIENT STOCK: " +  product.getName(), currentStock);
             }
 
             product.setStock(currentStock - requestedQuantity);

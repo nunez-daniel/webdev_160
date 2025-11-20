@@ -36,13 +36,7 @@ public class CustomerController {
     {
 
         Customer c = customerService.findCustomerById(id);
-        if(c == null)
-        {
-            return ResponseEntity.notFound().build(); // 404
-        }else
-        {
-            return ResponseEntity.ok(c);
-        }
+        return ResponseEntity.ok(c);
 
     }
 
@@ -50,16 +44,8 @@ public class CustomerController {
     @DeleteMapping("/customer/{id}")
     public ResponseEntity<String> deleteCustomerById(@PathVariable int id)
     {
-        Customer c  = customerService.findCustomerById(id);
-
-        if(c != null)
-        {
-            customerService.deleteCustomerById(id);
-            return new ResponseEntity<>("Customer Deleted", HttpStatus.OK);
-        }else
-        {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        customerService.deleteCustomerById(id);
+        return new ResponseEntity<>("Customer Deleted", HttpStatus.OK);
     }
 
 
@@ -78,15 +64,8 @@ public class CustomerController {
     public ResponseEntity<String> updateCustomer(@RequestBody Customer customer)
     {
         Customer c = customerService.findCustomerById(customer.getCustomer_id());
-        if(c != null)
-        {
-            customerService.updateCustomer(customer);
-            return new ResponseEntity<>("Customer Updated", HttpStatus.OK);
-        } else
-        {
-            // No customer found to update
-            return new ResponseEntity<>("Customer NOT Updated", HttpStatus.NOT_FOUND);
-        }
+        customerService.updateCustomer(customer);
+        return new ResponseEntity<>("Customer Updated", HttpStatus.OK);
     }
 
     // Need response entity pattern

@@ -11,6 +11,7 @@ import com.ofs_160.webdev.ExceptionHandler.CustomerNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ofs_160.webdev.ExceptionHandler.ProductNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -35,11 +36,11 @@ public class CartService {
 
         if (customer == null)
         {
-            throw new NullPointerException("customer not found in cs");
+            throw new CustomerNotFoundException("customer not found in cs");
         }
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("product not found: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException("product not found: " + productId));
 
         VirtualCart virtualCart = customer.getVirtualCart();
 
@@ -167,7 +168,7 @@ public class CartService {
         {
             // customers logged in and shouldn't have access
             System.out.println("404 cs");
-            throw new CustomerNotFoundException("Customer not found with username: " + username);
+            throw new CustomerNotFoundException(username);
         }
 
         VirtualCart virtualCart = customer.getVirtualCart();
@@ -215,7 +216,7 @@ public class CartService {
 
         } else
         {
-            throw new RuntimeException("cant set quantity: productID " + productId + " not found in cart.");
+            throw new ProductNotFoundException(productId);
         }
     }
 
@@ -225,7 +226,7 @@ public class CartService {
         Customer customer = customerRepository.findByUsername(username);
         if (customer == null) {
             // NTS: allow users to view products once they click on individual product ask them to nicely login
-            throw new RuntimeException("Customer not found for username: " + username);
+            throw new CustomerNotFoundException(username);
         }
         VirtualCart virtualCart = customer.getVirtualCart();
         if (virtualCart == null) {
@@ -247,7 +248,7 @@ public class CartService {
         Customer customer = customerRepository.findByUsername(username);
         if (customer == null) {
             // NTS: allow users to view products once they click on individual product ask them to nicely login
-            throw new RuntimeException("Customer not found for username: " + username);
+            throw new CustomerNotFoundException(username);
         }
         VirtualCart virtualCart = customer.getVirtualCart();
         if (virtualCart == null) {
@@ -286,7 +287,7 @@ public class CartService {
         Customer customer = customerRepository.findByUsername(username);
         if (customer == null) {
             // NTS: allow users to view products once they click on individual product ask them to nicely login
-            throw new RuntimeException("Customer not found for username: " + username);
+            throw new CustomerNotFoundException(username);
         }
 
         VirtualCart virtualCart = customer.getVirtualCart();

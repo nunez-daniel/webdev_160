@@ -44,16 +44,9 @@ public class CheckOutController {
         VirtualCart userCart = this.cartService.getVirtualCart(username);
 
         // stock check before checkout
-        if(productService.checkStock(userCart))
-        {
-            VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
-            StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
-            return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
-        }else
-        {
-            // Need to make this for not stock count there
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
+        StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
+        return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
 
 
 
@@ -69,25 +62,7 @@ public class CheckOutController {
             return ResponseEntity.badRequest().body("Failed handle the request");
         }
 
-        try
-        {
-            this.webhookService.checkoutVirtualCart(event);
-        } catch (RuntimeException e)
-        {
-            // check for handling errors temporary
-            if (e.getMessage().startsWith("INSUFFICIENT STOCK"))
-            {
-                System.err.println("STOCK ROLLBACK HANDLED: " + e.getMessage());
-                return ResponseEntity.ok().body("Stock rollback successful. Order not created.");
-            }
-
-            throw e;
-        }
-
-
-
-
-
+        this.webhookService.checkoutVirtualCart(event);
         return ResponseEntity.ok().body("Success handling request");
     }
 

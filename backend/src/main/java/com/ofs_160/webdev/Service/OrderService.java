@@ -7,8 +7,9 @@ import com.ofs_160.webdev.Repository.CustomerRepository;
 import com.ofs_160.webdev.Repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.ofs_160.webdev.ExceptionHandler.CustomerNotFoundException;
+import com.ofs_160.webdev.ExceptionHandler.OrderNotFoundException;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -21,14 +22,18 @@ public class OrderService {
 
 
     public List<Order> getOrders(String principalName) {
-        Customer customer = customerRepository.findByEmail(principalName);
+        Customer customer = customerRepository.findByEmail(principalName)
+            .orElseThrow(() -> new CustomerNotFoundException(principalName));
 
         return orderRepository.findByCustomer(customer);
     }
 
     public Order getOrderByNameAndId(String principalName, Long orderId) {
 
-        return orderRepository.findByIdAndCustomerUsername(orderId, principalName);
+        return orderRepository.findByIdAndCustomerUsername(orderId, principalName)
+            .orElseThrow(() -> new OrderNotFoundException(
+            Long.toString(orderId)
+        ));
     }
 
     public List<Order> getAllOrders() {
@@ -41,6 +46,7 @@ public class OrderService {
     }
 
     public Order findByStripeSessionId(String sessionId) {
-        return orderRepository.findByStripeSessionId(sessionId);
+        return orderRepository.findByStripeSessionId(sessionId)
+            .orElseThrow(() -> new OrderNotFoundException(sessionId));
     }
 }
