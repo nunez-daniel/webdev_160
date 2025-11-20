@@ -29,7 +29,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query(value = """
       SELECT * FROM product p
       WHERE
-        p.id <> FEE_ITEM
+        p.id <> 65
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -52,7 +52,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query(value = """
       SELECT COUNT(*) FROM product p
       WHERE 
-        p.id <> FEE_ITEM
+        p.id <> 65
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -65,7 +65,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       SELECT p.id, p.name 
       FROM product p
       WHERE 
-        p.id <> FEE_ITEM
+        p.id <> 65
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)

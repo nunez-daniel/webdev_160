@@ -1,6 +1,5 @@
 package com.ofs_160.webdev.Controller;
 
-import com.ofs_160.webdev.DTO.StripeResponse;
 import com.ofs_160.webdev.DTO.VirtualCartDTO;
 import com.ofs_160.webdev.Model.CustomerDetails;
 import com.ofs_160.webdev.Model.VirtualCart;
@@ -22,26 +21,6 @@ public class VirtualCartController {
 
     @Autowired
     private ProductService productService;
-/*
-
-    @PostMapping("/cart/add/{productId}")
-    public ResponseEntity<VirtualCart> addToCart(
-            @PathVariable int productId,
-            @RequestParam int quantity, // from url -> add/1?quantity=3 maybe make adjustments cart only
-            @AuthenticationPrincipal CustomerDetails principal)
-    {
-        // similar to /me for fetching username -> unique
-
-        String username = principal.getUsername();
-        //System.out.println("ss:" + principal.getUsername());
-        VirtualCart updatedCart = cartService.addProductToCart(username, productId, quantity);
-
-        // temporary for debugging
-        return ResponseEntity.ok(updatedCart);
-    }
-
-
-*/
 
     @PostMapping("/cart/add")
     public ResponseEntity<VirtualCartDTO> addToCartMethod2(@RequestBody VirtualCartRequestBody request, @AuthenticationPrincipal CustomerDetails principal)
@@ -88,30 +67,33 @@ public class VirtualCartController {
         return ResponseEntity.ok(new VirtualCartDTO(deleteFromVC));
     }
 
-    // Todo
+    // change cart item quantity to the desired total for that product
     @PutMapping("/changeStock")
-    public ResponseEntity<VirtualCartDTO> changeStockCount(
+    public ResponseEntity<?> changeStockCount(
             @RequestBody VirtualCartRequestBody request,
             @AuthenticationPrincipal CustomerDetails principal)
     {
 
-
         String username = principal.getUsername();
 
-        if(productService.productCheckStock(username, request.getProductId(), request.getQuantity()))
+        // changeStock receives the desired total quantity for the cart item, so
+        // validate that the product has at least that many units in stock.
+        if(productService.productCheckStockForTotal(request.getProductId(), request.getQuantity()))
         {
             VirtualCart updatedCart = cartService.changeStockCount(username, request.getProductId(), request.getQuantity());
             return ResponseEntity.ok(new VirtualCartDTO(updatedCart));
         }
 
+        int available = 0;
+        try {
+            com.ofs_160.webdev.Model.Product p = productService.findProductById(request.getProductId());
+            if (p != null) available = p.getStock();
+        } catch (Exception ignored) {}
 
-
-
-         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        String msg = String.format("Not enough stock: requested=%d, available=%d", request.getQuantity(), available);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(msg);
 
     }
-
-
 
 
 }

@@ -110,25 +110,11 @@ public class CustomerController {
 
     // purely a testing api just wanted to see if any difference in call type
     @GetMapping("/me")
-    public String getPrincipalInfo(@AuthenticationPrincipal CustomerDetails principal) {
+    public ResponseEntity<Customer> getPrincipalInfo(@AuthenticationPrincipal CustomerDetails principal) {
 
-        String username = principal.getUsername();
-        String full_name = principal.getCustomer().getFull_name();
-        //String last_name = principal.getCustomer().getLast_name();
-        String email = principal.getCustomer().getEmail();
-        String role = principal.getCustomer().getRole();
-        int id = principal.getCustomer().getCustomer_id();
-        String authority = principal.getAuthorities().toString();
+        Customer customer = principal.getCustomer();
 
-        return "CUSTOMER Info: " + authority +
-                " id: " + id +
-                " username: " + username +
-                " role: " + role +
-                " first_name: " + full_name +
-                //" last_name: " + last_name +
-                " email: " + email;
-
-
+        return ResponseEntity.ok(customer);
     }
 
 

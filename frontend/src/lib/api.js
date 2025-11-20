@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8080";
+export const BASE = "http://localhost:8080";
 
 export async function fetchProducts(params = {}) {
   const url = new URL(`${BASE}/products`, window.location.origin);
@@ -11,28 +11,43 @@ export async function fetchProducts(params = {}) {
   const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
   });
+  // detect HTML (login page) or redirects which return HTML instead of JSON
+  const ct = res.headers.get("content-type") || "";
+  if (res.redirected || ct.includes("text/html")) {
+    const text = await res.text();
+    throw new Error(
+        `Not authenticated or unexpected HTML response when fetching products`
+    );
+  }
 
   const productArray = await res.json();
 
   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
+
+  // Apply server-side search filter client-side as a fallback (some backends
+  // return full list). Then apply pagination (page/limit) here so the
+  // catalog page receives only the requested slice.
   let filteredProducts = productArray;
   if (search && search.trim()) {
     const searchTerm = search.trim().toLowerCase();
-    filteredProducts = productArray.filter(product => 
-      product.name?.toLowerCase().includes(searchTerm) ||
-      product.brand?.toLowerCase().includes(searchTerm) ||
-      product.category?.toLowerCase().includes(searchTerm) ||
-      product.description?.toLowerCase().includes(searchTerm)
+    filteredProducts = productArray.filter(
+        (product) =>
+            product.name?.toLowerCase().includes(searchTerm) ||
+            product.brand?.toLowerCase().includes(searchTerm) ||
+            product.category?.toLowerCase().includes(searchTerm) ||
+            product.description?.toLowerCase().includes(searchTerm)
     );
   }
 
-  return ({
-    items: filteredProducts,
-    total: filteredProducts.length
-  });
+  const total = filteredProducts.length;
+  const start = (Number(page) - 1) * Number(limit);
+  const items = filteredProducts.slice(start, start + Number(limit));
+
+  return {
+    items,
+    total,
+  };
 }
-
-
 
 export async function fetchSuggestions(q) {
   if (!q?.trim()) return [];
@@ -43,14 +58,20 @@ export async function fetchSuggestions(q) {
       }
   );
   if (!res.ok) return [];
-  return (await res.json());
+  return await res.json();
 }
-
 
 export async function fetchProductById(id) {
   const res = await fetch(`${BASE}/products/${id}`, {
     headers: { Accept: "application/json" },
   });
+  const ct = res.headers.get("content-type") || "";
+  if (res.redirected || ct.includes("text/html")) {
+    throw new Error(
+        "Not authenticated or unexpected HTML response when fetching product"
+    );
+  }
+
   if (!res.ok) throw new Error(`Product not found`);
   const product = await res.json();
 
@@ -60,23 +81,74 @@ export async function fetchProductById(id) {
   };
 }
 
+export async function createProduct(product) {
+  const res = await fetch(`${BASE}/products`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "include",
+    body: JSON.stringify(product),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Create product failed (${res.status})`);
+  }
+
+  return await res.text();
+}
+
+export async function updateProduct(id, updates) {
+  // Backend expects full product on /product-manager-access PUT or /products/{id} style.
+  const payload = { ...updates, id };
+  const res = await fetch(`${BASE}/product-manager-access`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Update product failed (${res.status})`);
+  }
+
+  return await res.text();
+}
+
+export async function deleteProduct(id) {
+  const res = await fetch(`${BASE}/product-manager-access/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Delete product failed (${res.status})`);
+  }
+
+  return true;
+}
 
 export async function authenticateUser({ email, password }) {
   const url = `${BASE}/login`;
 
   const body = new URLSearchParams();
-  body.append("username", email); 
+  body.append("username", email);
   body.append("password", password);
 
   const response = await fetch(url, {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Requested-With": "XMLHttpRequest"},
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-Requested-With": "XMLHttpRequest",
+    },
     body: body.toString(),
-    credentials: 'include',
+    credentials: "include",
   });
 
   const responseText = await response.text();
 
-  if (responseText.includes("Invalid credentials") || responseText.includes('<form class="login-form"')) {
+  if (
+      responseText.includes("Invalid credentials") ||
+      responseText.includes('<form class="login-form"')
+  ) {
     return false;
   }
 
@@ -87,21 +159,19 @@ export async function authenticateUser({ email, password }) {
   throw new Error(`Login Request failed with status: ${response.status}`);
 }
 
-
 export async function registerUser({ full_name, email, password }) {
   const url = `${BASE}/signup`;
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json"
+      Accept: "application/json",
     },
     body: JSON.stringify({
       full_name: full_name,
       email: email,
       password: password,
     }),
-
   });
 
   if (response.ok) {
@@ -110,10 +180,14 @@ export async function registerUser({ full_name, email, password }) {
 
   // TODO... email taken etc
   if (response.status === 409) {
-    throw new Error("Registration Failed: Email address is already registered.");
+    throw new Error(
+        "Registration Failed: Email address is already registered."
+    );
   }
 
-  throw new Error(`Registration Request failed with status: ${response.status}`);
+  throw new Error(
+      `Registration Request failed with status: ${response.status}`
+  );
 }
 
 export async function fetchAllOrders() {
@@ -148,7 +222,6 @@ export async function fetchOrdersInCar(carId) {
   if (!text || text.trim() === "") return [];
   return JSON.parse(text);
 }
-
 
 
 

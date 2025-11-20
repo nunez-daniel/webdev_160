@@ -18,6 +18,7 @@ export default function LoginPage() {
   async function submit(e) {
     e.preventDefault();
     /*if (!submittable) {
+      console.log("form not submitted. error.");
       return;
     }*/
     try {
@@ -25,8 +26,11 @@ export default function LoginPage() {
       if (user) {
         navigate("/catalog");
       } else {
+        alert("User not found");
       }
-    } catch (err) {}
+    } catch (err) {
+      alert("Login failed");
+    }
   }
 
   const handleGoogleLogin = () => {
