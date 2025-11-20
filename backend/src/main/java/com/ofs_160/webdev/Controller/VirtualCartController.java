@@ -5,6 +5,7 @@ import com.ofs_160.webdev.Model.*;
 import com.ofs_160.webdev.Service.CartService;
 import com.ofs_160.webdev.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,9 @@ public class VirtualCartController {
 
     @Autowired
     private ProductService productService;
+
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
     @PostMapping("/cart/add")
     public ResponseEntity<VirtualCartDTO> addToCartMethod2(@RequestBody VirtualCartRequestBody request, @AuthenticationPrincipal CustomerDetails principal)
@@ -53,7 +57,7 @@ public class VirtualCartController {
         if(productService.productCheckStock(username, request.getProductId(), request.getQuantity()))
         {
             VirtualCart updatedCart2 = cartService.addToCart(username, request.getProductId(), request.getQuantity());
-            return ResponseEntity.ok(new VirtualCartDTO(updatedCart2));
+            return ResponseEntity.ok(new VirtualCartDTO(updatedCart2, customFeeId));
         }else
         {
             // Need to make this for not stock count there
@@ -68,7 +72,7 @@ public class VirtualCartController {
     {
         String username = principal.getUsername();
         VirtualCart virtualCart = cartService.getVirtualCart(username);
-        return ResponseEntity.ok(new VirtualCartDTO(virtualCart));
+        return ResponseEntity.ok(new VirtualCartDTO(virtualCart, customFeeId));
     }
 
     @DeleteMapping("/clear")
@@ -77,7 +81,7 @@ public class VirtualCartController {
         String username = principal.getUsername();
 
         VirtualCart clearedVC = cartService.clearVirtualCart(username);
-        return ResponseEntity.ok(new VirtualCartDTO(clearedVC));
+        return ResponseEntity.ok(new VirtualCartDTO(clearedVC, customFeeId));
     }
 
     @DeleteMapping("/delete/{productId}")
@@ -85,7 +89,7 @@ public class VirtualCartController {
     {
         String username = principal.getUsername();
         VirtualCart deleteFromVC = cartService.deleteItemVirtualCart(username, productId);
-        return ResponseEntity.ok(new VirtualCartDTO(deleteFromVC));
+        return ResponseEntity.ok(new VirtualCartDTO(deleteFromVC, customFeeId));
     }
 
     // change cart item quantity to the desired total for that product
@@ -114,7 +118,7 @@ public class VirtualCartController {
         if(productService.productCheckStockForTotal(request.getProductId(), request.getQuantity()))
         {
             VirtualCart updatedCart = cartService.changeStockCount(username, request.getProductId(), request.getQuantity());
-            return ResponseEntity.ok(new VirtualCartDTO(updatedCart));
+            return ResponseEntity.ok(new VirtualCartDTO(updatedCart, customFeeId));
         }
 
         int available = 0;

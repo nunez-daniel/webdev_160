@@ -1,5 +1,6 @@
 package com.ofs_160.webdev.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ofs_160.webdev.Model.CartItem;
 import com.ofs_160.webdev.Model.VirtualCart;
 import lombok.Data;
@@ -23,11 +24,14 @@ public class VirtualCartDTO {
     private List<CartItemDTO> items;
 
 
-    @Value("${custom.fee.id}")
+    //@JsonIgnore
+    //@Value("${custom.fee.id}")
     private int customFeeId;
 
-    public VirtualCartDTO(VirtualCart cart)
+    public VirtualCartDTO(VirtualCart cart, int customFeeId)
     {
+        this.customFeeId = customFeeId;
+
         if (cart.getCustomer() != null)
         {
             this.customerId = (long) cart.getCustomer().getCustomer_id();
@@ -44,7 +48,7 @@ public class VirtualCartDTO {
             dtoList.add(new CartItemDTO(item));
         }
 
-        String val = Integer.toString(customFeeId);
+        String val = Integer.toString(this.customFeeId);
         dtoList.sort(Comparator.comparing(
                 item -> val.equals(item.getId()) ? 1 : 0
         ));

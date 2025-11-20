@@ -40,6 +40,9 @@ public class CheckOutController {
     @Autowired
     private ProductService productService;
 
+    @Value("${custom.fee.id}")
+    private int customFeeId;
+
     @GetMapping({"/new-cart"})
     public ResponseEntity<StripeResponse> handleEvent(@AuthenticationPrincipal CustomerDetails principal) {
         // Return 401 if user isnt logged in
@@ -69,7 +72,7 @@ public class CheckOutController {
 
         // stock check before checkout
         if (productService.checkStock(userCart)) {
-            VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
+            VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart, customFeeId);
             try
             {
                 StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
