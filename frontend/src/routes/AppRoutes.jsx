@@ -5,7 +5,7 @@ import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
 import CartPage from "@/pages/CartPage";
 import AppLayout from "@/layouts/AppLayout";
-import Map from "@/pages/Map";
+import MapPage from "@/pages/Map";
 import UserSettings from "@/pages/UserSettings";
 
 const router = createBrowserRouter([
@@ -21,7 +21,7 @@ const router = createBrowserRouter([
     ],
   },
   { path: "/order-history", element: <UserSettings /> },
-  { path: "/map", element: <Map /> },
+  { path: "/map", element: <MapPage /> },
 ]);
 
 export default function AppRoutes() {

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+import "leaflet-routing-machine";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronDown, ChevronUp, Package, Truck, Clock, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -44,12 +46,11 @@ function addressToCoordinates(address) {
   return { lat, lng };
 }
 
-// Calculate estimated arrival time (mock - in production, use real routing)
-function calculateETA(orderDate, deliveryCar) {
+// Calculate estimated arrival time (uses route distance if available)
+function calculateETA(orderDate, deliveryCar, distanceMiles = null) {
   const orderTime = new Date(orderDate);
   const now = new Date();
   const minutesSinceOrder = Math.max(0, (now - orderTime) / (1000 * 60));
-  const clampedElapsed = Math.min(TOTAL_DELIVERY_MINUTES, minutesSinceOrder);
 
   if (!deliveryCar) {
     return {
@@ -60,7 +61,16 @@ function calculateETA(orderDate, deliveryCar) {
     };
   }
 
-  const estimatedMinutes = TOTAL_DELIVERY_MINUTES - minutesSinceOrder;
+  // If we have route distance, calculate ETA based on average speed (25 mph for city delivery)
+  // Otherwise use the fixed 45 minutes
+  let totalMinutes = TOTAL_DELIVERY_MINUTES;
+  if (distanceMiles != null && distanceMiles > 0) {
+    const averageSpeedMph = 25; // Average city delivery speed
+    totalMinutes = (distanceMiles / averageSpeedMph) * 60; // Convert to minutes
+  }
+
+  const clampedElapsed = Math.min(totalMinutes, minutesSinceOrder);
+  const estimatedMinutes = totalMinutes - minutesSinceOrder;
   let label;
 
   if (estimatedMinutes <= 0) {
@@ -77,7 +87,7 @@ function calculateETA(orderDate, deliveryCar) {
     label,
     minutesRemaining: Math.max(0, estimatedMinutes),
     elapsedMinutes: clampedElapsed,
-    totalMinutes: TOTAL_DELIVERY_MINUTES,
+    totalMinutes: totalMinutes,
   };
 }
 
@@ -103,17 +113,13 @@ function calculateDistanceMiles(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
+function OrderCard({ order, isExpanded, onToggle, mapInstance, onShowRoute, isRouteShown, routeDistance }) {
   const products = order.items?.map(item => item.productName || "Product").join(", ") || "No products";
   const deliveryCar = order.deliveryCar;
   const coordinates = addressToCoordinates(order);
-  const etaData = calculateETA(order.orderDate, deliveryCar);
-
-  const progress = etaData.totalMinutes
-    ? Math.min(1, etaData.elapsedMinutes / etaData.totalMinutes)
-    : 0;
-
-  const totalDistanceMiles = coordinates
+  
+  // Use route distance if available, otherwise use straight-line distance
+  const straightLineDistance = coordinates
     ? calculateDistanceMiles(
         STORE_COORDS.lat,
         STORE_COORDS.lng,
@@ -121,6 +127,14 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
         coordinates.lng
       )
     : null;
+  
+  const totalDistanceMiles = routeDistance !== undefined ? routeDistance : straightLineDistance;
+  
+  const etaData = calculateETA(order.orderDate, deliveryCar, totalDistanceMiles);
+
+  const progress = etaData.totalMinutes
+    ? Math.min(1, etaData.elapsedMinutes / etaData.totalMinutes)
+    : 0;
 
   const distanceCoveredMiles =
     totalDistanceMiles != null
@@ -130,6 +144,13 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
   const handleHighlightOnMap = () => {
     if (mapInstance && coordinates) {
       mapInstance.setView([coordinates.lat, coordinates.lng], 15);
+    }
+  };
+
+  const handleShowRoute = (e) => {
+    e.stopPropagation(); // Prevent card toggle
+    if (onShowRoute) {
+      onShowRoute(order.id, coordinates);
     }
   };
 
@@ -203,14 +224,22 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
                 {order.shippingAddressLine2 && <div>{order.shippingAddressLine2}</div>}
                 <div>{order.shippingCity}, {order.shippingState} {order.shippingPostalCode}</div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-2"
-                onClick={handleHighlightOnMap}
-              >
-                Show on Map
-              </Button>
+              <div className="flex gap-2 mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleHighlightOnMap}
+                >
+                  Show on Map
+                </Button>
+                <Button 
+                  variant={isRouteShown ? "default" : "outline"}
+                  size="sm" 
+                  onClick={handleShowRoute}
+                >
+                  {isRouteShown ? "Hide Route" : "Show Route"}
+                </Button>
+              </div>
             </div>
           )}
           
@@ -254,16 +283,19 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
   );
 }
 
-export default function Map() {
+export default function MapPage() {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const orderMarkersRef = useRef([]);
+  const routeControlsRef = useRef([]);
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState(new Set());
   const [error, setError] = useState(null);
+  const [shownRouteOrderId, setShownRouteOrderId] = useState(null);
+  const [routeDistances, setRouteDistances] = useState(new Map()); // Store route distances by order ID
 
   // Fetch orders
   const fetchOrders = async () => {
@@ -332,7 +364,7 @@ export default function Map() {
     };
   }, []);
 
-  // Update map markers when orders change
+  // Update map markers and routes when orders change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
@@ -342,10 +374,24 @@ export default function Map() {
     });
     orderMarkersRef.current = [];
 
-    // Add markers for each order
+    // Clear existing routes if the shown order is no longer in the list
+    if (shownRouteOrderId && !orders.find(o => o.id === shownRouteOrderId)) {
+      routeControlsRef.current.forEach(control => {
+        if (control.remove) {
+          control.remove();
+        } else if (mapInstanceRef.current.hasLayer(control)) {
+          mapInstanceRef.current.removeLayer(control);
+        }
+      });
+      routeControlsRef.current = [];
+      setShownRouteOrderId(null);
+    }
+
+    // Add markers for each order (routes are shown on demand via button)
     orders.forEach(order => {
       const coords = addressToCoordinates(order);
       if (coords) {
+        // Add marker
         const marker = L.marker([coords.lat, coords.lng])
           .addTo(mapInstanceRef.current);
         
@@ -384,6 +430,104 @@ export default function Map() {
       }
       return newSet;
     });
+  };
+
+  // Function to show/hide route for a specific order
+  const handleShowRoute = (orderId, coordinates) => {
+    if (!mapInstanceRef.current || !coordinates) return;
+
+    // If clicking the same order, hide the route
+    if (shownRouteOrderId === orderId) {
+      // Clear existing route
+      routeControlsRef.current.forEach(control => {
+        if (control.remove) {
+          control.remove();
+        } else if (mapInstanceRef.current.hasLayer(control)) {
+          mapInstanceRef.current.removeLayer(control);
+        }
+      });
+      routeControlsRef.current = [];
+      setShownRouteOrderId(null);
+      return;
+    }
+
+    // Clear any existing route first
+    routeControlsRef.current.forEach(control => {
+      if (control.remove) {
+        control.remove();
+      } else if (mapInstanceRef.current.hasLayer(control)) {
+        mapInstanceRef.current.removeLayer(control);
+      }
+    });
+    routeControlsRef.current = [];
+
+    // Find the order to get its details
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // Create new route
+    try {
+      const routeControl = L.Routing.control({
+        waypoints: [
+          L.latLng(STORE_COORDS.lat, STORE_COORDS.lng),
+          L.latLng(coordinates.lat, coordinates.lng)
+        ],
+        router: L.Routing.osrmv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1',
+          profile: 'driving'
+        }),
+        createMarker: function() { return null; },
+        lineOptions: {
+          styles: [
+            {
+              color: order.deliveryCar ? '#22c55e' : '#94a3b8',
+              opacity: 0.7,
+              weight: 4
+            }
+          ]
+        },
+        addWaypoints: false,
+        routeWhileDragging: false,
+        showAlternatives: false
+      }).addTo(mapInstanceRef.current);
+
+      // Listen for route calculation to get actual distance
+      routeControl.on('routesfound', function(e) {
+        const routes = e.routes;
+        if (routes && routes.length > 0) {
+          const route = routes[0];
+          // Distance is in meters, convert to miles
+          const distanceMeters = route.summary.totalDistance;
+          const distanceMiles = distanceMeters * 0.000621371;
+          setRouteDistances(prev => new Map(prev).set(orderId, distanceMiles));
+        }
+      });
+
+      routeControlsRef.current.push(routeControl);
+      setShownRouteOrderId(orderId);
+      
+      // Center map on the route
+      mapInstanceRef.current.fitBounds([
+        [STORE_COORDS.lat, STORE_COORDS.lng],
+        [coordinates.lat, coordinates.lng]
+      ], { padding: [50, 50] });
+    } catch (error) {
+      console.warn('Failed to create route for order', orderId, error);
+      // Fallback: draw a simple polyline
+      const polyline = L.polyline(
+        [
+          [STORE_COORDS.lat, STORE_COORDS.lng],
+          [coordinates.lat, coordinates.lng]
+        ],
+        {
+          color: order.deliveryCar ? '#22c55e' : '#94a3b8',
+          opacity: 0.7,
+          weight: 4
+        }
+      ).addTo(mapInstanceRef.current);
+      routeControlsRef.current.push(polyline);
+      setShownRouteOrderId(orderId);
+    }
   };
 
   return (
@@ -465,6 +609,9 @@ export default function Map() {
                   isExpanded={expandedOrders.has(order.id)}
                   onToggle={() => toggleOrder(order.id)}
                   mapInstance={mapInstanceRef.current}
+                  onShowRoute={handleShowRoute}
+                  isRouteShown={shownRouteOrderId === order.id}
+                  routeDistance={routeDistances.get(order.id)}
                 />
               ))
             )}
