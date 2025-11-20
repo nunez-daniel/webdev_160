@@ -16,9 +16,9 @@ export default function App() {
   }, [initializeCart]);
 
   return (
-      <div className="h-screen w-screen">
-        <AppRoutes />
-        <ChatWidget />
-      </div>
+    <div className="h-screen w-screen">
+      <AppRoutes />
+      <ChatWidget />
+    </div>
   );
 }
