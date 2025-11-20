@@ -10,7 +10,7 @@ export default function CartItemRow({ item }) {
     const { updateQty, remove, saveForLater } = useCart();
 
     const FEE_PRODUCT_ID = getFeeProductId();
-    const isFeeItem = item.id === FEE_PRODUCT_ID || item.name.includes("Robot Fee");
+    const isFeeItem = item.id === FEE_PRODUCT_ID;
 
     return (
         <TableRow>
