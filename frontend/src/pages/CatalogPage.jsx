@@ -16,7 +16,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 15;
 
 export default function CatalogPage() {
   const [loading, setLoading] = useState(true);

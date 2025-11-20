@@ -118,6 +118,21 @@ export const useCart = create((set, get) => ({
     await get().apiFetch("/clear", { method: "DELETE" });
   },
 
+  // Reset local cart state (use after logout)
+  reset: () =>
+    set({
+      items: [],
+      saved: [],
+      backendTotals: {
+        subtotal: 0,
+        total: 0,
+        weight: 0,
+        under_twenty_lbs: false,
+      },
+      error: null,
+      isLoading: false,
+    }),
+
   checkoutLink: async () => {
     const { totals } = get();
     if (totals().count === 0) return;
@@ -236,8 +251,11 @@ export const useCart = create((set, get) => ({
     const { items } = get();
     const item = items.find(
       (item) =>
-        item.productId === Number(productId) ||
-        item.product?.id === Number(productId)
+        // Some DTOs use `productId`, others embed `product.id`, and some old responses put the
+        // product id into `id` as a string — check all variants defensively.
+        Number(item?.productId) === Number(productId) ||
+        Number(item?.product?.id) === Number(productId) ||
+        Number(item?.id) === Number(productId)
     );
     return item ? item.qty : 0;
   },

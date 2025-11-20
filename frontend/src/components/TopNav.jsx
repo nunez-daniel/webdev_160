@@ -30,6 +30,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useCart } from "@/lib/cartStore";
+import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
 
 /** Cart summary renders fee/total using local computed subtotal */
@@ -430,14 +431,32 @@ export default function TopNav() {
                     className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
                     onClick={async () => {
                       try {
-                        await fetch("/logout", {
+                        // Call backend logout endpoint to invalidate server session
+                        await fetch(`${BASE}/logout`, {
                           method: "POST",
                           credentials: "include",
                           headers: { "X-Requested-With": "XMLHttpRequest" },
                         });
+
+                        // Clear local client state (cart, flags)
+                        try {
+                          const cart = useCart.getState();
+                          if (cart && typeof cart.reset === "function") cart.reset();
+                        } catch (e) {
+                          console.warn("Failed to reset cart state locally", e);
+                        }
+
+                        // Redirect to login page (app's login is at `/`)
                         window.location.href = "/";
                       } catch (e) {
-                        window.location.href = "/logout";
+                        // If backend call fails, still clear local state and send to login
+                        try {
+                          const cart = useCart.getState();
+                          if (cart && typeof cart.reset === "function") cart.reset();
+                        } catch (er) {
+                          /* ignore */
+                        }
+                        window.location.href = "/";
                       }
                     }}
                   >

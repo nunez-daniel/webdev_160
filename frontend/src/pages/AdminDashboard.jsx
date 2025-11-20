@@ -10,13 +10,21 @@ import {
 } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function AdminDashboard() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 12;
+  const PAGE_SIZE = 15;
 
   useEffect(() => {
     async function load() {
@@ -70,7 +78,7 @@ export default function AdminDashboard() {
       )}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <ProductForm onSubmit={onCreate} />
+        <Button onClick={() => setCreateOpen(true)}>New Product</Button>
       </div>
 
       <div className="mb-4">
@@ -156,14 +164,39 @@ export default function AdminDashboard() {
 
       <div className="mt-8">
         <h2 className="text-lg font-medium mb-3">Grid Preview</h2>
-        <ProductGrid products={products} />
+        <ProductGrid
+          products={products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)}
+        />
       </div>
 
-      {editing && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Edit Product</h3>
+      {/* Create Dialog */}
+      <Dialog open={createOpen} onOpenChange={(o) => setCreateOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Product</DialogTitle>
+            <DialogDescription>Fill in details to add a new product.</DialogDescription>
+          </DialogHeader>
+          <ProductForm
+            layout="stack"
+            onSubmit={async (vals) => {
+              await onCreate(vals);
+              setCreateOpen(false);
+            }}
+            onCancel={() => setCreateOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>Update fields and save changes.</DialogDescription>
+          </DialogHeader>
+          {editing && (
             <ProductForm
+              layout="stack"
               initial={editing}
               onSubmit={async (vals) => {
                 await onUpdate(editing.id, vals);
@@ -171,9 +204,9 @@ export default function AdminDashboard() {
               }}
               onCancel={() => setEditing(null)}
             />
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

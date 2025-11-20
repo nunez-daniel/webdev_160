@@ -9,15 +9,74 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useCart } from "@/lib/cartStore";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { add, getProductQuantity } = useCart();
+  const add = useCart((s) => s.add);
+  const updateQty = useCart((s) => s.updateQty);
+  const remove = useCart((s) => s.remove);
+  // subscribe to items so component updates when cart changes
+  const items = useCart((s) => s.items);
 
   const goToDetail = () => navigate(`/products/${product.id}`);
   const price = Number(product.cost ?? 0);
-  const quantityInCart = getProductQuantity(product.id);
+
+  // items from backend (VirtualCartDTO) use `id` (string) and `qty`
+  const quantityInCart =
+    items.find((it) =>
+      Number(it?.id) === Number(product.id) ||
+      Number(it?.productId) === Number(product.id) ||
+      Number(it?.product?.id) === Number(product.id)
+    )?.qty || 0;
+
+  // compute stock defensively (treat missing/negative as 0)
+  const stock = Math.max(0, Number(product.stock ?? 0));
+
+  const [localQty, setLocalQty] = useState(quantityInCart);
+  const inputRef = useRef(null);
+  const [optimisticAdded, setOptimisticAdded] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+
+  useEffect(() => {
+    setLocalQty(quantityInCart);
+    // clear optimistic flag once cart state is authoritative
+    setOptimisticAdded(false);
+  }, [quantityInCart]);
+
+  // react to external stock changes: clamp local qty and update cart if needed
+  // available stock for purchase (accounts for reserved qty in cart)
+  const available = Math.max(0, stock - (quantityInCart + (optimisticAdded ? 1 : 0)));
+
+  // react to external stock changes: clamp local qty and update cart if needed
+  useEffect(() => {
+    // If backend stock decreased below the qty we have in cart / local control
+    if (stock < localQty) {
+      const clamped = Math.max(0, stock);
+      setLocalQty(clamped);
+      if (clamped === 0) {
+        if (quantityInCart > 0) remove(product.id).catch(() => {});
+      } else {
+        updateQty(product.id, clamped).catch(() => {});
+      }
+    }
+    // If stock becomes 0, ensure cart is cleared
+    if (stock === 0 && quantityInCart > 0) {
+      remove(product.id).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stock, quantityInCart]);
 
   return (
     <Card
@@ -46,7 +105,7 @@ export default function ProductCard({ product }) {
               </div>
             )}
           </div>
-          {product.inStock !== false ? (
+          {available > 0 ? (
             <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 text-white border-0">
               In Stock
             </Badge>
@@ -134,37 +193,163 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        <Button
-          className="w-full bg-green-600 hover:bg-green-700 text-white border-0 rounded-lg py-2.5 font-medium transition-colors"
-          disabled={product.inStock === false}
-          onClick={async (e) => {
-            e.stopPropagation();
-            try {
-              await add(product, 1);
-              console.log(`✅ Successfully added ${product.name} to cart`);
-            } catch (error) {
-              console.error(`❌ Failed to add ${product.name} to cart:`, error);
-              if (
-                error.message.includes("login") ||
-                error.message.includes("401") ||
-                error.message.includes("403")
-              ) {
-                alert("Please log in to add items to your cart");
-              } else {
-                alert(
-                  `Failed to add ${product.name} to cart. Please try again.`
-                );
+        {quantityInCart === 0 && !optimisticAdded ? (
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 text-white border-0 rounded-lg py-2.5 font-medium transition-colors"
+            disabled={available === 0}
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                // optimistic UI: show qty control immediately
+                setOptimisticAdded(true);
+                setLocalQty(1);
+                await add(product, 1);
+                console.log(`✅ Successfully added ${product.name} to cart`);
+              } catch (error) {
+                setOptimisticAdded(false);
+                console.error(`❌ Failed to add ${product.name} to cart:`, error);
+                const msg = (error && error.message) || "Failed to add to cart";
+                if (
+                  msg.toLowerCase().includes("login") ||
+                  msg.includes("401") ||
+                  msg.includes("403")
+                ) {
+                  alert("Please log in to add items to your cart");
+                } else if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
+                  const text = msg.replace(/^Bad request:\s*/i, "");
+                  setDialogMessage(text || `Failed to add ${product.name} to cart.`);
+                  setDialogOpen(true);
+                  setLocalQty(0);
+                } else {
+                  alert(
+                    `Failed to add ${product.name} to cart. Please try again.`
+                  );
+                }
               }
-            }
-          }}
-        >
-          {product.inStock === false
-            ? "Out of Stock"
-            : quantityInCart > 0
-            ? `Add to Cart (${quantityInCart} in cart)`
-            : "Add to Cart"}
-        </Button>
+            }}
+          >
+            {available === 0 ? "Out of Stock" : "Add to Cart"}
+          </Button>
+        ) : (quantityInCart > 0 || optimisticAdded) ? (
+          <div
+            className="mt-3 flex items-center justify-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const newQty = Math.max(0, localQty - 1);
+                setLocalQty(newQty);
+                try {
+                  if (newQty === 0) {
+                    await remove(product.id);
+                  } else {
+                    await updateQty(product.id, newQty);
+                  }
+                } catch (err) {
+                  console.error(err);
+                  const msg = (err && err.message) || "";
+                  if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
+                    const text = msg.replace(/^Bad request:\s*/i, "");
+                    setDialogMessage(text || "Not enough stock");
+                    setDialogOpen(true);
+                    setLocalQty(quantityInCart);
+                  }
+                }
+              }}
+              disabled={localQty <= 0}
+            >
+              -
+            </Button>
+
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              className="w-16 text-center border rounded px-2 py-1 text-sm"
+              value={localQty}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^\d*$/.test(v)) {
+                  setLocalQty(v === "" ? 0 : Number(v));
+                }
+              }}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  const parsed = parseInt(e.target.value, 10);
+                  if (Number.isNaN(parsed)) {
+                    setLocalQty(quantityInCart);
+                    return;
+                  }
+                  const clamped = Math.max(0, Math.min(stock, parsed));
+                  setLocalQty(clamped);
+                  try {
+                    if (clamped === 0) {
+                      await remove(product.id);
+                    } else if (clamped !== quantityInCart) {
+                      await updateQty(product.id, clamped);
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    const msg = (err && err.message) || "";
+                    if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
+                      const text = msg.replace(/^Bad request:\s*/i, "");
+                      setDialogMessage(text || "Not enough stock");
+                      setDialogOpen(true);
+                      setLocalQty(quantityInCart);
+                    }
+                  }
+                }
+              }}
+            />
+
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const newQty = Math.min(stock, localQty + 1);
+                setLocalQty(newQty);
+                try {
+                  await updateQty(product.id, newQty);
+                } catch (err) {
+                  console.error(err);
+                  const msg = (err && err.message) || "";
+                  if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
+                    const text = msg.replace(/^Bad request:\s*/i, "");
+                    setDialogMessage(text || "Not enough stock");
+                    setDialogOpen(true);
+                    setLocalQty(quantityInCart);
+                  }
+                }
+              }}
+              disabled={localQty >= stock}
+            >
+              +
+            </Button>
+          </div>
+        ) : null}
       </div>
+
+      {/* Dialog for showing backend messages (e.g., out of stock) */}
+      <Dialog open={dialogOpen} onOpenChange={(v) => setDialogOpen(v)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Notice</DialogTitle>
+            <DialogDescription>{dialogMessage}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button onClick={() => setDialogOpen(false)}>OK</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </Card>
   );
 }

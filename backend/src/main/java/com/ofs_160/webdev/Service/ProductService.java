@@ -107,6 +107,17 @@ public class ProductService {
         return true;
     }
 
+    /**
+     * Check whether the desired total quantity for a product is available in stock.
+     * This differs from productCheckStock which treats the provided quantity as an
+     * additional amount to the user's existing cart quantity.
+     */
+    public boolean productCheckStockForTotal(int productId, int desiredTotalQuantity) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) return false;
+        return product.getStock() >= desiredTotalQuantity;
+    }
+
     public Map<String, Object> smartSearch(String q, int page, int limit) {
         int offset = (page - 1) * limit;
 

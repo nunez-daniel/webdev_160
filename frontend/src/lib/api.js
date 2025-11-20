@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8080";
+export const BASE = "http://localhost:8080";
 
 export async function fetchProducts(params = {}) {
   const url = new URL(`${BASE}/products`, window.location.origin);
@@ -23,6 +23,10 @@ export async function fetchProducts(params = {}) {
   const productArray = await res.json();
 
   if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
+
+  // Apply server-side search filter client-side as a fallback (some backends
+  // return full list). Then apply pagination (page/limit) here so the
+  // catalog page receives only the requested slice.
   let filteredProducts = productArray;
   if (search && search.trim()) {
     const searchTerm = search.trim().toLowerCase();
@@ -35,9 +39,13 @@ export async function fetchProducts(params = {}) {
     );
   }
 
+  const total = filteredProducts.length;
+  const start = (Number(page) - 1) * Number(limit);
+  const items = filteredProducts.slice(start, start + Number(limit));
+
   return {
-    items: filteredProducts,
-    total: filteredProducts.length,
+    items,
+    total,
   };
 }
 
