@@ -18,20 +18,16 @@ export default function LoginPage() {
   async function submit(e) {
     e.preventDefault();
     /*if (!submittable) {
-      console.log("form not submitted. error.");
       return;
     }*/
-    console.log("login attempt", { email, password });
     try {
       const user = await authenticateUser({ email, password });
       if (user) {
-        console.log("Logged in user:", user);
         navigate("/catalog");
       } else {
         alert("User not found");
       }
     } catch (err) {
-      console.error(err.message);
       alert("Login failed");
     }
   }

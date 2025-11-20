@@ -6,6 +6,22 @@ function money(n) {
     return Math.round((Number(n) || 0) * 100) / 100;
 }
 
+let toastFunction = null;
+
+export const setToastFunction = (fn) => {
+    toastFunction = fn;
+};
+
+const showToast = (title, description, variant = "destructive") => {
+    if (toastFunction) {
+        toastFunction({
+            title,
+            description,
+            variant,
+        });
+    }
+};
+
 
 export const useCart = create((set, get) => ({
     items: [],
@@ -51,7 +67,6 @@ export const useCart = create((set, get) => ({
 
             return data;
         } catch (err) {
-            console.error("Cart API Error:", err);
             set({ error: err.message, isLoading: false });
             throw err;
         } finally {
@@ -81,13 +96,18 @@ export const useCart = create((set, get) => ({
     },
 
     add: async (product, qty = 1) => {
-        await get().apiFetch('/cart/add', {
-            method: 'POST',
-            body: JSON.stringify({
-                productId: Number(product.id),
-                quantity: qty,
-            }),
-        });
+        try {
+            await get().apiFetch('/cart/add', {
+                method: 'POST',
+                body: JSON.stringify({
+                    productId: Number(product.id),
+                    quantity: qty,
+                }),
+            });
+        } catch (err) {
+            showToast("Failed to Add to Cart", err.message || "An error occurred while adding the item to your cart.");
+            throw err;
+        }
     },
 
     remove: async (id) => {
@@ -102,13 +122,18 @@ export const useCart = create((set, get) => ({
             return get().remove(id);
         }
 
-        await get().apiFetch('/changeStock', {
-            method: 'PUT',
-            body: JSON.stringify({
-                productId: Number(id),
-                quantity: safeQty,
-            }),
-        });
+        try {
+            await get().apiFetch('/changeStock', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    productId: Number(id),
+                    quantity: safeQty,
+                }),
+            });
+        } catch (err) {
+            showToast("Failed to Update Quantity", err.message || "An error occurred while updating the item quantity.");
+            throw err;
+        }
     },
 
     clear: async () => {
@@ -147,8 +172,8 @@ export const useCart = create((set, get) => ({
 
 
         }catch (err) {
-            // TODO logging to user temp ...
-            console.error("Checkout error:", err);
+            showToast("Checkout Failed", err.message || "An error occurred while processing your checkout.");
+            throw err;
         }
 
     },
@@ -175,7 +200,6 @@ export const useCart = create((set, get) => ({
                 }));
             })
             .catch(() => {
-                console.error("Error adding to cart");
             });
     },
 

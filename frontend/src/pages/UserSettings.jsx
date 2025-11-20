@@ -40,7 +40,6 @@ export default function UserSettings() {
         const data = JSON.parse(text);
         setOrders(data || []);
       } catch (jsonError) {
-        console.error("JSON parse error:", jsonError);
         setOrders([]);
       }
     } catch (err) {

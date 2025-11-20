@@ -135,9 +135,7 @@ export default function ProductCard({ product }) {
             e.stopPropagation();
             try {
               await add(product, 1);
-              console.log(`✅ Successfully added ${product.name} to cart`);
             } catch (error) {
-              console.error(`❌ Failed to add ${product.name} to cart:`, error);
               if (
                 error.message.includes("login") ||
                 error.message.includes("401") ||

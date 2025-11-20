@@ -2,7 +2,15 @@ import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronDown, ChevronUp, Package, Truck, Clock, MapPin } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  Package,
+  Truck,
+  Clock,
+  MapPin,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +22,13 @@ const TOTAL_DELIVERY_MINUTES = 45;
 
 // Fix for default marker icons in Leaflet
 // Using CDN URLs for icons to avoid import issues
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    iconRetinaUrl:
+      "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
 }
 
@@ -29,18 +38,20 @@ function addressToCoordinates(address) {
   // Mock: Generate coordinates based on address hash
   // This creates consistent coordinates for the same address
   let hash = 0;
-  const addr = `${address.shippingAddressLine1 || ""} ${address.shippingCity || ""} ${address.shippingState || ""}`.toLowerCase();
+  const addr = `${address.shippingAddressLine1 || ""} ${
+    address.shippingCity || ""
+  } ${address.shippingState || ""}`.toLowerCase();
   for (let i = 0; i < addr.length; i++) {
-    hash = ((hash << 5) - hash) + addr.charCodeAt(i);
+    hash = (hash << 5) - hash + addr.charCodeAt(i);
     hash = hash & hash;
   }
-  
+
   // Generate coordinates in San Francisco area (37.7749, -122.4194)
   const baseLat = 37.7749;
   const baseLng = -122.4194;
   const lat = baseLat + (hash % 1000) / 10000;
   const lng = baseLng + ((hash >> 10) % 1000) / 10000;
-  
+
   return { lat, lng };
 }
 
@@ -97,14 +108,18 @@ function calculateDistanceMiles(lat1, lng1, lat2, lng2) {
   const dLng = toRad(lng2 - lng1);
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
 function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
-  const products = order.items?.map(item => item.productName || "Product").join(", ") || "No products";
+  const products =
+    order.items?.map((item) => item.productName || "Product").join(", ") ||
+    "No products";
   const deliveryCar = order.deliveryCar;
   const coordinates = addressToCoordinates(order);
   const etaData = calculateETA(order.orderDate, deliveryCar);
@@ -135,10 +150,7 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
 
   return (
     <Card className="mb-4 border-2 hover:border-green-500 transition-colors">
-      <CardHeader 
-        className="cursor-pointer" 
-        onClick={onToggle}
-      >
+      <CardHeader className="cursor-pointer" onClick={onToggle}>
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -157,20 +169,26 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
           </div>
         </div>
       </CardHeader>
-      
+
       {isExpanded && (
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <div className="font-medium text-muted-foreground mb-1">Status</div>
+              <div className="font-medium text-muted-foreground mb-1">
+                Status
+              </div>
               <div>{order.paymentStatus || "PAID"}</div>
             </div>
             <div>
-              <div className="font-medium text-muted-foreground mb-1">Total</div>
+              <div className="font-medium text-muted-foreground mb-1">
+                Total
+              </div>
               <div>${Number(order.totalAmount || 0).toFixed(2)}</div>
             </div>
             <div>
-              <div className="font-medium text-muted-foreground mb-1">Order Date</div>
+              <div className="font-medium text-muted-foreground mb-1">
+                Order Date
+              </div>
               <div>{new Date(order.orderDate).toLocaleString()}</div>
             </div>
             <div>
@@ -181,16 +199,18 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
               <div>{etaData.label || "Not available"}</div>
             </div>
           </div>
-          
+
           {deliveryCar && (
             <div className="border-t pt-4">
               <div className="flex items-center gap-2 mb-2">
                 <Truck className="h-4 w-4" />
-                <span className="font-medium">Delivery Vehicle #{deliveryCar.id}</span>
+                <span className="font-medium">
+                  Delivery Vehicle #{deliveryCar.id}
+                </span>
               </div>
             </div>
           )}
-          
+
           {order.shippingAddressLine1 && (
             <div className="border-t pt-4">
               <div className="font-medium text-muted-foreground mb-2 flex items-center gap-1">
@@ -200,12 +220,17 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
               <div className="text-sm">
                 <div>{order.shippingName}</div>
                 <div>{order.shippingAddressLine1}</div>
-                {order.shippingAddressLine2 && <div>{order.shippingAddressLine2}</div>}
-                <div>{order.shippingCity}, {order.shippingState} {order.shippingPostalCode}</div>
+                {order.shippingAddressLine2 && (
+                  <div>{order.shippingAddressLine2}</div>
+                )}
+                <div>
+                  {order.shippingCity}, {order.shippingState}{" "}
+                  {order.shippingPostalCode}
+                </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="mt-2"
                 onClick={handleHighlightOnMap}
               >
@@ -213,15 +238,21 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
               </Button>
             </div>
           )}
-          
+
           {order.items && order.items.length > 0 && (
             <div className="border-t pt-4">
-              <div className="font-medium text-muted-foreground mb-2">Items</div>
+              <div className="font-medium text-muted-foreground mb-2">
+                Items
+              </div>
               <div className="space-y-1 text-sm">
                 {order.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between">
-                    <span>{item.productName} x{item.quantity}</span>
-                    <span>${Number(item.unitPrice * item.quantity).toFixed(2)}</span>
+                    <span>
+                      {item.productName} x{item.quantity}
+                    </span>
+                    <span>
+                      ${Number(item.unitPrice * item.quantity).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -246,7 +277,9 @@ function OrderCard({ order, isExpanded, onToggle, mapInstance }) {
         </div>
         <div className="text-xs text-muted-foreground">
           {totalDistanceMiles != null
-            ? `${distanceCoveredMiles?.toFixed(1) ?? "0.0"} mi / ${totalDistanceMiles.toFixed(1)} mi`
+            ? `${
+                distanceCoveredMiles?.toFixed(1) ?? "0.0"
+              } mi / ${totalDistanceMiles.toFixed(1)} mi`
             : "Distance data unavailable"}
         </div>
       </CardContent>
@@ -293,21 +326,20 @@ export default function Map() {
               }
             }
           } catch (e3) {
-            console.error("All order fetch attempts failed:", e3);
             throw e3;
           }
         }
       }
-      
+
       // Filter to only show orders with shipping addresses
       const ordersWithAddresses = allOrders.filter(
-        order => order.shippingAddressLine1 && order.shippingAddressLine1.trim() !== ""
+        (order) =>
+          order.shippingAddressLine1 && order.shippingAddressLine1.trim() !== ""
       );
-      
+
       setOrders(ordersWithAddresses);
       setError(null);
     } catch (err) {
-      console.error("Error fetching orders:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -317,10 +349,14 @@ export default function Map() {
   // Initialize map
   useEffect(() => {
     if (!mapInstanceRef.current && mapRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current).setView([37.7749, -122.4194], 12);
+      mapInstanceRef.current = L.map(mapRef.current).setView(
+        [37.7749, -122.4194],
+        12
+      );
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
+        attribution:
+          '&copy; <a href="https://openstreetmap.org/copyright">OSM</a>',
       }).addTo(mapInstanceRef.current);
     }
 
@@ -337,28 +373,33 @@ export default function Map() {
     if (!mapInstanceRef.current) return;
 
     // Clear existing markers
-    orderMarkersRef.current.forEach(marker => {
+    orderMarkersRef.current.forEach((marker) => {
       mapInstanceRef.current.removeLayer(marker);
     });
     orderMarkersRef.current = [];
 
     // Add markers for each order
-    orders.forEach(order => {
+    orders.forEach((order) => {
       const coords = addressToCoordinates(order);
       if (coords) {
-        const marker = L.marker([coords.lat, coords.lng])
-          .addTo(mapInstanceRef.current);
-        
+        const marker = L.marker([coords.lat, coords.lng]).addTo(
+          mapInstanceRef.current
+        );
+
         marker.bindPopup(`
           <div style="min-width: 200px;">
             <strong>Order #${order.id}</strong><br/>
             ${order.shippingName || "Customer"}<br/>
             ${order.shippingAddressLine1 || ""}<br/>
             ${order.shippingCity || ""}, ${order.shippingState || ""}
-            ${order.deliveryCar ? `<br/><br/><strong>Vehicle #${order.deliveryCar.id}</strong>` : ""}
+            ${
+              order.deliveryCar
+                ? `<br/><br/><strong>Vehicle #${order.deliveryCar.id}</strong>`
+                : ""
+            }
           </div>
         `);
-        
+
         orderMarkersRef.current.push(marker);
       }
     });
@@ -367,15 +408,15 @@ export default function Map() {
   // Initial fetch and polling
   useEffect(() => {
     fetchOrders();
-    
+
     // Poll for updates every 10 seconds
     const interval = setInterval(fetchOrders, 10000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   const toggleOrder = (orderId) => {
-    setExpandedOrders(prev => {
+    setExpandedOrders((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(orderId)) {
         newSet.delete(orderId);
@@ -389,13 +430,13 @@ export default function Map() {
   return (
     <div className="flex flex-col h-screen w-full">
       <div className="flex items-center gap-4 px-4 py-4 border-b">
-      <Button variant="ghost" onClick={() => navigate(-1)}>
-        <ChevronLeft className="h-4 w-4" />
-        Back
-      </Button>
+        <Button variant="ghost" onClick={() => navigate(-1)}>
+          <ChevronLeft className="h-4 w-4" />
+          Back
+        </Button>
         <h1 className="text-2xl font-bold">Delivery Tracking</h1>
       </div>
-      
+
       <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
         {/* Map Section */}
         <div className="flex flex-col">
@@ -405,18 +446,18 @@ export default function Map() {
               {orders.length} active order{orders.length !== 1 ? "s" : ""}
             </p>
           </div>
-      <div
-        ref={mapRef}
-        style={{
-          width: "100%",
+          <div
+            ref={mapRef}
+            style={{
+              width: "100%",
               height: "100%",
               minHeight: "400px",
-          border: "1px solid #ccc",
+              border: "1px solid #ccc",
               borderRadius: "8px",
             }}
           />
         </div>
-        
+
         {/* Orders List Section */}
         <div className="flex flex-col overflow-hidden">
           <div className="mb-2">
@@ -425,7 +466,7 @@ export default function Map() {
               Click to expand order details
             </p>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto pr-2">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -452,9 +493,14 @@ export default function Map() {
                     <span>—</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-muted-foreground/40" style={{ width: "0%" }} />
+                    <div
+                      className="h-full bg-muted-foreground/40"
+                      style={{ width: "0%" }}
+                    />
                   </div>
-                  <div className="text-xs text-muted-foreground">No distance data</div>
+                  <div className="text-xs text-muted-foreground">
+                    No distance data
+                  </div>
                 </div>
               </Card>
             ) : (

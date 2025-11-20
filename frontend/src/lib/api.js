@@ -77,12 +77,10 @@ export async function authenticateUser({ email, password }) {
   const responseText = await response.text();
 
   if (responseText.includes("Invalid credentials") || responseText.includes('<form class="login-form"')) {
-    console.log("bag login attempt")
     return false;
   }
 
   if (response.ok && !responseText.includes("Invalid credentials")) {
-    console.log("good login attempt")
     return true;
   }
 

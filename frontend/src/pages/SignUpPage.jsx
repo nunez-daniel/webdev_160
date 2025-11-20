@@ -23,13 +23,13 @@ export default function SignUpPage() {
 
   async function submit(e) {
     e.preventDefault();
-    console.log("signup attempt", { full_name, email, password });
 
-    const isPasswordValid = Object.values(checks).every(c => c === true);
+    const isPasswordValid = Object.values(checks).every((c) => c === true);
 
-    if (!isPasswordValid)
-    {
-      alert("Please ensure your password meets all requirements before submitting.");
+    if (!isPasswordValid) {
+      alert(
+        "Please ensure your password meets all requirements before submitting."
+      );
       setVisible(true);
       return;
     }
@@ -43,7 +43,6 @@ export default function SignUpPage() {
         alert("Username already taken");
       }
     } catch (err) {
-      console.error(err.message);
       alert("Signup failed");
     }
   }

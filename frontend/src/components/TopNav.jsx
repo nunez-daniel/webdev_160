@@ -186,7 +186,6 @@ export default function TopNav() {
     recognition.lang = "en-US";
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      console.log("Voice input:", transcript);
       setValue("");
       setValue(transcript);
     };
