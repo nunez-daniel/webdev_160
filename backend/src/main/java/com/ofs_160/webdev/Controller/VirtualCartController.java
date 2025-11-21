@@ -34,6 +34,11 @@ public class VirtualCartController {
 
         BigDecimal currentWeight = cartService.getVirtualCart(username).getWeight();
 
+        if (currentWeight == null)
+        {
+            currentWeight = BigDecimal.ZERO;
+        }
+
         Product product = productService.findProductById(request.getProductId());
 
         if (product != null)
