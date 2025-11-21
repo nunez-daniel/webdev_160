@@ -17,15 +17,16 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
     @Query("SELECT p FROM Product p WHERE p.name = :name")
     Product findByNameWithLock(@Param("name") String name);
 
-    List<Product> findByNameContainingIgnoreCase(String keyword);
+    List<Product> findByNameContainingIgnoreCaseAndActiveTrue(String keyword);
 
-    Product findByName(String name);
+    Product findByNameAndActiveTrue(String name);
 
     // Primary search: exact/partial + phonetic match
     @Query(value = """
       SELECT * FROM product p
       WHERE
         p.id <> :customFeeId
+        AND p.active = TRUE
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -49,6 +50,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       SELECT COUNT(*) FROM product p
       WHERE 
         p.id <> :customFeeId
+        AND p.active = TRUE
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -62,6 +64,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       FROM product p
       WHERE 
         p.id <> :customFeeId
+        AND p.active = TRUE
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -71,5 +74,8 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       """, nativeQuery = true)
     List<Object[]> suggest(@Param("q") String q, @Param("customFeeId") int customFeeId);
 
-    List<Product> findByIdNot(int feeProductId);
+    List<Product> findByIdNotAndActiveTrue(int feeProductId);
+
+    List<Product> findByIdNotAndActiveFalse(int feeProductId);
+
 }

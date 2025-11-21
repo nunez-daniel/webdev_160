@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import ProductGrid from "@/components/ProductGrid";
 import ProductRow from "@/components/admin/ProductRow";
 import ProductForm from "@/components/admin/ProductForm";
 import {
-  fetchProducts,
+  fetchActiveProducts,
+  fetchArchivedProducts,
   createProduct,
   updateProduct,
-  deleteProduct,
+  archiveProduct,
+  restoreProduct,
 } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,28 +21,46 @@ import {
 } from "@/components/ui/dialog";
 
 export default function AdminDashboard() {
-  const [products, setProducts] = useState([]);
+  const [masterActiveProducts, setMasterActiveProducts] = useState([]);
+  const [masterArchivedProducts, setMasterArchivedProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('active');
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 15;
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetchProducts({ page: 1, limit: 200 });
-        // store full product list; we'll paginate client-side for the list view
-        setProducts(res.items || res);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+
+  const sourceProducts = viewMode === 'active' ? masterActiveProducts : masterArchivedProducts;
+
+  const filteredProducts = sourceProducts.filter(p =>
+      (p.name || "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const productsToDisplay = filteredProducts;
+  const totalProductsInView = filteredProducts.length;
+
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const activeRes = await fetchActiveProducts();
+      setMasterActiveProducts(activeRes.items || activeRes);
+
+      const archivedRes = await fetchArchivedProducts();
+      setMasterArchivedProducts(archivedRes.items || archivedRes);
+
+    } catch (e) {
+      console.error("Failed to load products:", e);
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   const onCreate = async (data) => {
     const created = await createProduct(data);
@@ -54,20 +74,32 @@ export default function AdminDashboard() {
     return updated;
   };
 
-  const onDelete = async (id) => {
-    await deleteProduct(id);
-    await refresh();
+  const onArchive = async (id) => {
+    if (confirm("Are you sure you want to archive this product?")) {
+      await archiveProduct(id);
+      await refresh();
+    }
   };
 
-  async function refresh() {
-    setLoading(true);
-    try {
-      const res = await fetchProducts({ page: 1, limit: 200 });
-      setProducts(res.items || res);
-    } finally {
-      setLoading(false);
+
+  const onRestore = async (id) => {
+    if (confirm("Restore this product? It will appear in the active catalog.")) {
+
+      try {
+        await restoreProduct(id);
+        window.location.reload();
+      } catch (error) {
+        console.error("Restore failed:", error);
+        alert("Failed to restore product. See console for details.");
+      }
     }
-  }
+  };
+
+  const handleSearch = (q) => {
+    setSearchQuery(q);
+    setPage(1);
+  };
+
 
   return (
       <div className="p-6">
@@ -81,16 +113,34 @@ export default function AdminDashboard() {
           <Button onClick={() => setCreateOpen(true)}>New Product</Button>
         </div>
 
+        <div className="flex items-center gap-4 mb-4">
+          <Button
+              onClick={() => {
+                setViewMode('active');
+                setPage(1);
+                setSearchQuery('');
+              }}
+              variant={viewMode === 'active' ? 'default' : 'outline'}
+          >
+            Active Products ({masterActiveProducts.length})
+          </Button>
+          <Button
+              onClick={() => {
+                setViewMode('archived');
+                setPage(1);
+                setSearchQuery('');
+              }}
+              variant={viewMode === 'archived' ? 'default' : 'outline'}
+          >
+            Archived Products ({masterArchivedProducts.length})
+          </Button>
+        </div>
+
         <div className="mb-4">
           <Input
-              placeholder="Search products (client-side)"
-              onChange={(e) => {
-                const q = e.target.value.toLowerCase();
-                if (!q) return refresh();
-                setProducts((prev) =>
-                    prev.filter((p) => (p.name || "").toLowerCase().includes(q))
-                );
-              }}
+              placeholder={`Search products in ${viewMode} view`}
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
 
@@ -108,14 +158,15 @@ export default function AdminDashboard() {
               </tr>
               </thead>
               <tbody>
-              {products
+              {productsToDisplay
                   .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
                   .map((p) => (
                       <ProductRow
                           key={p.id}
                           product={p}
                           onEdit={() => setEditing(p)}
-                          onDelete={() => onDelete(p.id)}
+                          onDelete={onArchive}
+                          onRestore={onRestore}
                       />
                   ))}
               </tbody>
@@ -125,8 +176,8 @@ export default function AdminDashboard() {
           {/* Pagination controls for list view */}
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-gray-600">
-              Showing {Math.min(products.length, (page - 1) * PAGE_SIZE + 1)} -{" "}
-              {Math.min(products.length, page * PAGE_SIZE)} of {products.length}
+              Showing {Math.min(totalProductsInView, (page - 1) * PAGE_SIZE + 1)} -{" "}
+              {Math.min(totalProductsInView, page * PAGE_SIZE)} of {totalProductsInView}
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -139,7 +190,7 @@ export default function AdminDashboard() {
               </Button>
               <span className="text-sm">
               Page {page} of{" "}
-                {Math.max(1, Math.ceil(products.length / PAGE_SIZE))}
+                {Math.max(1, Math.ceil(totalProductsInView / PAGE_SIZE))}
             </span>
               <Button
                   variant="outline"
@@ -147,13 +198,13 @@ export default function AdminDashboard() {
                   onClick={() =>
                       setPage((p) =>
                           Math.min(
-                              Math.max(1, Math.ceil(products.length / PAGE_SIZE)),
+                              Math.max(1, Math.ceil(totalProductsInView / PAGE_SIZE)),
                               p + 1
                           )
                       )
                   }
                   disabled={
-                      page === Math.max(1, Math.ceil(products.length / PAGE_SIZE))
+                      page === Math.max(1, Math.ceil(totalProductsInView / PAGE_SIZE))
                   }
               >
                 Next
@@ -165,7 +216,7 @@ export default function AdminDashboard() {
         <div className="mt-8">
           <h2 className="text-lg font-medium mb-3">Grid Preview</h2>
           <ProductGrid
-              products={products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)}
+              products={productsToDisplay.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)}
           />
         </div>
 

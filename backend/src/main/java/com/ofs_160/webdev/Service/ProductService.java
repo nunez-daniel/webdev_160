@@ -4,6 +4,9 @@ import com.ofs_160.webdev.Model.CartItem;
 import com.ofs_160.webdev.Model.OrderItem;
 import com.ofs_160.webdev.Model.Product;
 import com.ofs_160.webdev.Model.VirtualCart;
+import com.ofs_160.webdev.Repository.CartItemRepository;
+import com.ofs_160.webdev.Repository.VirtualCartRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.text.similarity.FuzzyScore;
 import com.ofs_160.webdev.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,12 @@ import java.util.*;
 
 @Service
 public class ProductService {
+
+    @Autowired
+    CartItemRepository cartItemRepository;
+
+    @Autowired
+    VirtualCartRepository virtualCartRepository;
 
     @Autowired
     ProductRepository productRepository;
@@ -35,9 +44,38 @@ public class ProductService {
         return productRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public void deleteProductById(int id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + id));
+
+        cartItemRepository.deleteByProductId(id);
+        product.setActive(false);
+        productRepository.save(product);
     }
+
+
+    @Transactional
+    public void restoreProductById(int id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("product not found " + id));
+
+        if (!product.isActive())
+        {
+            product.setActive(true);
+            productRepository.save(product);
+        } else
+        {
+            throw new IllegalStateException("product is active already");
+        }
+    }
+
+
+    public List<Product> getArchivedProducts() {
+        int feeId = customFeeId;
+        return productRepository.findByIdNotAndActiveFalse(feeId);
+    }
+
 
     public void insertProduct(Product product) {
         productRepository.save(product);
@@ -59,7 +97,7 @@ public class ProductService {
     }*/
 
     public List<Product> searchProducts(String keyword) {
-        return productRepository.findByNameContainingIgnoreCase(keyword);
+        return productRepository.findByNameContainingIgnoreCaseAndActiveTrue(keyword);
     }
 
     // checkout finally stock checker
@@ -211,9 +249,12 @@ public class ProductService {
 
     public List<Product> getAllProductsWithoutFeeItem(int FEE_PRODUCT_ID) {
 
-        return productRepository.findByIdNot(FEE_PRODUCT_ID);
+        return productRepository.findByIdNotAndActiveTrue(FEE_PRODUCT_ID);
 
     }
 
 
+    public List<Product> getActiveProducts(int customFeeId) {
+        return productRepository.findByIdNotAndActiveTrue(customFeeId);
+    }
 }

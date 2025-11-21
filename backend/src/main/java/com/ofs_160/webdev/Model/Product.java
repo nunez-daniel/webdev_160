@@ -21,6 +21,7 @@ public class Product {
     private BigDecimal cost;
     private int stock;
     private BigDecimal weight;
+    private boolean active = true;
 
     /*private String imageName;
     private String imageType;

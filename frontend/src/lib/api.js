@@ -113,7 +113,7 @@ export async function updateProduct(id, updates) {
   return await res.text();
 }
 
-export async function deleteProduct(id) {
+export async function archiveProduct(id) {
   const res = await fetch(`${BASE}/product-manager-access/${id}`, {
     method: "DELETE",
     credentials: "include",
@@ -125,6 +125,58 @@ export async function deleteProduct(id) {
 
   return true;
 }
+
+export async function fetchActiveProducts() {
+  const res = await fetch(`${BASE}/product-manager-access/active`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch active products');
+  }
+  return res.json();
+}
+
+export async function fetchArchivedProducts() {
+  const url = `${BASE}/product-manager-access/archived`;
+
+  const res = await fetch(url, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+
+  if (res.status === 401 || res.status === 403 || contentType.includes("text/html")) {
+    console.error(`Authentication/Authorization failed accessing: ${url}. Status: ${res.status}`);
+    throw new Error(`Authentication/Authorization failed for archived products. Status: ${res.status}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch archived products (${res.status})`);
+  }
+
+  return res.json();
+}
+
+export async function restoreProduct(id) {
+  const response = await fetch(`${BASE}/product-manager-access/restore/${id}`, {
+    method: 'PUT',
+    credentials: "include",
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to restore product: ${response.status} - ${errorText}`);
+  }
+
+  return response.text();
+}
+
 
 export async function authenticateUser({ email, password }) {
   const url = `${BASE}/login`;
