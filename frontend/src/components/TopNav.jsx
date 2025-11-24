@@ -152,6 +152,7 @@ export default function TopNav() {
   const [open, setOpen] = useState(false);
   const [suggests, setSuggests] = useState([]);
   const [active, setActive] = useState(-1);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -223,13 +224,21 @@ export default function TopNav() {
     if (value.trim().length > 0) {
       setOpen(true);
       setActive(-1);
+      setLoading(true);
       fetchSuggestions(value.trim())
-        .then((results) => setSuggests(Array.isArray(results) ? results : []))
-        .catch(() => setSuggests([]));
+        .then((results) => {
+          setSuggests(Array.isArray(results) ? results : []);
+          setLoading(false);
+        })
+        .catch(() => {
+          setSuggests([]);
+          setLoading(false);
+        });
     } else {
       setOpen(false);
       setSuggests([]);
       setActive(-1);
+      setLoading(false);
     }
   }, [value]);
 
@@ -270,7 +279,7 @@ export default function TopNav() {
               className="w-full"
             >
               <Popover
-                open={open && suggests.length > 0}
+                open={open && (suggests.length > 0 || loading)}
                 onOpenChange={setOpen}
               >
                 <PopoverTrigger asChild>
@@ -324,22 +333,51 @@ export default function TopNav() {
                   <Command shouldFilter={false} value="" defaultValue="">
                     <CommandList>
                       <CommandEmpty>No matches</CommandEmpty>
-                      <CommandGroup heading="Suggestions">
-                        {suggests.map((s, idx) => (
-                          <CommandItem
-                            key={s.id}
-                            value={s.name}
-                            onMouseEnter={() => setActive(idx)}
-                            onMouseLeave={() => setActive(-1)}
-                            onSelect={() => goSearch(s.name)}
-                            className={`${
-                              active >= 0 && idx === active ? "bg-green-50" : ""
-                            } hover:bg-green-50`}
-                          >
-                            {s.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
+                      {loading && (
+                        <div className="p-3 text-center text-gray-500">
+                          <div className="inline-flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                            Searching...
+                          </div>
+                        </div>
+                      )}
+                      {!loading && suggests.length > 0 && (
+                        <CommandGroup heading="Suggestions">
+                          {suggests.map((s, idx) => (
+                            <CommandItem
+                              key={s.id}
+                              value={s.name}
+                              onMouseEnter={() => setActive(idx)}
+                              onMouseLeave={() => setActive(-1)}
+                              onSelect={() => goSearch(s.name)}
+                              className={`${
+                                active >= 0 && idx === active ? "bg-green-50" : ""
+                              } hover:bg-green-50 p-3 cursor-pointer`}
+                            >
+                              <div className="flex items-center gap-3 w-full">
+                                {s.imageUrl && (
+                                  <img
+                                    src={s.imageUrl}
+                                    alt={s.name}
+                                    className="w-8 h-8 object-cover rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm truncate">
+                                    {s.name}
+                                  </div>
+                                </div>
+                                <div className="text-green-600 font-semibold text-sm">
+                                  ${parseFloat(s.price).toFixed(2)}
+                                </div>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
                     </CommandList>
                   </Command>
                 </PopoverContent>
