@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getFeeProductId } from "@/lib/config";
@@ -163,7 +163,7 @@ export default function TopNav() {
     } else {
       setSearchParams({ q: finalTerm });
     }
-    setValue("");
+    //setValue("");
     setOpen(false);
   }
 
@@ -193,27 +193,61 @@ export default function TopNav() {
     }
   }
 
-  const [recording, setRecording] = useState(false);
-  function handleClick(e) {
-    if (!("webkitSpeechRecognition" in window)) {
-      return;
-    }
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setValue("");
-      setValue(transcript);
-    };
-    if (!recording) {
-      recognition.start();
-      setRecording(true);
-    } else {
-      recognition.stop();
-      setRecording(false);
-    }
+const [recording, setRecording] = useState(false);
+const recognitionRef = useRef(null); 
+const timeoutRef = useRef(null);
+const transcriptRef = useRef("");
+
+function handleClick(e) {
+  if (!("webkitSpeechRecognition" in window)) {
+    alert("Speech Recognition is not supported.");
+    return;
   }
+
+  if (recording) {
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
+    clearTimeout(timeoutRef.current);
+
+    return;
+  }
+
+  transcriptRef.current = "";
+  const recognition = new window.webkitSpeechRecognition();
+  recognitionRef.current = recognition; 
+  recognition.interimResults = false;
+  recognition.lang = "en-US";
+
+  setRecording(true); 
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    setValue(transcript);
+    transcriptRef.current = transcript;
+  };
+
+  recognition.onend = () => {
+    setRecording(false);
+    clearTimeout(timeoutRef.current);
+    recognitionRef.current = null;
+    const finalTranscript = transcriptRef.current;
+    if (finalTranscript.trim()) {
+      goSearch(finalTranscript);
+    }
+  };
+  
+  recognition.start();
+  const durationInMs = 5000; 
+  timeoutRef.current = setTimeout(() => {
+
+    if (recognitionRef.current) {
+      console.log(`Recording stopped after ${durationInMs / 1000} seconds.`);
+      recognitionRef.current.stop();
+
+    }
+  }, durationInMs);
+}
 
   useEffect(() => {
     if (value.trim().length > 0) {

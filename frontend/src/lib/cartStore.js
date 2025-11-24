@@ -109,7 +109,7 @@ export const useCart = create((set, get) => ({
         }),
       });
     } catch (err) {
-      showToast("Failed to Add to Cart", err.message || "An error occurred while adding the item to your cart.");
+      showToast("Failed to Add to Cart", "Please Login to Add Items");
       throw err;
     }
   },

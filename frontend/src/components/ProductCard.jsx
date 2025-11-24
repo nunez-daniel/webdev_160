@@ -212,7 +212,7 @@ export default function ProductCard({ product }) {
                           msg.includes("401") ||
                           msg.includes("403")
                       ) {
-                        alert("Please log in to add items to your cart");
+                        //alert("Please log in to add items to your cart");
                       } else if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
                         const text = msg.replace(/^Bad request:\s*/i, "");
                         setDialogMessage(text || `Failed to add ${product.name} to cart.`);

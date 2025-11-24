@@ -25,9 +25,9 @@ const router = createBrowserRouter([
       {
         path: "admin",
         element: (
-          <AdminGuard>
+          <ProtectedRoute>
             <AdminDashboard />
-          </AdminGuard>
+          </ProtectedRoute>
         ),
       },
       { path: "cart", element: <CartPage /> },

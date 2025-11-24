@@ -37,7 +37,7 @@ export default function SignUpPage() {
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
-        alert("Account created successfully! Please login.");
+        //alert("Account created successfully! Please login.");
         navigate("/");
       } else {
         alert("Username already taken");

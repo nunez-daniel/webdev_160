@@ -20,7 +20,9 @@ const Toast = React.forwardRef(({ className, variant, ...props }, ref) => {
             className={`group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full ${
                 variant === "destructive"
                     ? "border-red-500 bg-red-600 text-white"
-                    : "border bg-white text-gray-900"
+                    : variant === "success" 
+                    ? "border-green-500 bg-green-600 text-white" // <-- NEW SUCCESS VARIANT
+                    : "border bg-white text-gray-900" // Default
             }`}
             {...props}
         />
