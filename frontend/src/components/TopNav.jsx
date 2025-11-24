@@ -52,7 +52,7 @@ function CartSummary() {
       </div>
       <div className="flex justify-between text-sm">
         <span>Fees</span>
-        <span className="font-medium">${t.fees.toFixed(2)}</span>
+        <span className="font-medium">${(t.under_twenty_lbs ? 10 : 0).toFixed(2)}</span>
       </div>
       <div className="flex justify-between text-sm">
         <span>Total Weight</span>
