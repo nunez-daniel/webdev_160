@@ -91,7 +91,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Fees</span>
-                  <span>${t.fees.toFixed(2)}</span>
+                    <span>${(t.under_twenty_lbs ? 10 : 0).toFixed(2)}</span>
                 </div>
 
 
