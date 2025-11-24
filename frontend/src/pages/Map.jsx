@@ -604,9 +604,9 @@ export default function MapPage() {
               <Card className="p-8">
                 <div className="text-center space-y-3">
                   <p className="text-sm text-muted-foreground">{error}</p>
-                  <Button 
-                    onClick={fetchOrders} 
-                    variant="outline" 
+                  <Button
+                    onClick={fetchOrders}
+                    variant="outline"
                     size="sm"
                     className="text-green-600 border-green-600 hover:bg-green-50"
                   >
