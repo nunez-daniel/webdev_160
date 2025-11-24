@@ -1,17 +1,17 @@
 package com.ofs_160.webdev.Controller;
 
-import com.ofs_160.webdev.DTO.StripeResponse;
 import com.ofs_160.webdev.DTO.VirtualCartDTO;
-import com.ofs_160.webdev.Model.CustomerDetails;
-import com.ofs_160.webdev.Model.VirtualCart;
-import com.ofs_160.webdev.Model.VirtualCartRequestBody;
+import com.ofs_160.webdev.Model.*;
 import com.ofs_160.webdev.Service.CartService;
 import com.ofs_160.webdev.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 
 @RestController
@@ -22,26 +22,9 @@ public class VirtualCartController {
 
     @Autowired
     private ProductService productService;
-/*
 
-    @PostMapping("/cart/add/{productId}")
-    public ResponseEntity<VirtualCart> addToCart(
-            @PathVariable int productId,
-            @RequestParam int quantity, // from url -> add/1?quantity=3 maybe make adjustments cart only
-            @AuthenticationPrincipal CustomerDetails principal)
-    {
-        // similar to /me for fetching username -> unique
-
-        String username = principal.getUsername();
-        //System.out.println("ss:" + principal.getUsername());
-        VirtualCart updatedCart = cartService.addProductToCart(username, productId, quantity);
-
-        // temporary for debugging
-        return ResponseEntity.ok(updatedCart);
-    }
-
-
-*/
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
     @PostMapping("/cart/add")
     public ResponseEntity<VirtualCartDTO> addToCartMethod2(@RequestBody VirtualCartRequestBody request, @AuthenticationPrincipal CustomerDetails principal)
@@ -49,11 +32,37 @@ public class VirtualCartController {
 
         String username = principal.getUsername();
 
+        BigDecimal currentWeight = cartService.getVirtualCart(username).getWeight();
+
+        if (currentWeight == null)
+        {
+            currentWeight = BigDecimal.ZERO;
+        }
+
+        Product product = productService.findProductById(request.getProductId());
+
+        if (product != null)
+        {
+            BigDecimal itemWeight = product.getWeight();
+
+            if (itemWeight == null)
+            {
+                itemWeight = BigDecimal.ZERO;
+            }
+
+            BigDecimal weightToAdd = itemWeight.multiply(BigDecimal.valueOf(request.getQuantity()));
+            BigDecimal projectedTotal = currentWeight.add(weightToAdd);
+
+            if (projectedTotal.compareTo(new BigDecimal(200)) > 0)
+            {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }
         // TODO... include a stock check here so users cant add overcount items amount
         if(productService.productCheckStock(username, request.getProductId(), request.getQuantity()))
         {
             VirtualCart updatedCart2 = cartService.addToCart(username, request.getProductId(), request.getQuantity());
-            return ResponseEntity.ok(new VirtualCartDTO(updatedCart2));
+            return ResponseEntity.ok(new VirtualCartDTO(updatedCart2, customFeeId));
         }else
         {
             // Need to make this for not stock count there
@@ -68,7 +77,7 @@ public class VirtualCartController {
     {
         String username = principal.getUsername();
         VirtualCart virtualCart = cartService.getVirtualCart(username);
-        return ResponseEntity.ok(new VirtualCartDTO(virtualCart));
+        return ResponseEntity.ok(new VirtualCartDTO(virtualCart, customFeeId));
     }
 
     @DeleteMapping("/clear")
@@ -77,7 +86,7 @@ public class VirtualCartController {
         String username = principal.getUsername();
 
         VirtualCart clearedVC = cartService.clearVirtualCart(username);
-        return ResponseEntity.ok(new VirtualCartDTO(clearedVC));
+        return ResponseEntity.ok(new VirtualCartDTO(clearedVC, customFeeId));
     }
 
     @DeleteMapping("/delete/{productId}")
@@ -85,33 +94,71 @@ public class VirtualCartController {
     {
         String username = principal.getUsername();
         VirtualCart deleteFromVC = cartService.deleteItemVirtualCart(username, productId);
-        return ResponseEntity.ok(new VirtualCartDTO(deleteFromVC));
+        return ResponseEntity.ok(new VirtualCartDTO(deleteFromVC, customFeeId));
     }
 
-    // Todo
+    // change cart item quantity to the desired total for that product
     @PutMapping("/changeStock")
-    public ResponseEntity<VirtualCartDTO> changeStockCount(
+    public ResponseEntity<?> changeStockCount(
             @RequestBody VirtualCartRequestBody request,
             @AuthenticationPrincipal CustomerDetails principal)
     {
 
-
         String username = principal.getUsername();
 
-        if(productService.productCheckStock(username, request.getProductId(), request.getQuantity()))
+        VirtualCart cart = cartService.getVirtualCart(username);
+        Product productToCheck = productService.findProductById(request.getProductId());
+
+        if (cart != null && productToCheck != null)
         {
-            VirtualCart updatedCart = cartService.changeStockCount(username, request.getProductId(), request.getQuantity());
-            return ResponseEntity.ok(new VirtualCartDTO(updatedCart));
+            BigDecimal projectedWeight = getBigDecimal(request, productToCheck, cart);
+            if (projectedWeight.compareTo(new BigDecimal(200)) > 0)
+            {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Total weight would exceed 200 lbs.");
+            }
         }
 
+        // changeStock receives the desired total quantity for the cart item, so
+        // validate that the product has at least that many units in stock.
+        if(productService.productCheckStockForTotal(request.getProductId(), request.getQuantity()))
+        {
+            VirtualCart updatedCart = cartService.changeStockCount(username, request.getProductId(), request.getQuantity());
+            return ResponseEntity.ok(new VirtualCartDTO(updatedCart, customFeeId));
+        }
 
+        int available = 0;
+        try {
+            com.ofs_160.webdev.Model.Product p = productService.findProductById(request.getProductId());
+            if (p != null) available = p.getStock();
+        } catch (Exception ignored) {}
 
-
-         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        String msg = String.format("Not enough stock: requested=%d, available=%d", request.getQuantity(), available);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(msg);
 
     }
 
+    private static BigDecimal getBigDecimal(VirtualCartRequestBody request, Product productToCheck, VirtualCart cart) {
 
+        // Check other locations for new Big Decimal useage and replace
+        BigDecimal projectedWeight = BigDecimal.ZERO;
+        BigDecimal targetItemWeight = productToCheck.getWeight();
+
+        for (CartItem item : cart.getItemsInCart())
+        {
+            BigDecimal itemWeight = item.getProduct().getWeight();
+
+            if (item.getProduct().getId() == request.getProductId())
+            {
+                BigDecimal newQty = BigDecimal.valueOf(request.getQuantity());
+                projectedWeight = projectedWeight.add(targetItemWeight.multiply(newQty));
+            } else
+            {
+                BigDecimal currentQty = BigDecimal.valueOf(item.getQty());
+                projectedWeight = projectedWeight.add(itemWeight.multiply(currentQty));
+            }
+        }
+        return projectedWeight;
+    }
 
 
 }

@@ -88,7 +88,7 @@ public class WebhookService {
             BigDecimal unitPrice = BigDecimal.valueOf(unitAmountCents).divide(new BigDecimal(100));
             orderItem.setUnitPrice(unitPrice);
 
-            Product internalProduct = productRepository.findByName((name));
+            Product internalProduct = productRepository.findByNameAndActiveTrue((name));
             orderItem.setWeight(internalProduct.getWeight());
             orderItem.setProductId((long) internalProduct.getId());
 
@@ -135,12 +135,6 @@ public class WebhookService {
                 newOrder.setShippingCountry(address.getCountry());
             }
         }
-
-        // NOT HERE BUT NEED TO CHANGE STOCK
-
-        // race conditions?
-
-
 
         return newOrder;
     }

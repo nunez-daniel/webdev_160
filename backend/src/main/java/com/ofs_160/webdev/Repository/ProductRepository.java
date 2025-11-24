@@ -9,27 +9,24 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
-
-    // check for using public variables in project structure
-    int FEE_ITEM = 65;
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.name = :name")
     Product findByNameWithLock(@Param("name") String name);
 
-    List<Product> findByNameContainingIgnoreCase(String keyword);
+    List<Product> findByNameContainingIgnoreCaseAndActiveTrue(String keyword);
 
-    Product findByName(String name);
+    Product findByNameAndActiveTrue(String name);
 
     // Primary search: exact/partial + phonetic match
     @Query(value = """
       SELECT * FROM product p
       WHERE
-        p.id <> FEE_ITEM
+        p.id <> :customFeeId
+        AND p.active = TRUE
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -47,25 +44,27 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
             nativeQuery = true)
     List<Product> smartSearch(@Param("q") String q,
                               @Param("limit") int limit,
-                              @Param("offset") int offset);
+                              @Param("offset") int offset, @Param("customFeeId") int customFeeId);
 
     @Query(value = """
       SELECT COUNT(*) FROM product p
       WHERE 
-        p.id <> FEE_ITEM
+        p.id <> :customFeeId
+        AND p.active = TRUE
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
         )      
       """, nativeQuery = true)
-    long smartSearchCount(@Param("q") String q);
+    long smartSearchCount(@Param("q") String q, @Param("customFeeId") int customFeeId);
 
     // Lightweight suggest results for typeahead (top 10)
     @Query(value = """
-      SELECT p.id, p.name 
+      SELECT p.id, p.name, p.cost, p.image_url
       FROM product p
       WHERE 
-        p.id <> FEE_ITEM
+        p.id <> :customFeeId
+        AND p.active = TRUE
         AND (
         LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
         OR SOUNDEX(p.name) = SOUNDEX(:q)
@@ -73,7 +72,10 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
       ORDER BY p.stock DESC, p.name ASC
       LIMIT 10
       """, nativeQuery = true)
-    List<Object[]> suggest(@Param("q") String q);
+    List<Object[]> suggest(@Param("q") String q, @Param("customFeeId") int customFeeId);
 
-    List<Product> findByIdNot(int feeProductId);
+    List<Product> findByIdNotAndActiveTrue(int feeProductId);
+
+    List<Product> findByIdNotAndActiveFalse(int feeProductId);
+
 }

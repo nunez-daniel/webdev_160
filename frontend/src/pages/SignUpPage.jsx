@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { registerUser } from "@/lib/api"; // your user registration logic
+import { useToast } from "@/lib/use-toast";
+import { registerUser } from "@/lib/api";
 import view from "../assets/view.png";
 import hide from "../assets/hide.png";
 import { Paper, Collapse } from "@mui/material";
@@ -20,16 +21,20 @@ export default function SignUpPage() {
   });
 
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   async function submit(e) {
     e.preventDefault();
-    console.log("signup attempt", { full_name, email, password });
 
-    const isPasswordValid = Object.values(checks).every(c => c === true);
+    const isPasswordValid = Object.values(checks).every((c) => c === true);
 
-    if (!isPasswordValid)
-    {
-      alert("Please ensure your password meets all requirements before submitting.");
+    if (!isPasswordValid) {
+      toast({
+        title: "Password Requirements Not Met",
+        description:
+          "Please ensure your password meets all requirements before submitting.",
+        variant: "destructive",
+      });
       setVisible(true);
       return;
     }
@@ -37,15 +42,10 @@ export default function SignUpPage() {
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
-        alert("Account created successfully! Please login.");
         navigate("/");
       } else {
-        alert("Username already taken");
       }
-    } catch (err) {
-      console.error(err.message);
-      alert("Signup failed");
-    }
+    } catch (err) {}
   }
 
   function checkPassword(pw) {
@@ -68,35 +68,57 @@ export default function SignUpPage() {
         </h2>
 
         <form onSubmit={submit} className="space-y-4">
-          {/* Full Name */}
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Full name
             </span>
+
             <input
-              type="text"
-              value={full_name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                type="text"
+                value={full_name}
+                maxLength={100}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
+
+            {full_name.length >= 90 && (
+                <div
+                    className={`text-xs mt-1 text-right ${
+                        full_name.length >= 100 ? "text-red-600" : "text-gray-500"
+                    }`}
+                >
+                  {full_name.length}/100
+                </div>
+            )}
           </label>
 
-          {/* Email */}
+
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Email
             </span>
+
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
+                type="email"
+                value={email}
+                maxLength={100}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />{email.length >= 90 && (
+                <div
+                    className={`text-xs mt-1 text-right ${
+                        email.length >= 100 ? "text-red-600" : "text-gray-500"
+                    }`}
+                >
+                  {email.length}/100
+                </div>
+            )}
           </label>
 
-          {/* Password */}
+
+
           <div>
             <label className="block">
               <div className="flex justify-between">
@@ -125,7 +147,6 @@ export default function SignUpPage() {
               />
             </label>
 
-            {/* Animated password rule collapse */}
             <Collapse in={visible}>
               <Paper
                 className="w-full max-w-sm"
@@ -171,7 +192,6 @@ export default function SignUpPage() {
             </Collapse>
           </div>
 
-          {/* Submit + Login link */}
           <div className="flex items-center justify-between">
             <button
               type="submit"

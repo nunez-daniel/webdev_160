@@ -9,15 +9,79 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useToast } from "@/lib/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useCart } from "@/lib/cartStore";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { add, getProductQuantity } = useCart();
+  const { toast } = useToast();
+  const add = useCart((s) => s.add);
+  const updateQty = useCart((s) => s.updateQty);
+  const remove = useCart((s) => s.remove);
+  const items = useCart((s) => s.items);
 
   const goToDetail = () => navigate(`/products/${product.id}`);
   const price = Number(product.cost ?? 0);
-  const quantityInCart = getProductQuantity(product.id);
+
+  const quantityInCart =
+    items.find(
+      (it) =>
+        Number(it?.id) === Number(product.id) ||
+        Number(it?.productId) === Number(product.id) ||
+        Number(it?.product?.id) === Number(product.id)
+    )?.qty || 0;
+
+  const stock = Math.max(0, Number(product.stock ?? 0));
+
+  const [localQty, setLocalQty] = useState(quantityInCart);
+  const inputRef = useRef(null);
+  const [optimisticAdded, setOptimisticAdded] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+
+  useEffect(() => {
+    if (dialogOpen) {
+      const timer = setTimeout(() => {
+        setDialogOpen(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [dialogOpen]);
+
+  useEffect(() => {
+    setLocalQty(quantityInCart);
+    setOptimisticAdded(false);
+  }, [quantityInCart]);
+
+  const available = Math.max(
+    0,
+    stock - (quantityInCart + (optimisticAdded ? 1 : 0))
+  );
+
+  useEffect(() => {
+    if (stock < localQty) {
+      const clamped = Math.max(0, stock);
+      setLocalQty(clamped);
+      if (clamped === 0) {
+        if (quantityInCart > 0) remove(product.id).catch(() => {});
+      } else {
+        updateQty(product.id, clamped).catch(() => {});
+      }
+    }
+    if (stock === 0 && quantityInCart > 0) {
+      remove(product.id).catch(() => {});
+    }
+  }, [stock, quantityInCart]);
 
   return (
     <Card
@@ -30,17 +94,22 @@ export default function ProductCard({ product }) {
       }}
     >
       <div className="p-4">
-        {/* Product Image */}
         <div className="relative mb-4">
           <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-50">
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-200"
-              loading="lazy"
-            />
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-200"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-gray-300">
+                <span className="text-sm">No image</span>
+              </div>
+            )}
           </div>
-          {product.inStock !== false ? (
+          {available > 0 ? (
             <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600 text-white border-0">
               In Stock
             </Badge>
@@ -54,7 +123,6 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Product Info */}
         <div className="space-y-2">
           <div className="min-h-[2.5rem]">
             <h3 className="font-medium text-gray-900 text-sm leading-tight line-clamp-2">
@@ -72,14 +140,12 @@ export default function ProductCard({ product }) {
             <span>({product.reviewsCount ?? 127})</span>
           </div>
 
-          {/* Description snippet if available */}
           {product.description && (
             <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
               {product.description}
             </p>
           )}
 
-          {/* Nutrition highlights */}
           <div className="flex flex-wrap gap-1">
             {product.organic && (
               <Badge
@@ -109,7 +175,6 @@ export default function ProductCard({ product }) {
         </div>
       </div>
 
-      {/* Price and Add to Cart */}
       <div className="px-4 pb-4">
         <Separator className="mb-4 border-gray-100" />
         <div className="flex items-center justify-between mb-3">
@@ -128,37 +193,179 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        <Button
-          className="w-full bg-green-600 hover:bg-green-700 text-white border-0 rounded-lg py-2.5 font-medium transition-colors"
-          disabled={product.inStock === false}
-          onClick={async (e) => {
-            e.stopPropagation();
-            try {
-              await add(product, 1);
-              console.log(`✅ Successfully added ${product.name} to cart`);
-            } catch (error) {
-              console.error(`❌ Failed to add ${product.name} to cart:`, error);
-              if (
-                error.message.includes("login") ||
-                error.message.includes("401") ||
-                error.message.includes("403")
-              ) {
-                alert("Please log in to add items to your cart");
-              } else {
-                alert(
-                  `Failed to add ${product.name} to cart. Please try again.`
-                );
+        {quantityInCart === 0 && !optimisticAdded ? (
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 text-white border-0 rounded-lg py-2.5 font-medium transition-colors"
+            disabled={available === 0}
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                setOptimisticAdded(true);
+                setLocalQty(1);
+                await add(product, 1);
+              } catch (error) {
+                e.stopPropagation();
+                setOptimisticAdded(false);
+                const msg = (error && error.message) || "Failed to add to cart";
+                if (
+                  msg.toLowerCase().includes("login") ||
+                  msg.includes("401") ||
+                  msg.includes("403")
+                ) {
+                } else if (
+                  msg.toLowerCase().includes("bad request") ||
+                  msg.toLowerCase().includes("not enough stock")
+                ) {
+                  const text = msg.replace(/^Bad request:\s*/i, "");
+                  setDialogMessage(
+                    text || `Failed to add ${product.name} to cart.`
+                  );
+                  setDialogOpen(true);
+                  setLocalQty(0);
+                } else {
+                }
               }
-            }
-          }}
-        >
-          {product.inStock === false
-            ? "Out of Stock"
-            : quantityInCart > 0
-            ? `Add to Cart (${quantityInCart} in cart)`
-            : "Add to Cart"}
-        </Button>
+            }}
+          >
+            {available === 0 ? "Out of Stock" : "Add to Cart"}
+          </Button>
+        ) : quantityInCart > 0 || optimisticAdded ? (
+          <div
+            className="mt-3 flex items-center justify-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const newQty = Math.max(0, localQty - 1);
+                setLocalQty(newQty);
+                try {
+                  if (newQty === 0) {
+                    await remove(product.id);
+                  } else {
+                    await updateQty(product.id, newQty);
+                  }
+                } catch (err) {
+                  console.error(err);
+                  const msg = (err && err.message) || "";
+                  if (
+                    msg.toLowerCase().includes("bad request") ||
+                    msg.toLowerCase().includes("not enough stock")
+                  ) {
+                    const text = msg.replace(/^Bad request:\s*/i, "");
+                    setDialogMessage(text || "Not enough stock");
+                    setDialogOpen(true);
+                    setLocalQty(quantityInCart);
+                  }
+                }
+              }}
+              disabled={localQty <= 0}
+            >
+              -
+            </Button>
+
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              className="w-16 text-center border rounded px-2 py-1 text-sm"
+              value={localQty}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^\d*$/.test(v)) {
+                  setLocalQty(v === "" ? 0 : Number(v));
+                }
+              }}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  const parsed = parseInt(e.target.value, 10);
+                  if (Number.isNaN(parsed)) {
+                    setLocalQty(quantityInCart);
+                    return;
+                  }
+                  const clamped = Math.max(0, Math.min(stock, parsed));
+                  setLocalQty(clamped);
+                  try {
+                    if (clamped === 0) {
+                      await remove(product.id);
+                    } else if (clamped !== quantityInCart) {
+                      await updateQty(product.id, clamped);
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    const msg = (err && err.message) || "";
+                    if (
+                      msg.toLowerCase().includes("bad request") ||
+                      msg.toLowerCase().includes("not enough stock")
+                    ) {
+                      const text = msg.replace(/^Bad request:\s*/i, "");
+                      setDialogMessage(text || "Not enough stock");
+                      setDialogOpen(true);
+                      setLocalQty(quantityInCart);
+                    }
+                  }
+                }
+              }}
+            />
+
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const newQty = Math.min(stock, localQty + 1);
+                if (newQty === localQty) return;
+                try {
+                  await updateQty(product.id, newQty);
+                  setLocalQty(newQty);
+                } catch (err) {
+                  const msg = (err && err.message) || "";
+                  if (
+                    msg.toLowerCase().includes("bad request") ||
+                    msg.toLowerCase().includes("not enough stock")
+                  ) {
+                    const text = msg.replace(/^Bad request:\s*/i, "");
+                    setDialogMessage(text || "Not enough stock");
+                    setDialogOpen(true);
+                  }
+                }
+              }}
+              disabled={localQty >= stock}
+            >
+              +
+            </Button>
+          </div>
+        ) : null}
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={(v) => setDialogOpen(v)}>
+        <DialogContent
+          className="max-w-sm"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DialogHeader>
+            <DialogTitle className="text-lg">⚠️ Stock Alert</DialogTitle>
+            <DialogDescription className="text-base pt-2">
+              {dialogMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDialogOpen(false);
+              }}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

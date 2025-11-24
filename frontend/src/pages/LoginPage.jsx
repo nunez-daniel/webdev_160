@@ -1,6 +1,5 @@
 import { use, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-// import { fetchUserByCredentials } from "@/lib/mock";
 import { authenticateUser } from "@/lib/api";
 import { FcGoogle } from "react-icons/fc";
 import { Paper, Collapse } from "@mui/material";
@@ -15,24 +14,20 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [submittable] = useState(false);
   const [passwordShown, setPasswordShown] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   async function submit(e) {
     e.preventDefault();
-    /*if (!submittable) {
-      console.log("form not submitted. error.");
-      return;
-    }*/
-    console.log("login attempt", { email, password });
+    setLoading(true);
     try {
       const user = await authenticateUser({ email, password });
       if (user) {
-        console.log("Logged in user:", user);
         navigate("/catalog");
       } else {
-        alert("User not found");
       }
     } catch (err) {
-      console.error(err.message);
-      alert("Login failed");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -116,9 +111,14 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              disabled={loading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Sign in
+              {loading && (
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              )}
+
+              {loading ? "Signing in..." : "Sign in"}
             </button>
             <Link
               to="/signup"

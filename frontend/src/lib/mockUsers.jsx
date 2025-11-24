@@ -42,7 +42,6 @@ export async function signupUser({ email: username, password, name }) {
   const users = getUsers();
   const byUsername = users.find((u) => u.username === username);
   if (byUsername) {
-    // Username taken
     return null;
   }
 

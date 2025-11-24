@@ -1,4 +1,3 @@
-// src/lib/mock.js
 const IMG = (label) =>
   `https://placehold.co/600x400?text=${encodeURIComponent(label)}`;
 
@@ -101,7 +100,6 @@ const MOCK_PRODUCTS = [
   },
 ];
 
-// make the list feel “big” for paging
 const expanded = Array.from({ length: 32 }).map((_, i) => {
   const base = MOCK_PRODUCTS[i % MOCK_PRODUCTS.length];
   return { ...base, id: `${base.id}-${i + 1}`, name: `${base.name} #${i + 1}` };
@@ -109,7 +107,6 @@ const expanded = Array.from({ length: 32 }).map((_, i) => {
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** @param {{page?:number, limit?:number, search?:string}} params */
 export async function fetchProductsMock(params = {}) {
   const { page = 1, limit = 12, search = "" } = params;
   await delay(250);
@@ -122,10 +119,9 @@ export async function fetchProductsMock(params = {}) {
     : expanded;
   const start = (page - 1) * limit;
   const items = filtered.slice(start, start + limit);
-  return { items, total: filtered.length };
+  return { items: subset, total: filtered.length };
 }
 
-/** @param {string} id */
 export async function fetchProductByIdMock(id) {
   await delay(200);
   const found = expanded.find((p) => p.id === id);

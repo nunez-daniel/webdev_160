@@ -8,6 +8,7 @@ import com.ofs_160.webdev.Repository.CustomerRepository;
 import com.ofs_160.webdev.Repository.ProductRepository;
 import com.ofs_160.webdev.Repository.VirtualCartRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +27,8 @@ public class CartService {
     @Autowired
     private VirtualCartRepository virtualCartRepository;
 
-    private int weightItemId = 65;
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
     @Transactional
     public VirtualCart addToCart(String username, int productId, int quantity) {
@@ -100,7 +102,7 @@ public class CartService {
             Product product = cartItem.getProduct();
 
             if (product != null) {
-                if (product.getId() == weightItemId) {
+                if (product.getId() == customFeeId) {
                     feeItem = cartItem;
                     continue;
                 }
@@ -125,12 +127,12 @@ public class CartService {
         if(virtualCart.isUnder_twenty_lbs())
         {
             if (feeItem == null) {
-                Product feeProduct = getWeightFeeProduct(weightItemId);
+                Product feeProduct = getWeightFeeProduct(customFeeId);
 
                 CartItem newFeeItem = new CartItem();
                 newFeeItem.setQty(1);
                 newFeeItem.setProduct(feeProduct);
-                newFeeItem.setWeight(new BigDecimal(0));
+                newFeeItem.setWeight(BigDecimal.ZERO);
                 newFeeItem.setVirtualCart(virtualCart);
 
                 virtualCart.getItemsInCart().add(newFeeItem);

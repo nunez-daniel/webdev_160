@@ -4,9 +4,13 @@ import com.ofs_160.webdev.Model.CartItem;
 import com.ofs_160.webdev.Model.OrderItem;
 import com.ofs_160.webdev.Model.Product;
 import com.ofs_160.webdev.Model.VirtualCart;
+import com.ofs_160.webdev.Repository.CartItemRepository;
+import com.ofs_160.webdev.Repository.VirtualCartRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.text.similarity.FuzzyScore;
 import com.ofs_160.webdev.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +21,19 @@ import java.util.*;
 public class ProductService {
 
     @Autowired
+    CartItemRepository cartItemRepository;
+
+    @Autowired
+    VirtualCartRepository virtualCartRepository;
+
+    @Autowired
     ProductRepository productRepository;
 
     @Autowired
     CartService cartService;
+
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -31,9 +44,38 @@ public class ProductService {
         return productRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public void deleteProductById(int id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + id));
+
+        cartItemRepository.deleteByProductId(id);
+        product.setActive(false);
+        productRepository.save(product);
     }
+
+
+    @Transactional
+    public void restoreProductById(int id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("product not found " + id));
+
+        if (!product.isActive())
+        {
+            product.setActive(true);
+            productRepository.save(product);
+        } else
+        {
+            throw new IllegalStateException("product is active already");
+        }
+    }
+
+
+    public List<Product> getArchivedProducts() {
+        int feeId = customFeeId;
+        return productRepository.findByIdNotAndActiveFalse(feeId);
+    }
+
 
     public void insertProduct(Product product) {
         productRepository.save(product);
@@ -55,7 +97,7 @@ public class ProductService {
     }*/
 
     public List<Product> searchProducts(String keyword) {
-        return productRepository.findByNameContainingIgnoreCase(keyword);
+        return productRepository.findByNameContainingIgnoreCaseAndActiveTrue(keyword);
     }
 
     // checkout finally stock checker
@@ -107,19 +149,30 @@ public class ProductService {
         return true;
     }
 
+    /**
+     * Check whether the desired total quantity for a product is available in stock.
+     * This differs from productCheckStock which treats the provided quantity as an
+     * additional amount to the user's existing cart quantity.
+     */
+    public boolean productCheckStockForTotal(int productId, int desiredTotalQuantity) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) return false;
+        return product.getStock() >= desiredTotalQuantity;
+    }
+
     public Map<String, Object> smartSearch(String q, int page, int limit) {
         int offset = (page - 1) * limit;
 
-        List<Product> items = productRepository.smartSearch(q, limit, offset);
-        long total = productRepository.smartSearchCount(q);
+        List<Product> items = productRepository.smartSearch(q, limit, offset, customFeeId);
+        long total = productRepository.smartSearchCount(q, customFeeId);
 
         // If we didn’t find much, try autocorrect
         String corrected = null;
         if (total == 0) {
             corrected = guessCorrection(q);
             if (corrected != null && !corrected.equalsIgnoreCase(q)) {
-                items = productRepository.smartSearch(corrected, limit, offset);
-                total = productRepository.smartSearchCount(corrected);
+                items = productRepository.smartSearch(corrected, limit, offset, customFeeId);
+                total = productRepository.smartSearchCount(corrected, customFeeId);
             }
         }
 
@@ -131,12 +184,14 @@ public class ProductService {
     }
 
     public List<Map<String, Object>> suggest(String q) {
-        List<Object[]> rows = productRepository.suggest(q);
+        List<Object[]> rows = productRepository.suggest(q, customFeeId);
         List<Map<String, Object>> out = new ArrayList<>();
         for (Object[] r : rows) {
             Map<String, Object> m = new HashMap<>();
             m.put("id", String.valueOf(r[0]));
             m.put("name", String.valueOf(r[1]));
+            m.put("price", r[2] != null ? String.valueOf(r[2]) : "0.00");
+            m.put("imageUrl", r[3] != null ? String.valueOf(r[3]) : null);
             out.add(m);
         }
         return out;
@@ -144,7 +199,7 @@ public class ProductService {
 
     private String guessCorrection(String q) {
         // pull a small candidate pool to score against (cheap + good enough)
-        List<Object[]> candidates = productRepository.suggest(q);
+        List<Object[]> candidates = productRepository.suggest(q, customFeeId);
         if (candidates.isEmpty()) return null;
 
         FuzzyScore scorer = new FuzzyScore(Locale.ENGLISH);
@@ -187,15 +242,21 @@ public class ProductService {
                 throw new RuntimeException("INSUFFICIENT STOCK: " +  product.getName());
             }
 
+
             product.setStock(currentStock - requestedQuantity);
             productRepository.save(product);
 
         }
     }
 
+    public List<Product> getAllProductsWithoutFeeItem(int FEE_PRODUCT_ID) {
 
-    public List<Product> getAllProductsWithoutFeeItem() {
-        final int FEE_PRODUCT_ID = 65;
-        return productRepository.findByIdNot(FEE_PRODUCT_ID);
+        return productRepository.findByIdNotAndActiveTrue(FEE_PRODUCT_ID);
+
+    }
+
+
+    public List<Product> getActiveProducts(int customFeeId) {
+        return productRepository.findByIdNotAndActiveTrue(customFeeId);
     }
 }

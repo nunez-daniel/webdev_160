@@ -7,6 +7,8 @@ import CartPage from "@/pages/CartPage";
 import AppLayout from "@/layouts/AppLayout";
 import MapPage from "@/pages/Map";
 import UserSettings from "@/pages/UserSettings";
+import AdminDashboard from "@/pages/AdminDashboard";
+import AdminGuard from "@/components/AdminGuard";
 
 const router = createBrowserRouter([
   { path: "/", element: <LoginPage /> },
@@ -17,11 +19,19 @@ const router = createBrowserRouter([
     children: [
       { path: "catalog", element: <CatalogPage /> },
       { path: "products/:id", element: <ProductDetailPage /> },
+      {
+        path: "admin",
+        element: (
+          <AdminGuard>
+            <AdminDashboard />
+          </AdminGuard>
+        ),
+      },
       { path: "cart", element: <CartPage /> },
+      { path: "order-history", element: <UserSettings /> },
+      { path: "map", element: <MapPage /> },
     ],
   },
-  { path: "/order-history", element: <UserSettings /> },
-  { path: "/map", element: <MapPage /> },
 ]);
 
 export default function AppRoutes() {

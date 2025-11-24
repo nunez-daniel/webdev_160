@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { getFeeProductId } from "@/lib/config";
 import {
   useNavigate,
   useLocation,
   useSearchParams,
   Link,
 } from "react-router-dom";
-import { ShoppingCart, Trash2, Settings, Search, MapPin } from "lucide-react";
+import { ShoppingCart, Trash2, Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,39 +31,45 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useCart } from "@/lib/cartStore";
+import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
 
-/** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
-  const { items = [], remove, updateQty, checkoutLink } = useCart();
-
-  const subtotal = Array.isArray(items)
-    ? items.reduce(
-        (sum, it) => sum + Number(it?.price || 0) * Number(it?.qty || 0),
-        0
-      )
-    : 0;
-
-  const fees = subtotal * 0.08;
-  const total = subtotal + fees;
+  const { items = [], remove, updateQty, checkoutLink, totals } = useCart();
+  const t = totals();
 
   const navigate = useNavigate();
 
   return (
     <div className="p-4 space-y-3">
       <div className="flex justify-between text-sm">
-        <span>Subtotal</span>
-        <span className="font-medium">${subtotal.toFixed(2)}</span>
+        <span>Items</span>
+        <span className="font-medium">{t.count}</span>
       </div>
       <div className="flex justify-between text-sm">
-        <span>Fees & taxes (est.)</span>
-        <span className="font-medium">${fees.toFixed(2)}</span>
+        <span>Subtotal</span>
+        <span className="font-medium">${t.subtotal.toFixed(2)}</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span>Fees</span>
+        <span className="font-medium">${t.fees.toFixed(2)}</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span>Total Weight</span>
+        <span className="font-medium">{(t.weight ?? 0).toFixed(2)} lbs</span>
       </div>
       <Separator />
       <div className="flex justify-between font-semibold">
         <span>Total</span>
-        <span>${total.toFixed(2)}</span>
+        <span>${t.total.toFixed(2)}</span>
       </div>
+
+      <Button
+        className="w-full mt-4 bg-gray-600 hover:bg-gray-700"
+        onClick={() => navigate("/cart")}
+      >
+        Go to Cart
+      </Button>
 
       <Button
         className="w-full mt-4 bg-green-600 hover:bg-green-700"
@@ -76,7 +83,7 @@ function CartSummary() {
 
 function VirtualCartComponent() {
   const { items = [], remove, updateQty } = useCart();
-
+  const feeId = getFeeProductId();
   if (!Array.isArray(items) || items.length === 0) {
     return (
       <div className="p-4 text-center text-gray-500">Your cart is empty</div>
@@ -85,37 +92,56 @@ function VirtualCartComponent() {
 
   return (
     <div className="p-4">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className="flex justify-between items-center py-2 border-b"
-        >
-          <div className="flex-1">
-            <h4 className="font-medium text-sm">{item.name}</h4>
-            <p className="text-xs text-gray-500">${item.price}</p>
+      {items.map((item) => {
+        const isFeeProduct = item.id === feeId;
+        return (
+          <div
+            key={item.id}
+            className="flex justify-between items-center py-2 border-b"
+          >
+            <div className="flex-1">
+              <h4 className="font-medium text-sm">{item.name}</h4>
+              <p className="text-xs text-gray-500">${item.price}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateQty(item.id, Math.max(0, item.qty - 1))}
+                disabled={isFeeProduct}
+                title={
+                  isFeeProduct ? "Can't change qty for fee" : "Other functions"
+                }
+              >
+                -
+              </Button>
+              <span className="px-2">{item.qty}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateQty(item.id, item.qty + 1)}
+                disabled={isFeeProduct}
+                title={
+                  isFeeProduct ? "Can't change qty for fee" : "Other functions"
+                }
+              >
+                +
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => remove(item.id)}
+                disabled={isFeeProduct}
+                title={
+                  isFeeProduct ? "Can't change qty for fee" : "Other functions"
+                }
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateQty(item.id, Math.max(0, item.qty - 1))}
-            >
-              -
-            </Button>
-            <span className="px-2">{item.qty}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => updateQty(item.id, item.qty + 1)}
-            >
-              +
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => remove(item.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      ))}
+        );
+      })}
       <CartSummary />
     </div>
   );
@@ -132,10 +158,12 @@ export default function TopNav() {
   const [open, setOpen] = useState(false);
   const [suggests, setSuggests] = useState([]);
   const [active, setActive] = useState(-1);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   function goSearch(term) {
     const finalTerm = term || value;
@@ -179,14 +207,13 @@ export default function TopNav() {
   const [recording, setRecording] = useState(false);
   function handleClick(e) {
     if (!("webkitSpeechRecognition" in window)) {
-      alert("Your browser does not support voice recognition");
+      return;
     }
     const recognition = new window.webkitSpeechRecognition();
     recognition.interimResults = false;
     recognition.lang = "en-US";
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      console.log("Voice input:", transcript);
       setValue("");
       setValue(transcript);
     };
@@ -203,15 +230,40 @@ export default function TopNav() {
     if (value.trim().length > 0) {
       setOpen(true);
       setActive(-1);
+      setLoading(true);
       fetchSuggestions(value.trim())
-        .then((results) => setSuggests(Array.isArray(results) ? results : []))
-        .catch(() => setSuggests([]));
+        .then((results) => {
+          setSuggests(Array.isArray(results) ? results : []);
+          setLoading(false);
+        })
+        .catch(() => {
+          setSuggests([]);
+          setLoading(false);
+        });
     } else {
       setOpen(false);
       setSuggests([]);
       setActive(-1);
+      setLoading(false);
     }
   }, [value]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("http://localhost:8080/me", { credentials: "include" })
+      .then((res) => res.text())
+      .then((text) => {
+        if (!mounted) return;
+        if (typeof text === "string" && text.toUpperCase().includes("ADMIN")) {
+          setIsAdmin(true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-md shadow-sm">
@@ -233,7 +285,7 @@ export default function TopNav() {
               className="w-full"
             >
               <Popover
-                open={open && suggests.length > 0}
+                open={open && (suggests.length > 0 || loading)}
                 onOpenChange={setOpen}
               >
                 <PopoverTrigger asChild>
@@ -287,22 +339,51 @@ export default function TopNav() {
                   <Command shouldFilter={false} value="" defaultValue="">
                     <CommandList>
                       <CommandEmpty>No matches</CommandEmpty>
-                      <CommandGroup heading="Suggestions">
-                        {suggests.map((s, idx) => (
-                          <CommandItem
-                            key={s.id}
-                            value={s.name}
-                            onMouseEnter={() => setActive(idx)}
-                            onMouseLeave={() => setActive(-1)}
-                            onSelect={() => goSearch(s.name)}
-                            className={`${
-                              active >= 0 && idx === active ? "bg-green-50" : ""
-                            } hover:bg-green-50`}
-                          >
-                            {s.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
+                      {loading && (
+                        <div className="p-3 text-center text-gray-500">
+                          <div className="inline-flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                            Searching...
+                          </div>
+                        </div>
+                      )}
+                      {!loading && suggests.length > 0 && (
+                        <CommandGroup heading="Suggestions">
+                          {suggests.map((s, idx) => (
+                            <CommandItem
+                              key={s.id}
+                              value={s.name}
+                              onMouseEnter={() => setActive(idx)}
+                              onMouseLeave={() => setActive(-1)}
+                              onSelect={() => goSearch(s.name)}
+                              className={`${
+                                active >= 0 && idx === active ? "bg-green-50" : ""
+                              } hover:bg-green-50 p-3 cursor-pointer`}
+                            >
+                              <div className="flex items-center gap-3 w-full">
+                                {s.imageUrl && (
+                                  <img
+                                    src={s.imageUrl}
+                                    alt={s.name}
+                                    className="w-8 h-8 object-cover rounded"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-sm truncate">
+                                    {s.name}
+                                  </div>
+                                </div>
+                                <div className="text-green-600 font-semibold text-sm">
+                                  ${parseFloat(s.price).toFixed(2)}
+                                </div>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
                     </CommandList>
                   </Command>
                 </PopoverContent>
@@ -315,7 +396,6 @@ export default function TopNav() {
               <Search className="h-4 w-4" />
             </Button>
 
-            {/* Mobile Map Button */}
             <Button
               variant="ghost"
               size="sm"
@@ -330,7 +410,7 @@ export default function TopNav() {
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative text-gray-600 hover:text-green-600 transition-colors"
+                  className="relative text-green-600 bg-white hover:text-white hover:bg-green-600 transition-colors"
                 >
                   <ShoppingCart className="h-5 w-5" />
                   {totalItems > 0 && (
@@ -350,25 +430,90 @@ export default function TopNav() {
               </SheetContent>
             </Sheet>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/order-history")}
-              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="3" y="4" width="14" height="2" rx="1"></rect>
+                    <rect x="3" y="9" width="14" height="2" rx="1"></rect>
+                    <rect x="3" y="14" width="14" height="2" rx="1"></rect>
+                  </svg>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2 bg-white text-gray-800">
+                <div className="flex flex-col">
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                    onClick={() => navigate("/order-history")}
+                  >
+                    Orders
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                    onClick={() => navigate("/map")}
+                  >
+                    Track Delivery
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                      onClick={() => navigate("/admin")}
+                    >
+                      Admin Dashboard
+                    </Button>
+                  )}
+                  <Separator />
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                    onClick={async () => {
+                      try {
+                        await fetch(`${BASE}/logout`, {
+                          method: "POST",
+                          credentials: "include",
+                          headers: { "X-Requested-With": "XMLHttpRequest" },
+                        });
 
-            {/* Map/Robot Tracking */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/map")}
-              className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
-              title="Track Delivery Robot"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
+                        try {
+                          const cart = useCart.getState();
+                          if (cart && typeof cart.reset === "function")
+                            cart.reset();
+                        } catch (e) {
+                          console.warn("Failed to reset cart state locally", e);
+                        }
+
+                        window.location.href = "/";
+                      } catch (e) {
+                        try {
+                          const cart = useCart.getState();
+                          if (cart && typeof cart.reset === "function")
+                            cart.reset();
+                        } catch (er) {}
+                        window.location.href = "/";
+                      }
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>

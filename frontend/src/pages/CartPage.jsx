@@ -90,9 +90,15 @@ export default function CartPage() {
                 <span>${t.subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Fees & taxes (est.)</span>
-                <span>${t.fees.toFixed(2)}</span>
+                <span>Fees</span>
+                <span>${(t.under_twenty_lbs ? 10 : 0).toFixed(2)}</span>
               </div>
+
+              <div className="flex justify-between">
+                <span>Total Weight</span>
+                <span>{(t.weight ?? 0).toFixed(2)} lbs</span>
+              </div>
+
               <Separator />
               <div className="flex justify-between font-semibold text-base">
                 <span>Total</span>
@@ -133,7 +139,6 @@ function SavedForLater({ saved, moveToCart }) {
           <div key={p.id} className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="h-14 w-18 overflow-hidden rounded bg-muted">
-                {/* eslint-disable-next-line */}
                 <img
                   src={p.imageUrl}
                   alt={p.name}

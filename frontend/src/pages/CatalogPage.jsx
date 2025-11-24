@@ -16,7 +16,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 15;
 
 export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export default function CatalogPage() {
         setNotice("");
       }
     } catch (e) {
-      setError(e.message || "Failed loading products");
+      setError("Unable to load products. Please try again.");
     } finally {
       setLoading(false);
     }

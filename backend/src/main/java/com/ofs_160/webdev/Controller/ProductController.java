@@ -3,12 +3,15 @@ package com.ofs_160.webdev.Controller;
 
 import com.ofs_160.webdev.Model.Product;
 import com.ofs_160.webdev.Service.ProductService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,8 +23,8 @@ public class ProductController {
     @Autowired
     ProductService productService;
 
-
-
+    @Value("${custom.fee.id}")
+    private int customFeeId;
 
 
     @GetMapping("/products3")
@@ -33,7 +36,9 @@ public class ProductController {
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts()
     {
-        List<Product> filteredProducts = productService.getAllProductsWithoutFeeItem();
+        // System.out.println(customFeeId);
+
+        List<Product> filteredProducts = productService.getAllProductsWithoutFeeItem(customFeeId);
         if (filteredProducts.isEmpty())
         {
             return new ResponseEntity<>(filteredProducts, HttpStatus.NO_CONTENT);
@@ -70,6 +75,12 @@ public class ProductController {
     public ResponseEntity<Product> getProductById(@PathVariable int id)
     {
 
+        if (id == customFeeId)
+        {
+            // Dont let our people accesss the fee item
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found.");
+        }
+
         Product p = productService.findProductById(id);
         if(p == null)
         {
@@ -79,6 +90,23 @@ public class ProductController {
             return ResponseEntity.ok(p);
         }
 
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @GetMapping("/product-manager-access/active")
+    public ResponseEntity<List<Product>> getActiveProducts() {
+        try
+        {
+            List<Product> activeProducts = productService.getActiveProducts(customFeeId);
+
+            if (activeProducts.isEmpty())
+            {
+                return new ResponseEntity<>(activeProducts, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(activeProducts, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -93,6 +121,34 @@ public class ProductController {
         } else
         {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PutMapping("/product-manager-access/restore/{id}")
+    public ResponseEntity<String> restoreProductById(@PathVariable int id) {
+        try
+        {
+            productService.restoreProductById(id);
+            return new ResponseEntity<>("Product Restored Successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @GetMapping("/product-manager-access/archived")
+    public ResponseEntity<List<Product>> getArchivedProducts() {
+        try {
+            List<Product> archivedProducts = productService.getArchivedProducts();
+
+            if (archivedProducts.isEmpty())
+            {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(archivedProducts, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
         }
     }
 
