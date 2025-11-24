@@ -35,35 +35,41 @@ import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
 
 function CartSummary() {
-  const { items = [], remove, updateQty, checkoutLink } = useCart();
-
-  const subtotal = Array.isArray(items)
-    ? items.reduce(
-        (sum, it) => sum + Number(it?.price || 0) * Number(it?.qty || 0),
-        0
-      )
-    : 0;
-
-  const fees = subtotal * 0.08;
-  const total = subtotal + fees;
+  const { items = [], remove, updateQty, checkoutLink, totals } = useCart();
+  const t = totals();
 
   const navigate = useNavigate();
 
   return (
     <div className="p-4 space-y-3">
       <div className="flex justify-between text-sm">
-        <span>Subtotal</span>
-        <span className="font-medium">${subtotal.toFixed(2)}</span>
+        <span>Items</span>
+        <span className="font-medium">{t.count}</span>
       </div>
       <div className="flex justify-between text-sm">
-        <span>Fees & taxes (est.)</span>
-        <span className="font-medium">${fees.toFixed(2)}</span>
+        <span>Subtotal</span>
+        <span className="font-medium">${t.subtotal.toFixed(2)}</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span>Fees</span>
+        <span className="font-medium">${t.fees.toFixed(2)}</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span>Total Weight</span>
+        <span className="font-medium">{(t.weight ?? 0).toFixed(2)} lbs</span>
       </div>
       <Separator />
       <div className="flex justify-between font-semibold">
         <span>Total</span>
-        <span>${total.toFixed(2)}</span>
+        <span>${t.total.toFixed(2)}</span>
       </div>
+
+      <Button
+        className="w-full mt-4 bg-gray-600 hover:bg-gray-700"
+        onClick={() => navigate("/cart")}
+      >
+        Go to Cart
+      </Button>
 
       <Button
         className="w-full mt-4 bg-green-600 hover:bg-green-700"
