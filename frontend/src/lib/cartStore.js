@@ -6,6 +6,22 @@ function money(n) {
   return Math.round((Number(n) || 0) * 100) / 100;
 }
 
+let toastFunction = null;
+
+export const setToastFunction = (fn) => {
+  toastFunction = fn;
+};
+
+const showToast = (title, description, variant = "destructive") => {
+  if (toastFunction) {
+    toastFunction({
+      title,
+      description,
+      variant,
+    });
+  }
+};
+
 export const useCart = create((set, get) => ({
   items: [],
   saved: [],
@@ -84,13 +100,18 @@ export const useCart = create((set, get) => ({
   },
 
   add: async (product, qty = 1) => {
-    await get().apiFetch("/cart/add", {
-      method: "POST",
-      body: JSON.stringify({
-        productId: Number(product.id),
-        quantity: qty,
-      }),
-    });
+    try {
+      await get().apiFetch('/cart/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          productId: Number(product.id),
+          quantity: qty,
+        }),
+      });
+    } catch (err) {
+      showToast("Failed to Add to Cart", err.message || "An error occurred while adding the item to your cart.");
+      throw err;
+    }
   },
 
   remove: async (id) => {
@@ -149,6 +170,7 @@ export const useCart = create((set, get) => ({
       });
 
       if (response.status === 401 || response.status === 403) {
+        showToast("Not Logged In", "Your shopping cart is now empty.", "success");
         set({ error: "You must be logged in to checkout", isLoading: false });
         return;
       }
