@@ -76,6 +76,13 @@
 			<version>30.0.0</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.theokanning.openai-gpt3-java/openai-java -->
+		<dependency>
+			<groupId>com.theokanning.openai-gpt3-java</groupId>
+			<artifactId>service</artifactId>
+			<version>0.18.2</version>
+		</dependency>
+
 		<!--&lt;!&ndash; For Maven (pom.xml) &ndash;&gt;
 		<dependency>
 			<groupId>org.springdoc</groupId>
