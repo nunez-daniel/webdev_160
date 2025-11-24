@@ -337,12 +337,12 @@ export default function MapPage() {
       let allOrders = [];
       try {
         allOrders = await fetchAllOrders();
-      } catch (e) {
+      } catch {
         try {
           const paidOrders = await fetchOrdersByStatus("PAID");
           const inCarOrders = await fetchOrdersByStatus("In car now");
           allOrders = [...paidOrders, ...inCarOrders];
-        } catch (e2) {
+        } catch {
           try {
             const response = await fetch(`${BASE}/orders`, {
               credentials: "include",
@@ -368,7 +368,7 @@ export default function MapPage() {
 
       setOrders(ordersWithAddresses);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("Unable to load delivery orders. Please try again.");
     } finally {
       setLoading(false);

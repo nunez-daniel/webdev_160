@@ -13,7 +13,7 @@ export default function App() {
   useEffect(() => {
     setToastFunction(toast);
 
-    initializeCart().catch((err) => {});
+    initializeCart().catch(() => {});
   }, [initializeCart, toast]);
 
   return (

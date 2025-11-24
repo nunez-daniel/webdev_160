@@ -51,7 +51,7 @@ export default function CatalogPage() {
       } else {
         setNotice("");
       }
-    } catch (e) {
+    } catch {
       setError("Unable to load products. Please try again.");
     } finally {
       setLoading(false);

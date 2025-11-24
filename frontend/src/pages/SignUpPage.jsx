@@ -44,8 +44,11 @@ export default function SignUpPage() {
       if (user) {
         navigate("/");
       } else {
+        // Intentionally empty - registration succeeded but no additional action needed
       }
-    } catch (err) {}
+    } catch {
+      // Intentionally empty - error handling is done elsewhere
+    }
   }
 
   function checkPassword(pw) {
@@ -74,25 +77,24 @@ export default function SignUpPage() {
             </span>
 
             <input
-                type="text"
-                value={full_name}
-                maxLength={100}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              type="text"
+              value={full_name}
+              maxLength={100}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
 
             {full_name.length >= 90 && (
-                <div
-                    className={`text-xs mt-1 text-right ${
-                        full_name.length >= 100 ? "text-red-600" : "text-gray-500"
-                    }`}
-                >
-                  {full_name.length}/100
-                </div>
+              <div
+                className={`text-xs mt-1 text-right ${
+                  full_name.length >= 100 ? "text-red-600" : "text-gray-500"
+                }`}
+              >
+                {full_name.length}/100
+              </div>
             )}
           </label>
-
 
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -100,24 +102,23 @@ export default function SignUpPage() {
             </span>
 
             <input
-                type="email"
-                value={email}
-                maxLength={100}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />{email.length >= 90 && (
-                <div
-                    className={`text-xs mt-1 text-right ${
-                        email.length >= 100 ? "text-red-600" : "text-gray-500"
-                    }`}
-                >
-                  {email.length}/100
-                </div>
+              type="email"
+              value={email}
+              maxLength={100}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+            {email.length >= 90 && (
+              <div
+                className={`text-xs mt-1 text-right ${
+                  email.length >= 100 ? "text-red-600" : "text-gray-500"
+                }`}
+              >
+                {email.length}/100
+              </div>
             )}
           </label>
-
-
 
           <div>
             <label className="block">

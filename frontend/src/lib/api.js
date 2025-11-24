@@ -13,10 +13,8 @@ export async function fetchProducts(params = {}) {
   });
   const ct = res.headers.get("content-type") || "";
   if (res.redirected || ct.includes("text/html")) {
-    const text = await res.text();
-    throw new Error(
-        "You are not logged in. Please log in to continue."
-    );
+    await res.text();
+    throw new Error("You are not logged in. Please log in to continue.");
   }
 
   const productArray = await res.json();
@@ -27,11 +25,11 @@ export async function fetchProducts(params = {}) {
   if (search && search.trim()) {
     const searchTerm = search.trim().toLowerCase();
     filteredProducts = productArray.filter(
-        (product) =>
-            product.name?.toLowerCase().includes(searchTerm) ||
-            product.brand?.toLowerCase().includes(searchTerm) ||
-            product.category?.toLowerCase().includes(searchTerm) ||
-            product.description?.toLowerCase().includes(searchTerm)
+      (product) =>
+        product.name?.toLowerCase().includes(searchTerm) ||
+        product.brand?.toLowerCase().includes(searchTerm) ||
+        product.category?.toLowerCase().includes(searchTerm) ||
+        product.description?.toLowerCase().includes(searchTerm)
     );
   }
 
@@ -48,10 +46,10 @@ export async function fetchProducts(params = {}) {
 export async function fetchSuggestions(q) {
   if (!q?.trim()) return [];
   const res = await fetch(
-      `${BASE}/products2/suggest?q=${encodeURIComponent(q)}`,
-      {
-        headers: { Accept: "application/json" },
-      }
+    `${BASE}/products2/suggest?q=${encodeURIComponent(q)}`,
+    {
+      headers: { Accept: "application/json" },
+    }
   );
   if (!res.ok) return [];
   return await res.json();
@@ -63,9 +61,7 @@ export async function fetchProductById(id) {
   });
   const ct = res.headers.get("content-type") || "";
   if (res.redirected || ct.includes("text/html")) {
-    throw new Error(
-        "You are not logged in. Please log in to continue."
-    );
+    throw new Error("You are not logged in. Please log in to continue.");
   }
 
   if (!res.ok) throw new Error("Product not found. It may have been removed.");
@@ -143,8 +139,14 @@ export async function fetchArchivedProducts() {
 
   const contentType = res.headers.get("content-type") || "";
 
-  if (res.status === 401 || res.status === 403 || contentType.includes("text/html")) {
-    throw new Error("You don't have permission to access this. Please log in as an admin.");
+  if (
+    res.status === 401 ||
+    res.status === 403 ||
+    contentType.includes("text/html")
+  ) {
+    throw new Error(
+      "You don't have permission to access this. Please log in as an admin."
+    );
   }
 
   if (!res.ok) {
@@ -156,21 +158,20 @@ export async function fetchArchivedProducts() {
 
 export async function restoreProduct(id) {
   const response = await fetch(`${BASE}/product-manager-access/restore/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     credentials: "include",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
+    await response.text();
     throw new Error("Unable to restore product. Please try again.");
   }
 
   return response.text();
 }
-
 
 export async function authenticateUser({ email, password }) {
   const url = `${BASE}/login`;
@@ -192,8 +193,8 @@ export async function authenticateUser({ email, password }) {
   const responseText = await response.text();
 
   if (
-      responseText.includes("Invalid credentials") ||
-      responseText.includes('<form class="login-form"')
+    responseText.includes("Invalid credentials") ||
+    responseText.includes('<form class="login-form"')
   ) {
     return false;
   }
@@ -226,13 +227,11 @@ export async function registerUser({ full_name, email, password }) {
 
   if (response.status === 409) {
     throw new Error(
-        "This email address is already registered. Please use a different email or try logging in."
+      "This email address is already registered. Please use a different email or try logging in."
     );
   }
 
-  throw new Error(
-      "Unable to create account. Please try again."
-  );
+  throw new Error("Unable to create account. Please try again.");
 }
 
 export async function fetchAllOrders() {
@@ -262,7 +261,8 @@ export async function fetchOrdersInCar(carId) {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-  if (!res.ok) throw new Error("Unable to load delivery orders. Please try again.");
+  if (!res.ok)
+    throw new Error("Unable to load delivery orders. Please try again.");
   const text = await res.text();
   if (!text || text.trim() === "") return [];
   return JSON.parse(text);

@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { authenticateUser } from "@/lib/api";
 import { FcGoogle } from "react-icons/fc";
@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const [submittable] = useState(false);
   const [passwordShown, setPasswordShown] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -24,8 +23,10 @@ export default function LoginPage() {
       if (user) {
         navigate("/catalog");
       } else {
+        // Handle unsuccessful login
       }
-    } catch (err) {
+    } catch {
+      // Handle login error
     } finally {
       setLoading(false);
     }

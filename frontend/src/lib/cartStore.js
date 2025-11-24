@@ -60,7 +60,7 @@ export const useCart = create((set, get) => ({
       }
       const ct = response.headers.get("content-type") || "";
       if (response.redirected || ct.includes("text/html")) {
-        const html = await response.text();
+        await response.text();
         throw new Error("You are not logged in. Please log in to continue.");
       }
 
@@ -99,16 +99,16 @@ export const useCart = create((set, get) => ({
 
   add: async (product, qty = 1) => {
     try {
-      await get().apiFetch('/cart/add', {
-        method: 'POST',
+      await get().apiFetch("/cart/add", {
+        method: "POST",
         body: JSON.stringify({
           productId: Number(product.id),
           quantity: qty,
         }),
       });
     } catch (err) {
-      const userMessage = err.message.includes("not logged in") 
-        ? err.message 
+      const userMessage = err.message.includes("not logged in")
+        ? err.message
         : "Unable to add item to cart. Please try again.";
       showToast("Failed to Add to Cart", userMessage);
       throw err;
@@ -176,7 +176,10 @@ export const useCart = create((set, get) => ({
 
       if (!response.ok) {
         const text = await response.text();
-        showToast("Checkout Failed", "Unable to process your checkout. Please try again.");
+        showToast(
+          "Checkout Failed",
+          "Unable to process your checkout. Please try again."
+        );
         set({
           error: `Checkout failed: ${response.status} ${response.statusText} - ${text}`,
           isLoading: false,
@@ -186,7 +189,7 @@ export const useCart = create((set, get) => ({
 
       const ct = response.headers.get("content-type") || "";
       if (response.redirected || ct.includes("text/html")) {
-        const html = await response.text();
+        await response.text();
         showToast("Not Logged In", "Please log in to complete your checkout.");
         set({
           error: "You are not logged in",
@@ -198,7 +201,7 @@ export const useCart = create((set, get) => ({
       let data;
       try {
         data = await response.json();
-      } catch (e) {
+      } catch {
         const txt = await response.text();
         showToast("Checkout Error", "Something went wrong. Please try again.");
         set({
@@ -214,7 +217,8 @@ export const useCart = create((set, get) => ({
       }
 
       const msg =
-        (data && (data.message || data.error)) || "Something went wrong with your checkout";
+        (data && (data.message || data.error)) ||
+        "Something went wrong with your checkout";
       showToast("Checkout Failed", msg);
       set({ error: `Checkout failed: ${msg}`, isLoading: false });
       return;
