@@ -15,8 +15,11 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [submittable] = useState(false);
   const [passwordShown, setPasswordShown] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   async function submit(e) {
     e.preventDefault();
+    setLoading(true);
     /*if (!submittable) {
       console.log("form not submitted. error.");
       return;
@@ -30,6 +33,8 @@ export default function LoginPage() {
       }
     } catch (err) {
       alert("Login failed");
+    }finally {
+      setLoading(false);
     }
   }
 
@@ -112,10 +117,15 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between">
             <button
-              type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              Sign in
+              {loading && (
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              )}
+
+              {loading ? "Signing in..." : "Sign in"}
             </button>
             <Link
               to="/signup"
