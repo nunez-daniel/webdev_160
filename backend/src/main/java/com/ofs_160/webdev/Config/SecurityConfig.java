@@ -3,6 +3,7 @@ package com.ofs_160.webdev.Config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 import java.util.Arrays;
 
@@ -31,7 +33,6 @@ public class SecurityConfig {
 
     private String redirect_url = "http://localhost:5173/catalog";
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
@@ -43,14 +44,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{id}", "products/{productId}/image").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/login").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/logout").permitAll()
                         .requestMatchers(HttpMethod.POST,"/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/products").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/orders").hasAnyAuthority("CUSTOMER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/products2").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/products2/suggest").permitAll()
+
+                        .requestMatchers(HttpMethod.POST,"/products").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/delivery/{orderId}/{carId}").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/loaded/{carId}").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/create/car").hasAnyAuthority("ADMIN")
+
                         .requestMatchers(HttpMethod.POST,"/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET,"/webhook").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/product-manager-access")
-                        .hasAnyAuthority("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET,"/orders-all").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/orders-all-status").hasAnyAuthority("ADMIN")
+
+                        // /me
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

@@ -1,6 +1,7 @@
 package com.ofs_160.webdev.Model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,17 +20,19 @@ public class Customer {
     private int customer_id;
 
     private String full_name;
-    //private String last_name;
+    // private String last_name;
     private String email;
     // private String phone_number;
 
     @Column(unique = true)
     private String username;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+
     private String role;
 
-    @OneToOne(mappedBy = "customer",  cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     @EqualsAndHashCode.Exclude
     @JsonBackReference
     private VirtualCart virtualCart;

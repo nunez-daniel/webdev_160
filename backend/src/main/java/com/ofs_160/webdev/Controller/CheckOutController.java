@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 public class CheckOutController {
     @Autowired
@@ -38,20 +40,49 @@ public class CheckOutController {
     @Autowired
     private ProductService productService;
 
+    @Value("${custom.fee.id}")
+    private int customFeeId;
+
     @GetMapping({"/new-cart"})
     public ResponseEntity<StripeResponse> handleEvent(@AuthenticationPrincipal CustomerDetails principal) {
+        // Return 401 if user isnt logged in
+        if (principal == null)
+        {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
         String username = principal.getUsername();
         VirtualCart userCart = this.cartService.getVirtualCart(username);
 
+        if (userCart == null)
+        {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+
+        BigDecimal weightMax = cartService.getVirtualCart(username).getWeight();
+
+        int intWightMax = weightMax.intValue();
+
+        if (intWightMax > 200) {
+            // note this shouldnt happen due to hadnling weight of products in cart < 200 but to be redundant
+            System.err.println("Checkout failed: Cart weight (" + weightMax + " lbs) exceeds limit.");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
         // stock check before checkout
-        if(productService.checkStock(userCart))
+        if (productService.checkStock(userCart)) {
+            VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart, customFeeId);
+            try
+            {
+                StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
+                return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
+            } catch (Exception e) {
+                System.err.println("Error creating stripe checkout session: " + e.getMessage());
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else
         {
-            VirtualCartDTO userCartDTO = new VirtualCartDTO(userCart);
-            StripeResponse stripeResponse = this.stripeService.checkoutProducts(userCartDTO);
-            return new ResponseEntity<>(stripeResponse, HttpStatus.OK);
-        }else
-        {
-            // Need to make this for not stock count there
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -69,7 +100,21 @@ public class CheckOutController {
             return ResponseEntity.badRequest().body("Failed handle the request");
         }
 
-        this.webhookService.checkoutVirtualCart(event);
+        try
+        {
+            this.webhookService.checkoutVirtualCart(event);
+        } catch (RuntimeException e)
+        {
+            // check for handling errors temporary
+            if (e.getMessage().startsWith("INSUFFICIENT STOCK"))
+            {
+                System.err.println("STOCK ROLLBACK HANDLED: " + e.getMessage());
+                return ResponseEntity.ok().body("Stock rollback successful. Order not created.");
+            }
+
+            throw e;
+        }
+
         return ResponseEntity.ok().body("Success handling request");
     }
 

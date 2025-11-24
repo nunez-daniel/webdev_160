@@ -77,7 +77,7 @@ public class StripeService {
                 )
 
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:5173/catalog")
+                .setSuccessUrl("http://localhost:8080/order-status?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl("http://localhost:5173/cart")
 
                 .putMetadata("customer_id", customerId)

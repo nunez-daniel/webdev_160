@@ -1,10 +1,14 @@
 package com.ofs_160.webdev.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ofs_160.webdev.Model.CartItem;
 import com.ofs_160.webdev.Model.VirtualCart;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Data
@@ -19,8 +23,15 @@ public class VirtualCartDTO {
 
     private List<CartItemDTO> items;
 
-    public VirtualCartDTO(VirtualCart cart)
+
+    //@JsonIgnore
+    //@Value("${custom.fee.id}")
+    private int customFeeId;
+
+    public VirtualCartDTO(VirtualCart cart, int customFeeId)
     {
+        this.customFeeId = customFeeId;
+
         if (cart.getCustomer() != null)
         {
             this.customerId = (long) cart.getCustomer().getCustomer_id();
@@ -36,6 +47,12 @@ public class VirtualCartDTO {
         {
             dtoList.add(new CartItemDTO(item));
         }
+
+        String val = Integer.toString(this.customFeeId);
+        dtoList.sort(Comparator.comparing(
+                item -> val.equals(item.getId()) ? 1 : 0
+        ));
+
         this.items = dtoList;
     }
 }

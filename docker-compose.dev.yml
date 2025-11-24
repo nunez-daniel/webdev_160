@@ -6,31 +6,34 @@ services:
       dockerfile: Dockerfile.dev
     container_name: vite-dev
     ports:
-      - "5173:5173" 
+      - "5173:5173"
     volumes:
-      - ./frontend:/app 
+      - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:8080/api
-      - CHOKIDAR_USEPOLLING=true 
-      - WATCHPACK_POLLING=true  
+      - VITE_API_URL=http://backend:8080
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
     networks:
       - app-network
     command: npm run dev -- --host
 
 
   backend:
-    build: 
+    build:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      - SPRING_DATASOURCE_URL=mysql://localhost:3306/ofs_db?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/ofs_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=Password123
       - SPRING.DATASOURCE.driver-class-name=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_SHOW_SQL=true
       - SPRING_PROFILES_ACTIVE=dev
+      - STRIPE_SECRET_KEY=sk_test_51SIZUYPDvaD0jocMq3QgXHdY0gkfESyz9AJw9Hc6zUJBmxABrCd2hHPyj8ZGvpUIxaFBcFxcchL4jxN16TuaiBRE00haamIojk
+      - STRIPE_WEBHOOK_SECRET=whsec_0d36df37a2caac7a9ba592ce15870a218d8c063ae2c7f8f145657e77cfd9ba96
     ports:
       - "8080:8080"
     volumes:
@@ -40,28 +43,41 @@ services:
         condition: service_healthy
     networks:
       - app-network
-    
+
+  stripe:
+    image: stripe/stripe-cli:latest
+    container_name: stripe-cli-listener
+
+    environment:
+      - STRIPE_API_KEY=sk_test_51SIZUYPDvaD0jocMq3QgXHdY0gkfESyz9AJw9Hc6zUJBmxABrCd2hHPyj8ZGvpUIxaFBcFxcchL4jxN16TuaiBRE00haamIojk
+    command: listen --forward-to http://backend:8080/webhook --log-level error
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
   database:
     image: mysql:latest
     container_name: mysql_db
     environment:
-      - MYSQL_DATABASE=ofc
-      - MYSQL_ROOT_PASSWORD=mysecret
+      - MYSQL_DATABASE=ofs_db
+      - MYSQL_ROOT_PASSWORD=Password123
+      - MYSQL_ROOT_HOST=%
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysecret"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pPassword123"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - app-network
-    
+
 volumes:
   db_data:
-  
+
 networks:
   app-network:
     driver: bridge

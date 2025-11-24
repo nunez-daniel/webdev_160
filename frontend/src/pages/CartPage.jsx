@@ -1,4 +1,4 @@
-import {useEffect, useMemo} from "react";
+import { useEffect, useMemo } from "react";
 import { useCart } from "@/lib/cartStore";
 import CartItemRow from "@/components/CartItemRow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,24 +14,24 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export default function CartPage() {
-  const { items, saved, totals, clear, moveToCart, checkoutLink, initializeCart} = useCart();
+  const {
+    items,
+    saved,
+    totals,
+    clear,
+    moveToCart,
+    checkoutLink,
+    initializeCart,
+  } = useCart();
   const t = useMemo(() => totals(), [items]);
   const navigate = useNavigate();
-
-
-
 
   useEffect(() => {
     initializeCart();
   }, [initializeCart]);
 
-
-
-
-
-
   return (
-      <main className="container mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="w-full px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="lg:col-span-2 space-y-6">
           <h1 className="text-2xl font-semibold">Your Cart</h1>
 
@@ -90,9 +90,18 @@ export default function CartPage() {
                   <span>${t.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Fees & taxes (est.)</span>
-                  <span>${t.fees.toFixed(2)}</span>
+                  <span>Fees</span>
+                    <span>${(t.under_twenty_lbs ? 10 : 0).toFixed(2)}</span>
                 </div>
+
+
+                <div className="flex justify-between">
+                  <span>Total Weight</span>
+                  <span>{(t.weight ?? 0).toFixed(2)} lbs</span>
+                </div>
+
+
+
                 <Separator />
                 <div className="flex justify-between font-semibold text-base">
                   <span>Total</span>

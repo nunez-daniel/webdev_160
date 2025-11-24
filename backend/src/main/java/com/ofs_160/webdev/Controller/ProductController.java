@@ -3,15 +3,18 @@ package com.ofs_160.webdev.Controller;
 
 import com.ofs_160.webdev.Model.Product;
 import com.ofs_160.webdev.Service.ProductService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -20,16 +23,63 @@ public class ProductController {
     @Autowired
     ProductService productService;
 
-    // Need... Implement ResponseEntity to return 200 or 404
+    @Value("${custom.fee.id}")
+    private int customFeeId;
+
+
+    @GetMapping("/products3")
+    public ResponseEntity<List<Product>> getProducts3()
+    {
+        return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
+    }
+
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts()
     {
-        return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
+        // System.out.println(customFeeId);
+
+        List<Product> filteredProducts = productService.getAllProductsWithoutFeeItem(customFeeId);
+        if (filteredProducts.isEmpty())
+        {
+            return new ResponseEntity<>(filteredProducts, HttpStatus.NO_CONTENT);
+        }
+
+        return new ResponseEntity<>(filteredProducts, HttpStatus.OK);
+    }
+
+
+
+    // Need... Implement ResponseEntity to return 200 or 404
+    @GetMapping("/products2")
+    public ResponseEntity<Map<String, Object>> getProducts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int limit,
+            @RequestParam(name = "search", required = false) String search) {
+
+        if (search == null || search.isBlank()) {
+            // fall back to simple list, first page
+            Map<String, Object> data = productService.smartSearch("", page, limit);
+            return ResponseEntity.ok(data);
+        }
+        Map<String, Object> data = productService.smartSearch(search, page, limit);
+        return ResponseEntity.ok(data);
+    }
+
+    // typeahead suggestions
+    @GetMapping("/products2/suggest")
+    public ResponseEntity<List<Map<String, Object>>> suggest(@RequestParam("q") String q) {
+        return ResponseEntity.ok(productService.suggest(q));
     }
 
     @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable int id)
     {
+
+        if (id == customFeeId)
+        {
+            // Dont let our people accesss the fee item
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found.");
+        }
 
         Product p = productService.findProductById(id);
         if(p == null)
@@ -40,6 +90,23 @@ public class ProductController {
             return ResponseEntity.ok(p);
         }
 
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @GetMapping("/product-manager-access/active")
+    public ResponseEntity<List<Product>> getActiveProducts() {
+        try
+        {
+            List<Product> activeProducts = productService.getActiveProducts(customFeeId);
+
+            if (activeProducts.isEmpty())
+            {
+                return new ResponseEntity<>(activeProducts, HttpStatus.OK);
+            }
+            return new ResponseEntity<>(activeProducts, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
@@ -57,6 +124,34 @@ public class ProductController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PutMapping("/product-manager-access/restore/{id}")
+    public ResponseEntity<String> restoreProductById(@PathVariable int id) {
+        try
+        {
+            productService.restoreProductById(id);
+            return new ResponseEntity<>("Product Restored Successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @GetMapping("/product-manager-access/archived")
+    public ResponseEntity<List<Product>> getArchivedProducts() {
+        try {
+            List<Product> archivedProducts = productService.getArchivedProducts();
+
+            if (archivedProducts.isEmpty())
+            {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(archivedProducts, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.NOT_MODIFIED);
+        }
+    }
+
     @PostMapping("/products")
     public ResponseEntity<String> insertProduct(@RequestBody Product product)
     {
@@ -66,47 +161,46 @@ public class ProductController {
 
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/product-manager-access")
-    public ResponseEntity<String> updateProduct(@RequestBody Product product)
+    public ResponseEntity<String> updateProduct(@RequestBody java.util.Map<String, Object> payload)
     {
+        // Expect payload to contain an 'id' and any fields to update. This is a defensive partial-update
+        Object idObj = payload.get("id");
+        if (idObj == null) return new ResponseEntity<>("Missing id", HttpStatus.BAD_REQUEST);
 
-        Product p = productService.findProductById(product.getId());
-        if(p != null)
-        {
-            productService.updateProduct(product);
-            return new ResponseEntity<>("Product Updated", HttpStatus.OK);
-        } else
-        {
-            // No product found to update
+        int id;
+        try {
+            id = ((Number) idObj).intValue();
+        } catch (ClassCastException ex) {
+            id = Integer.parseInt(idObj.toString());
+        }
+
+        Product existing = productService.findProductById(id);
+        if (existing == null) {
             return new ResponseEntity<>("Product NOT Updated", HttpStatus.NOT_FOUND);
         }
 
+        // Update only fields present in payload
+        if (payload.containsKey("name")) existing.setName((String) payload.get("name"));
+        if (payload.containsKey("imageUrl")) existing.setImageUrl((String) payload.get("imageUrl"));
+        if (payload.containsKey("cost") && payload.get("cost") != null) {
+            existing.setCost(new java.math.BigDecimal(payload.get("cost").toString()));
+        }
+        if (payload.containsKey("weight") && payload.get("weight") != null) {
+            existing.setWeight(new java.math.BigDecimal(payload.get("weight").toString()));
+        }
+        if (payload.containsKey("stock") && payload.get("stock") != null) {
+            try {
+                existing.setStock(((Number) payload.get("stock")).intValue());
+            } catch (ClassCastException ex) {
+                existing.setStock(Integer.parseInt(payload.get("stock").toString()));
+            }
+        }
+
+        productService.updateProduct(existing);
+        return new ResponseEntity<>("Product Updated", HttpStatus.OK);
     }
 
-    /*@PostMapping("/productsWithImage")
-    public ResponseEntity<?> addProductImage(@RequestPart Product product, @RequestPart MultipartFile imageFile) {
-        try {
-            Product productImage = productService.addProductImage(product, imageFile);
-            return new ResponseEntity<>(productImage, HttpStatus.CREATED);
 
-        } catch (IOException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INSUFFICIENT_STORAGE);
-        }
-    }*/
-
-    /*@GetMapping("products/{productId}/image")
-    public ResponseEntity<byte[]> getImageByProductId(@PathVariable int productId)
-    {
-        Product product = productService.findProductById(productId);
-
-        if(product.getId() > 0)
-        {
-            return new ResponseEntity<>(product.getImageData(), HttpStatus.OK);
-        }
-        else
-        {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-    }*/
 
     @GetMapping("/search")
     public List<Product> searchProducts(@RequestParam String keyword)

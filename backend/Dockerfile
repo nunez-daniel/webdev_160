@@ -1,9 +1,9 @@
 FROM maven:3.9.11-eclipse-temurin-21 AS builder
 WORKDIR /workspace
-COPY pom.xml .
+COPY backend/pom.xml .
 RUN mvn dependency:go-offline
 
-COPY src ./src
+COPY backend/src ./src
 RUN mvn clean package -DskipTests
 
 # RUN STAGE - Only has JRE for execution

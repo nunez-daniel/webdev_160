@@ -1,5 +1,6 @@
 package com.ofs_160.webdev.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,9 +18,16 @@ public class OrderItem {
     private BigDecimal unitPrice;
     private Long productId;
 
+    private String imageUrl;
+
+    private BigDecimal weight;
+
     // NTS: get whole product as well using id
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private Order order;
+
+
 }

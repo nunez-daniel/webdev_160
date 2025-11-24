@@ -5,7 +5,10 @@ import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
 import CartPage from "@/pages/CartPage";
 import AppLayout from "@/layouts/AppLayout";
-import Map from '@/pages/Map'
+import Map from "@/pages/Map";
+import UserSettings from "@/pages/UserSettings";
+import AdminDashboard from "@/pages/AdminDashboard";
+import AdminGuard from "@/components/AdminGuard";
 
 const router = createBrowserRouter([
   { path: "/", element: <LoginPage /> },
@@ -16,8 +19,17 @@ const router = createBrowserRouter([
     children: [
       { path: "catalog", element: <CatalogPage /> },
       { path: "products/:id", element: <ProductDetailPage /> },
+      {
+        path: "admin",
+        element: (
+          <AdminGuard>
+            <AdminDashboard />
+          </AdminGuard>
+        ),
+      },
       { path: "cart", element: <CartPage /> },
-      {path:'map',element:<Map/>},
+      { path: "order-history", element: <UserSettings /> },
+      { path: "map", element: <Map /> },
     ],
   },
 ]);

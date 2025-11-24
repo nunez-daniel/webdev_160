@@ -1,6 +1,8 @@
 package com.ofs_160.webdev.Model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -29,6 +31,7 @@ public class Order {
     private Customer customer;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<OrderItem> items;
 
     private String shippingName;
@@ -38,5 +41,10 @@ public class Order {
     private String shippingState;
     private String shippingPostalCode;
     private String shippingCountry;
+
+    @ManyToOne
+    @JoinColumn(name = "delivery_car_id")
+    @JsonBackReference("car_orders")
+    private DeliveryCar deliveryCar;
 
 }
