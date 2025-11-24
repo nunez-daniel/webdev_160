@@ -42,21 +42,23 @@ ToastAction.displayName = ToastPrimitives.Action.displayName
 const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
     <ToastPrimitives.Close
         ref={ref}
-        className="absolute right-2 top-2 rounded-md p-1 text-white opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2"
+        className="absolute right-2 top-2 rounded-md p-1 text-white opacity-90 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 bg-transparent hover:bg-white/10"
         toast-close=""
         {...props}
     >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4 stroke-2" />
     </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName
 
-const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
+const ToastTitle = React.forwardRef(({ className, children, ...props }, ref) => (
     <ToastPrimitives.Title
         ref={ref}
-        className="text-sm font-semibold"
+        className="text-sm font-semibold uppercase"
         {...props}
-    />
+    >
+        {children}
+    </ToastPrimitives.Title>
 ))
 ToastTitle.displayName = ToastPrimitives.Title.displayName
 

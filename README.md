@@ -18,6 +18,13 @@ Initialize the database by running the `db_setup.sql` file. This creates the nec
 
 Insert example data by running `db_initialize_data.sql`. This loads the set of example data for demonstration purposes, or use postman to test out POST methods.
 
+## Docker
+
+Initialize the container setup with 
+$ docker compose -f docker-compose.dev.yml up --build
+and after first initial build run 
+$ docker compose -f docker-compose.dev.yml up
+
 ## Frontend Setup
 
 Using git clone or unpacking zip navivate to frontend folder  then run following commands terminal.

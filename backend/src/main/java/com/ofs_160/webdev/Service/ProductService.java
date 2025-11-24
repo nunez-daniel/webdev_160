@@ -190,6 +190,8 @@ public class ProductService {
             Map<String, Object> m = new HashMap<>();
             m.put("id", String.valueOf(r[0]));
             m.put("name", String.valueOf(r[1]));
+            m.put("price", r[2] != null ? String.valueOf(r[2]) : "0.00");
+            m.put("imageUrl", r[3] != null ? String.valueOf(r[3]) : null);
             out.add(m);
         }
         return out;

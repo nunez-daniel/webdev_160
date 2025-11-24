@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/ofs_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/ofs_db?useSSL=false&serverTimezone=America/Los_Angeles&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=Password123
       - SPRING.DATASOURCE.driver-class-name=com.mysql.cj.jdbc.Driver
@@ -68,7 +68,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./DatabaseData/ofs_db_product.sql:/docker-entrypoint-initdb.d/init_products.sql
-      - ./backend/google_auth.sql:/docker-entrypoint-initdb.d/init_google.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pPassword123"]
       interval: 5s

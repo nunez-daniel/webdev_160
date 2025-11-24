@@ -60,7 +60,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer> {
 
     // Lightweight suggest results for typeahead (top 10)
     @Query(value = """
-      SELECT p.id, p.name 
+      SELECT p.id, p.name, p.cost, p.image_url
       FROM product p
       WHERE 
         p.id <> :customFeeId

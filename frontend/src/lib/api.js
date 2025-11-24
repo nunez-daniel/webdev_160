@@ -12,22 +12,18 @@ export async function fetchProducts(params = {}) {
   const res = await fetch(url.toString(), {
     headers: { Accept: "application/json" },
   });
-  // detect HTML (login page) or redirects which return HTML instead of JSON
   const ct = res.headers.get("content-type") || "";
   if (res.redirected || ct.includes("text/html")) {
     const text = await res.text();
     throw new Error(
-        `Not authenticated or unexpected HTML response when fetching products`
+        "You are not logged in. Please log in to continue."
     );
   }
 
   const productArray = await res.json();
 
-  if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
+  if (!res.ok) throw new Error("Unable to load products. Please try again.");
 
-  // Apply server-side search filter client-side as a fallback (some backends
-  // return full list). Then apply pagination (page/limit) here so the
-  // catalog page receives only the requested slice.
   let filteredProducts = productArray;
   if (search && search.trim()) {
     const searchTerm = search.trim().toLowerCase();
@@ -69,11 +65,11 @@ export async function fetchProductById(id) {
   const ct = res.headers.get("content-type") || "";
   if (res.redirected || ct.includes("text/html")) {
     throw new Error(
-        "Not authenticated or unexpected HTML response when fetching product"
+        "You are not logged in. Please log in to continue."
     );
   }
 
-  if (!res.ok) throw new Error(`Product not found`);
+  if (!res.ok) throw new Error("Product not found. It may have been removed.");
   const product = await res.json();
 
   return {
@@ -91,14 +87,13 @@ export async function createProduct(product) {
   });
 
   if (!res.ok) {
-    throw new Error(`Create product failed (${res.status})`);
+    throw new Error("Unable to create product. Please try again.");
   }
 
   return await res.text();
 }
 
 export async function updateProduct(id, updates) {
-  // Backend expects full product on /product-manager-access PUT or /products/{id} style.
   const payload = { ...updates, id };
   const res = await fetch(`${BASE}/product-manager-access`, {
     method: "PUT",
@@ -108,7 +103,7 @@ export async function updateProduct(id, updates) {
   });
 
   if (!res.ok) {
-    throw new Error(`Update product failed (${res.status})`);
+    throw new Error("Unable to update product. Please try again.");
   }
 
   return await res.text();
@@ -121,7 +116,7 @@ export async function archiveProduct(id) {
   });
 
   if (!res.ok) {
-    throw new Error(`Delete product failed (${res.status})`);
+    throw new Error("Unable to delete product. Please try again.");
   }
 
   return true;
@@ -134,7 +129,7 @@ export async function fetchActiveProducts() {
   });
 
   if (!res.ok) {
-    throw new Error('Failed to fetch active products');
+    throw new Error("Unable to load products. Please try again.");
   }
   return res.json();
 }
@@ -150,12 +145,11 @@ export async function fetchArchivedProducts() {
   const contentType = res.headers.get("content-type") || "";
 
   if (res.status === 401 || res.status === 403 || contentType.includes("text/html")) {
-    console.error(`Authentication/Authorization failed accessing: ${url}. Status: ${res.status}`);
-    throw new Error(`Authentication/Authorization failed for archived products. Status: ${res.status}`);
+    throw new Error("You don't have permission to access this. Please log in as an admin.");
   }
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch archived products (${res.status})`);
+    throw new Error("Unable to load archived products. Please try again.");
   }
 
   return res.json();
@@ -172,7 +166,7 @@ export async function restoreProduct(id) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to restore product: ${response.status} - ${errorText}`);
+    throw new Error("Unable to restore product. Please try again.");
   }
 
   return response.text();
@@ -209,7 +203,7 @@ export async function authenticateUser({ email, password }) {
     return true;
   }
 
-  throw new Error(`Login Request failed with status: ${response.status}`);
+  throw new Error("Login failed. Please check your credentials and try again.");
 }
 
 export async function registerUser({ full_name, email, password }) {
@@ -236,16 +230,14 @@ export async function registerUser({ full_name, email, password }) {
     return true;
   }
 
-  // TODO... email taken etc
   if (response.status === 409) {
     throw new Error(
-      
-        "Registration Failed: Email address is already registered."
+        "This email address is already registered. Please use a different email or try logging in."
     );
   }
 
   throw new Error(
-      `Registration Request failed with status: ${response.status}`
+      "Unable to create account. Please try again."
   );
 }
 
@@ -254,7 +246,7 @@ export async function fetchAllOrders() {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-  if (!res.ok) throw new Error(`Failed to fetch orders (${res.status})`);
+  if (!res.ok) throw new Error("Unable to load orders. Please try again.");
   const text = await res.text();
   if (!text || text.trim() === "") return [];
   return JSON.parse(text);
@@ -265,7 +257,7 @@ export async function fetchOrdersByStatus(status = "PAID") {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-  if (!res.ok) throw new Error(`Failed to fetch orders (${res.status})`);
+  if (!res.ok) throw new Error("Unable to load orders. Please try again.");
   const text = await res.text();
   if (!text || text.trim() === "") return [];
   return JSON.parse(text);
@@ -276,45 +268,8 @@ export async function fetchOrdersInCar(carId) {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-  if (!res.ok) throw new Error(`Failed to fetch car orders (${res.status})`);
+  if (!res.ok) throw new Error("Unable to load delivery orders. Please try again.");
   const text = await res.text();
   if (!text || text.trim() === "") return [];
   return JSON.parse(text);
 }
-
-
-
-// MOCK IMPLEMENTATIONS
-/*
-
-import { fetchProductsMock, fetchProductByIdMock } from "./mock";
-
-const USE_MOCK = String(import.meta.env.VITE_USE_MOCK) === "true";
-const BASE = "/api";
-
-export async function fetchProducts(params = {}) {
-  if (USE_MOCK) return fetchProductsMock(params);
-
-  const { page = 1, limit = 12, search = "" } = params;
-  const url = new URL(`${BASE}/products`, window.location.origin);
-  url.searchParams.set("page", page);
-  url.searchParams.set("limit", limit);
-  if (search) url.searchParams.set("search", search);
-
-  const res = await fetch(url.toString(), {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
-  return /!** @type {{items:any[], total:number}} *!/ (await res.json());
-}
-
-export async function fetchProductById(id) {
-  if (USE_MOCK) return fetchProductByIdMock(id);
-
-  const res = await fetch(`${BASE}/products/${id}`, {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error("Product not found");
-  return /!** @type {any} *!/ (await res.json());
-}
-*/
