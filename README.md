@@ -23,7 +23,7 @@ Insert example data by running `db_initialize_data.sql`. This loads the set of e
 Initialize the container setup with 
 $ docker compose -f docker-compose.dev.yml up --build
 and after first initial build run 
-docker compose -f docker-compose.dev.yml up
+$ docker compose -f docker-compose.dev.yml up
 
 ## Frontend Setup
 
