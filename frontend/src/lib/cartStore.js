@@ -50,7 +50,7 @@ export const useCart = create((set, get) => ({
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
-          throw new Error("User please login");
+          throw new Error("You are not logged in. Please log in to continue.");
         } else if (response.status === 400) {
           const errorText = await response.text();
           throw new Error(`Bad request: ${errorText}`);
@@ -58,12 +58,10 @@ export const useCart = create((set, get) => ({
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       }
-      // Defensive: some endpoints redirect to login and return HTML. Detect and handle.
       const ct = response.headers.get("content-type") || "";
       if (response.redirected || ct.includes("text/html")) {
         const html = await response.text();
-        // If the server returned HTML (likely login page), surface a clear error.
-        throw new Error("Not authenticated (received HTML login page)");
+        throw new Error("You are not logged in. Please log in to continue.");
       }
 
       const data = await response.json();
@@ -109,7 +107,10 @@ export const useCart = create((set, get) => ({
         }),
       });
     } catch (err) {
-      showToast("Failed to Add to Cart", err.message || "An error occurred while adding the item to your cart.");
+      const userMessage = err.message.includes("not logged in") 
+        ? err.message 
+        : "Unable to add item to cart. Please try again.";
+      showToast("Failed to Add to Cart", userMessage);
       throw err;
     }
   },
@@ -121,7 +122,6 @@ export const useCart = create((set, get) => ({
   updateQty: async (id, qty) => {
     const safeQty = Math.max(1, Math.min(99, qty));
 
-    // remove if 0
     if (qty === 0) {
       return get().remove(id);
     }
@@ -139,7 +139,6 @@ export const useCart = create((set, get) => ({
     await get().apiFetch("/clear", { method: "DELETE" });
   },
 
-  // Reset local cart state (use after logout)
   reset: () =>
     set({
       items: [],
@@ -170,13 +169,14 @@ export const useCart = create((set, get) => ({
       });
 
       if (response.status === 401 || response.status === 403) {
-        showToast("Not Logged In", "Your shopping cart is now empty.", "success");
+        showToast("Not Logged In", "Please log in to complete your checkout.");
         set({ error: "You must be logged in to checkout", isLoading: false });
         return;
       }
 
       if (!response.ok) {
         const text = await response.text();
+        showToast("Checkout Failed", "Unable to process your checkout. Please try again.");
         set({
           error: `Checkout failed: ${response.status} ${response.statusText} - ${text}`,
           isLoading: false,
@@ -187,8 +187,9 @@ export const useCart = create((set, get) => ({
       const ct = response.headers.get("content-type") || "";
       if (response.redirected || ct.includes("text/html")) {
         const html = await response.text();
+        showToast("Not Logged In", "Please log in to complete your checkout.");
         set({
-          error: "Not authenticated (received HTML login page)",
+          error: "You are not logged in",
           isLoading: false,
         });
         return;
@@ -199,6 +200,7 @@ export const useCart = create((set, get) => ({
         data = await response.json();
       } catch (e) {
         const txt = await response.text();
+        showToast("Checkout Error", "Something went wrong. Please try again.");
         set({
           error: `Invalid response from server: ${txt}`,
           isLoading: false,
@@ -211,13 +213,12 @@ export const useCart = create((set, get) => ({
         return;
       }
 
-      // If we get here, show a helpful message
       const msg =
-        (data && (data.message || data.error)) || "Unknown checkout error";
+        (data && (data.message || data.error)) || "Something went wrong with your checkout";
+      showToast("Checkout Failed", msg);
       set({ error: `Checkout failed: ${msg}`, isLoading: false });
       return;
     } catch (err) {
-      // TODO logging to user temp ...
       console.error("Checkout error:", err);
     }
   },
@@ -236,7 +237,6 @@ export const useCart = create((set, get) => ({
     const prod = get().saved.find((x) => x.id === id);
     if (!prod) return {};
 
-    // page default is add to cart not ATC quantity which I think we prefer
     get()
       .add(prod, 1)
       .then(() => {
@@ -249,7 +249,6 @@ export const useCart = create((set, get) => ({
       });
   },
 
-  // TODO... to implement the use of Boolean for over 20 or not
   totals: () => {
     const { items, backendTotals } = get();
     const count = items.reduce((n, i) => n + i.qty, 0);
@@ -268,13 +267,10 @@ export const useCart = create((set, get) => ({
     };
   },
 
-  // Get quantity of a specific product in cart
   getProductQuantity: (productId) => {
     const { items } = get();
     const item = items.find(
       (item) =>
-        // Some DTOs use `productId`, others embed `product.id`, and some old responses put the
-        // product id into `id` as a string — check all variants defensively.
         Number(item?.productId) === Number(productId) ||
         Number(item?.product?.id) === Number(productId) ||
         Number(item?.id) === Number(productId)
