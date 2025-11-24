@@ -77,7 +77,6 @@ export default function ChatWidget() {
 
     const chatWidth = 320;
     const chatHeight = 400;
-    const buttonSize = 56;
 
     // If current position would make chat go off right edge, move left
     if (newX + chatWidth > window.innerWidth) {
@@ -171,7 +170,7 @@ export default function ChatWidget() {
       const errorMessage = {
         role: "assistant",
         content:
-            "Sorry, I'm having trouble connecting. Please try again later.",
+          "Sorry, I'm having trouble connecting. Please try again later.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -187,84 +186,84 @@ export default function ChatWidget() {
   };
 
   return (
-      <div
-          ref={widgetRef}
-          className="fixed z-50 transition-all"
-          style={{
-            left: position.x,
-            top: position.y,
-            cursor: isDragging ? "grabbing" : isOpen ? "default" : "grab",
-          }}
-      >
-        {!isOpen ? (
+    <div
+      ref={widgetRef}
+      className="fixed z-50 transition-all"
+      style={{
+        left: position.x,
+        top: position.y,
+        cursor: isDragging ? "grabbing" : isOpen ? "default" : "grab",
+      }}
+    >
+      {!isOpen ? (
+        <Button
+          onMouseDown={handleMouseDown}
+          onClick={toggleChat}
+          className="h-14 w-14 rounded-full bg-green-600 hover:bg-green-700 focus:bg-green-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+          title="Chat with us"
+        >
+          <MessageCircle className="h-6 w-6 text-white" />
+        </Button>
+      ) : (
+        <div className="bg-white border border-gray-300 rounded-lg shadow-lg w-80 h-96 flex flex-col">
+          <div
+            className="bg-green-600 text-white p-3 rounded-t-lg cursor-grab flex justify-between items-center"
+            onMouseDown={handleMouseDown}
+          >
+            <span className="font-semibold">Customer Service</span>
             <Button
-                onMouseDown={handleMouseDown}
-                onClick={toggleChat}
-                className="h-14 w-14 rounded-full bg-green-600 hover:bg-green-700 focus:bg-green-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-lg hover:shadow-xl transition-all duration-200 border-0"
-                title="Chat with us"
+              onClick={toggleChat}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-white hover:bg-green-700"
             >
-              <MessageCircle className="h-6 w-6 text-white" />
+              <X className="h-4 w-4" />
             </Button>
-        ) : (
-            <div className="bg-white border border-gray-300 rounded-lg shadow-lg w-80 h-96 flex flex-col">
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {messages.length === 0 && (
+              <div className="text-gray-500 text-center text-sm">
+                Hi! How can I help you with your experience using our grocery
+                app?
+              </div>
+            )}
+            {messages.map((msg, index) => (
               <div
-                  className="bg-green-600 text-white p-3 rounded-t-lg cursor-grab flex justify-between items-center"
-                  onMouseDown={handleMouseDown}
+                key={index}
+                className={`p-2 rounded-lg text-sm ${
+                  msg.role === "user" ? "bg-blue-100 ml-8" : "bg-gray-100 mr-8"
+                }`}
               >
-                <span className="font-semibold">Customer Service</span>
-                <Button
-                    onClick={toggleChat}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-white hover:bg-green-700"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                {msg.content}
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {messages.length === 0 && (
-                    <div className="text-gray-500 text-center text-sm">
-                      Hi! How can I help you with your experience using our grocery
-                      app?
-                    </div>
-                )}
-                {messages.map((msg, index) => (
-                    <div
-                        key={index}
-                        className={`p-2 rounded-lg text-sm ${
-                            msg.role === "user" ? "bg-blue-100 ml-8" : "bg-gray-100 mr-8"
-                        }`}
-                    >
-                      {msg.content}
-                    </div>
-                ))}
-                {isLoading && (
-                    <div className="bg-gray-100 mr-8 p-2 rounded-lg text-sm">
-                      Typing...
-                    </div>
-                )}
-                <div ref={messagesEndRef} />
+            ))}
+            {isLoading && (
+              <div className="bg-gray-100 mr-8 p-2 rounded-lg text-sm">
+                Typing...
               </div>
-              <div className="p-3 border-t border-gray-200 flex">
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask about your app experience..."
-                    className="flex-1 border border-gray-300 rounded-l px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    disabled={isLoading}
-                />
-                <Button
-                    onClick={sendMessage}
-                    disabled={!input.trim() || isLoading}
-                    className="bg-green-600 hover:bg-green-700 rounded-l-none rounded-r px-3"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-        )}
-      </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <div className="p-3 border-t border-gray-200 flex">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about your app experience..."
+              className="flex-1 border border-gray-300 rounded-l px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              disabled={isLoading}
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!input.trim() || isLoading}
+              className="bg-green-600 hover:bg-green-700 rounded-l-none rounded-r px-3"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

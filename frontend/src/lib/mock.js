@@ -118,7 +118,7 @@ export async function fetchProductsMock(params = {}) {
       )
     : expanded;
   const start = (page - 1) * limit;
-  const items = filtered.slice(start, start + limit);
+  const subset = filtered.slice(start, start + limit);
   return { items: subset, total: filtered.length };
 }
 

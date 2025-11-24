@@ -86,7 +86,7 @@ export default function UserSettings() {
       try {
         const data = JSON.parse(text);
         setOrders(data || []);
-      } catch (jsonError) {
+      } catch {
         setOrders([]);
       }
     } catch (err) {

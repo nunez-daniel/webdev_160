@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/lib/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,6 @@ import { useCart } from "@/lib/cartStore";
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const add = useCart((s) => s.add);
   const updateQty = useCart((s) => s.updateQty);
   const remove = useCart((s) => s.remove);
@@ -212,6 +210,7 @@ export default function ProductCard({ product }) {
                   msg.includes("401") ||
                   msg.includes("403")
                 ) {
+                  // TODO: Handle auth errors
                 } else if (
                   msg.toLowerCase().includes("bad request") ||
                   msg.toLowerCase().includes("not enough stock")
@@ -222,7 +221,6 @@ export default function ProductCard({ product }) {
                   );
                   setDialogOpen(true);
                   setLocalQty(0);
-                } else {
                 }
               }
             }}

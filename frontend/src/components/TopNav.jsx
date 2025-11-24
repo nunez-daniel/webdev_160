@@ -35,7 +35,7 @@ import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
 
 function CartSummary() {
-  const { items = [], remove, updateQty, checkoutLink, totals } = useCart();
+  const { checkoutLink, totals } = useCart();
   const t = totals();
 
   const navigate = useNavigate();
@@ -52,7 +52,9 @@ function CartSummary() {
       </div>
       <div className="flex justify-between text-sm">
         <span>Fees</span>
-        <span className="font-medium">${(t.under_twenty_lbs ? 10 : 0).toFixed(2)}</span>
+        <span className="font-medium">
+          ${(t.under_twenty_lbs ? 10 : 0).toFixed(2)}
+        </span>
       </div>
       <div className="flex justify-between text-sm">
         <span>Total Weight</span>
@@ -162,7 +164,7 @@ export default function TopNav() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [, setSearchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
 
   function goSearch(term) {
@@ -205,7 +207,7 @@ export default function TopNav() {
   }
 
   const [recording, setRecording] = useState(false);
-  function handleClick(e) {
+  function handleClick() {
     if (!("webkitSpeechRecognition" in window)) {
       return;
     }
@@ -357,7 +359,9 @@ export default function TopNav() {
                               onMouseLeave={() => setActive(-1)}
                               onSelect={() => goSearch(s.name)}
                               className={`${
-                                active >= 0 && idx === active ? "bg-green-50" : ""
+                                active >= 0 && idx === active
+                                  ? "bg-green-50"
+                                  : ""
                               } hover:bg-green-50 p-3 cursor-pointer`}
                             >
                               <div className="flex items-center gap-3 w-full">
@@ -367,7 +371,7 @@ export default function TopNav() {
                                     alt={s.name}
                                     className="w-8 h-8 object-cover rounded"
                                     onError={(e) => {
-                                      e.target.style.display = 'none';
+                                      e.target.style.display = "none";
                                     }}
                                   />
                                 )}
@@ -494,17 +498,19 @@ export default function TopNav() {
                           const cart = useCart.getState();
                           if (cart && typeof cart.reset === "function")
                             cart.reset();
-                        } catch (e) {
-                          console.warn("Failed to reset cart state locally", e);
+                        } catch {
+                          console.warn("Failed to reset cart state locally");
                         }
 
                         window.location.href = "/";
-                      } catch (e) {
+                      } catch {
                         try {
                           const cart = useCart.getState();
                           if (cart && typeof cart.reset === "function")
                             cart.reset();
-                        } catch (er) {}
+                        } catch {
+                          console.warn("Failed to reset cart state locally");
+                        }
                         window.location.href = "/";
                       }
                     }}

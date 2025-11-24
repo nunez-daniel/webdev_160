@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useToast } from "@/lib/use-toast";
 import { fetchProductById, fetchProducts } from "@/lib/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,6 @@ function DetailSkeleton() {
 
 export default function ProductDetailPage() {
   const { id } = useParams();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,7 +64,7 @@ export default function ProductDetailPage() {
       .then((data) => {
         if (mounted) setP(data);
       })
-      .catch((e) =>
+      .catch(() =>
         setError("Unable to load product details. Please try again.")
       )
       .finally(() => setLoading(false));
@@ -146,7 +144,7 @@ export default function ProductDetailPage() {
       } else {
         setHasMore(false);
       }
-    } catch (e) {
+    } catch {
       setHasMore(false);
     } finally {
       setRelatedLoading(false);
@@ -276,6 +274,7 @@ export default function ProductDetailPage() {
                             msg.includes("401") ||
                             msg.includes("403")
                           ) {
+                            // Intentionally empty - no action needed for login errors
                           } else if (
                             msg.toLowerCase().includes("bad request") ||
                             msg.toLowerCase().includes("not enough stock")
@@ -288,6 +287,7 @@ export default function ProductDetailPage() {
                             setDialogOpen(true);
                             setLocalQty(0);
                           } else {
+                            // Intentionally empty - no action needed for other errors
                           }
                         }
                       }}
@@ -428,7 +428,9 @@ export default function ProductDetailPage() {
                           msg.includes("401") ||
                           msg.includes("403")
                         ) {
+                          // Intentionally empty - no action needed for login errors
                         } else {
+                          // Intentionally empty - no action needed for other errors
                         }
                       }
                     }}
