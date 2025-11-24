@@ -601,10 +601,15 @@ export default function MapPage() {
                 Loading orders...
               </div>
             ) : error ? (
-              <Card className="p-4">
-                <div className="text-center text-red-600">
-                  Error: {error}
-                  <Button onClick={fetchOrders} className="mt-2" size="sm">
+              <Card className="p-8">
+                <div className="text-center space-y-3">
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                  <Button 
+                    onClick={fetchOrders} 
+                    variant="outline" 
+                    size="sm"
+                    className="text-green-600 border-green-600 hover:bg-green-50"
+                  >
                     Retry
                   </Button>
                 </div>
