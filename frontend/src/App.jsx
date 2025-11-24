@@ -7,20 +7,20 @@ import ChatWidget from "@/components/ChatWidget";
 import "./App.css";
 
 export default function App() {
-    const { initializeCart } = useCart();
-    const { toast } = useToast();
+  const { initializeCart } = useCart();
+  const { toast } = useToast();
 
-    useEffect(() => {
-        setToastFunction(toast);
+  useEffect(() => {
+    setToastFunction(toast);
 
-        initializeCart().catch((err) => {});
-    }, [initializeCart, toast]);
+    initializeCart().catch((err) => {});
+  }, [initializeCart, toast]);
 
-    return (
-        <div className="h-screen w-screen">
-            <AppRoutes />
-            <ChatWidget />
-            <Toaster />
-        </div>
-    );
+  return (
+    <div className="h-screen w-screen">
+      <AppRoutes />
+      <ChatWidget />
+      <Toaster />
+    </div>
+  );
 }

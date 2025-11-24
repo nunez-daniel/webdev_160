@@ -29,11 +29,11 @@ export default function LoginPage() {
       if (user) {
         navigate("/catalog");
       } else {
-        alert("User not found");
+        // alert("User not found");
       }
     } catch (err) {
-      alert("Login failed");
-    }finally {
+      // alert("Login failed");
+    } finally {
       setLoading(false);
     }
   }
@@ -117,12 +117,12 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between">
             <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading && (
-                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               )}
 
               {loading ? "Signing in..." : "Sign in"}
