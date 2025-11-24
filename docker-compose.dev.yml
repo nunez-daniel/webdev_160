@@ -67,6 +67,7 @@ services:
       - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./DatabaseData/ofs_db_product.sql:/docker-entrypoint-initdb.d/init_products.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pPassword123"]
       interval: 5s

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Send, X } from "lucide-react";
+
+const API_BASE_URL = "http://localhost:8080";
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
