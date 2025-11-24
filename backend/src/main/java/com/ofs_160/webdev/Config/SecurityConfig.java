@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{id}", "products/{productId}/image").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/login").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/logout").hasAnyAuthority("CUSTOMER", "ADMIN")
                         .requestMatchers(HttpMethod.POST,"/signup").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/orders").hasAnyAuthority("CUSTOMER", "ADMIN")

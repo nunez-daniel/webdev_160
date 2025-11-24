@@ -9,6 +9,8 @@ import Map from "@/pages/Map";
 import UserSettings from "@/pages/UserSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminGuard from "@/components/AdminGuard";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import RouteErrorBoundary from "@/components/RouteErrorBoundary";
 
 const router = createBrowserRouter([
   { path: "/", element: <LoginPage /> },
@@ -16,6 +18,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <AppLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { path: "catalog", element: <CatalogPage /> },
       { path: "products/:id", element: <ProductDetailPage /> },
@@ -28,8 +31,20 @@ const router = createBrowserRouter([
         ),
       },
       { path: "cart", element: <CartPage /> },
-      { path: "order-history", element: <UserSettings /> },
-      { path: "map", element: <Map /> },
+      { path: "order-history", 
+        element: (
+          <ProtectedRoute>
+            <UserSettings /> 
+          </ProtectedRoute>
+        ),
+      },
+      { path: "map", 
+        element: (
+          <ProtectedRoute>
+            <Map /> 
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);

@@ -34,6 +34,7 @@ import { useCart } from "@/lib/cartStore";
 import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
 
+
 /** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
   const { items = [], remove, updateQty, checkoutLink } = useCart();
@@ -151,6 +152,7 @@ export default function TopNav() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCust, setIsCust] = useState(false);
 
   function goSearch(term) {
     const finalTerm = term || value;
@@ -237,6 +239,26 @@ export default function TopNav() {
           // backend returns a string containing role or authorities; check for ADMIN
           if (typeof text === "string" && text.toUpperCase().includes("ADMIN")) {
             setIsAdmin(true);
+          }
+        })
+        .catch(() => {
+          /* ignore */
+        });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+    useEffect(() => {
+    let mounted = true;
+    fetch("http://localhost:8080/me", { credentials: "include" })
+        .then((res) => res.text())
+        .then((text) => {
+          if (!mounted) return;
+          // backend returns a string containing role or authorities; check for ADMIN
+          if (typeof text === "string" && text.toUpperCase().includes("CUSTOMER")) {
+            setIsCust(true);
           }
         })
         .catch(() => {
@@ -410,6 +432,7 @@ export default function TopNav() {
                 </PopoverTrigger>
                 <PopoverContent className="w-48 p-2 bg-white text-gray-800">
                   <div className="flex flex-col">
+                    {(isCust || isAdmin) && (
                     <Button
                         variant="ghost"
                         size="default"
@@ -417,7 +440,8 @@ export default function TopNav() {
                         onClick={() => navigate("/order-history")}
                     >
                       Orders
-                    </Button>
+                    </Button>)}
+                    {(isCust || isAdmin) && (
                     <Button
                         variant="ghost"
                         size="default"
@@ -425,7 +449,7 @@ export default function TopNav() {
                         onClick={() => navigate("/map")}
                     >
                       Track Delivery
-                    </Button>
+                    </Button>)}
                     {isAdmin && (
                         <Button
                             variant="ghost"
@@ -437,6 +461,7 @@ export default function TopNav() {
                         </Button>
                     )}
                     <Separator />
+                    {isCust && (
                     <Button
                         variant="ghost"
                         size="default"
@@ -473,7 +498,19 @@ export default function TopNav() {
                         }}
                     >
                       Sign out
-                    </Button>
+                    </Button>)}
+                    {!isCust && !isAdmin && (
+                    <Button
+                        variant="ghost"
+                        size="default"
+                        className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                        onClick={async () => {
+                            window.location.href = "/";
+                          }
+                        }
+                    >
+                      Sign In
+                    </Button>)}
                   </div>
                 </PopoverContent>
               </Popover>
