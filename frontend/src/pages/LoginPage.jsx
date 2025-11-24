@@ -1,6 +1,5 @@
 import { use, useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-// import { fetchUserByCredentials } from "@/lib/mock";
 import { authenticateUser } from "@/lib/api";
 import { FcGoogle } from "react-icons/fc";
 import { Paper, Collapse } from "@mui/material";
@@ -20,19 +19,13 @@ export default function LoginPage() {
   async function submit(e) {
     e.preventDefault();
     setLoading(true);
-    /*if (!submittable) {
-      console.log("form not submitted. error.");
-      return;
-    }*/
     try {
       const user = await authenticateUser({ email, password });
       if (user) {
         navigate("/catalog");
       } else {
-        // alert("User not found");
       }
     } catch (err) {
-      // alert("Login failed");
     } finally {
       setLoading(false);
     }

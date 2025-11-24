@@ -94,7 +94,6 @@ export default function ProductCard({ product }) {
       }}
     >
       <div className="p-4">
-        {/* Product Image */}
         <div className="relative mb-4">
           <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-50">
             {product.imageUrl ? (
@@ -124,7 +123,6 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Product Info */}
         <div className="space-y-2">
           <div className="min-h-[2.5rem]">
             <h3 className="font-medium text-gray-900 text-sm leading-tight line-clamp-2">
@@ -142,14 +140,12 @@ export default function ProductCard({ product }) {
             <span>({product.reviewsCount ?? 127})</span>
           </div>
 
-          {/* Description snippet if available */}
           {product.description && (
             <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
               {product.description}
             </p>
           )}
 
-          {/* Nutrition highlights */}
           <div className="flex flex-wrap gap-1">
             {product.organic && (
               <Badge
@@ -179,7 +175,6 @@ export default function ProductCard({ product }) {
         </div>
       </div>
 
-      {/* Price and Add to Cart */}
       <div className="px-4 pb-4">
         <Separator className="mb-4 border-gray-100" />
         <div className="flex items-center justify-between mb-3">
@@ -228,9 +223,6 @@ export default function ProductCard({ product }) {
                   setDialogOpen(true);
                   setLocalQty(0);
                 } else {
-                  // alert(
-                  //   `Failed to add ${product.name} to cart. Please try again.`
-                  // );
                 }
               }
             }}
@@ -350,7 +342,6 @@ export default function ProductCard({ product }) {
         ) : null}
       </div>
 
-      {/* Dialog for showing backend messages (e.g., out of stock) */}
       <Dialog open={dialogOpen} onOpenChange={(v) => setDialogOpen(v)}>
         <DialogContent
           className="max-w-sm"

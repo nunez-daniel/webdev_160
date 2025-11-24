@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-// Simple guard that checks /me endpoint for ADMIN authority before rendering children.
-// If not admin (or not authenticated), redirects to login (root).
 export default function AdminGuard({ children }) {
   const [loading, setLoading] = useState(true);
   const [allowed, setAllowed] = useState(false);
@@ -33,7 +31,7 @@ export default function AdminGuard({ children }) {
     };
   }, []);
 
-  if (loading) return null; // or a spinner
+  if (loading) return null;
   if (!allowed) return <Navigate to="/" replace />;
   return children;
 }

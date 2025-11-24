@@ -128,14 +128,12 @@ export default function ProductDetailPage() {
     };
   }, [id, relatedPage]);
 
-  // navigate to previous page (always allowed when >1)
   async function handlePrev() {
     if (relatedPage <= 1) return;
     const target = relatedPage - 1;
     setRelatedPage(target);
   }
 
-  // navigate to next page only if next page actually has items
   async function handleNext() {
     const target = relatedPage + 1;
     setRelatedLoading(true);
@@ -146,7 +144,6 @@ export default function ProductDetailPage() {
         setRelatedPage(target);
         setHasMore(items.length === RELATED_PAGE_SIZE);
       } else {
-        // no more items; mark hasMore false so UI disables Next
         setHasMore(false);
       }
     } catch (e) {
@@ -205,7 +202,6 @@ export default function ProductDetailPage() {
             <div className="flex items-start justify-between gap-2">
               <h1 className="text-3xl font-semibold">{p.name}</h1>
               {(() => {
-                // compute availability from product stock and quantity in cart
                 const stock = Math.max(
                   0,
                   Number(p?.stock ?? (p?.inStock ? 9999 : 0))
@@ -220,7 +216,6 @@ export default function ProductDetailPage() {
               })()}
             </div>
 
-            {/* Dialog for backend messages (stock errors) */}
             <Dialog open={dialogOpen} onOpenChange={(v) => setDialogOpen(v)}>
               <DialogContent className="max-w-sm">
                 <DialogHeader>
@@ -249,7 +244,6 @@ export default function ProductDetailPage() {
             </p>
 
             <div className="flex gap-3 pt-2">
-              {/** Compute cart / stock visibility once so we can hide Buy Now when control is shown */}
               {(() => {
                 const quantityInCart = p ? getProductQuantity(p.id) || 0 : 0;
                 const stock = Math.max(
@@ -282,7 +276,6 @@ export default function ProductDetailPage() {
                             msg.includes("401") ||
                             msg.includes("403")
                           ) {
-                            // alert("Please log in to add items to your cart");
                           } else if (
                             msg.toLowerCase().includes("bad request") ||
                             msg.toLowerCase().includes("not enough stock")
@@ -295,7 +288,6 @@ export default function ProductDetailPage() {
                             setDialogOpen(true);
                             setLocalQty(0);
                           } else {
-                            // alert("Failed to add item. Please try again.");
                           }
                         }
                       }}
@@ -305,7 +297,6 @@ export default function ProductDetailPage() {
                   );
                 }
 
-                // show quantity control
                 return (
                   <div className="flex items-center gap-2">
                     <Button
@@ -410,7 +401,6 @@ export default function ProductDetailPage() {
                 );
               })()}
 
-              {/* Only show Buy Now when control is NOT shown */}
               {(() => {
                 const quantityInCart = p ? getProductQuantity(p.id) || 0 : 0;
                 const showControl = quantityInCart > 0 || optimisticAdded;
@@ -438,9 +428,7 @@ export default function ProductDetailPage() {
                           msg.includes("401") ||
                           msg.includes("403")
                         ) {
-                          // alert("Please log in to buy");
                         } else {
-                          // alert("Failed to add item. Please try again.");
                         }
                       }
                     }}
@@ -458,7 +446,6 @@ export default function ProductDetailPage() {
         </div>
       )}
 
-      {/* Related / browse section */}
       <section className="pt-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">

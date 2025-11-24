@@ -88,7 +88,6 @@ export default function AdminDashboard() {
         window.location.reload();
       } catch (error) {
         console.error("Restore failed:", error);
-        // alert("Failed to restore product. See console for details.");
       }
     }
   };
@@ -142,7 +141,6 @@ export default function AdminDashboard() {
       </div>
 
       <div>
-        {/* List view using table-like rows for admin editing (paginated) */}
         <div className="overflow-x-auto bg-white rounded shadow-sm">
           <table className="w-full text-left">
             <thead className="border-b">
@@ -170,7 +168,6 @@ export default function AdminDashboard() {
           </table>
         </div>
 
-        {/* Pagination controls for list view */}
         <div className="flex items-center justify-between mt-4">
           <div className="text-sm text-gray-600">
             Showing {Math.min(totalProductsInView, (page - 1) * PAGE_SIZE + 1)}{" "}
@@ -221,7 +218,6 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={(o) => setCreateOpen(o)}>
         <DialogContent>
           <DialogHeader>
@@ -241,7 +237,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
           <DialogHeader>

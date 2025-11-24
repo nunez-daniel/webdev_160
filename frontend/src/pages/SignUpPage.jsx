@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/lib/use-toast";
-import { registerUser } from "@/lib/api"; // your user registration logic
+import { registerUser } from "@/lib/api";
 import view from "../assets/view.png";
 import hide from "../assets/hide.png";
 import { Paper, Collapse } from "@mui/material";
@@ -35,9 +35,6 @@ export default function SignUpPage() {
           "Please ensure your password meets all requirements before submitting.",
         variant: "destructive",
       });
-      // alert(
-      //   "Please ensure your password meets all requirements before submitting."
-      // );
       setVisible(true);
       return;
     }
@@ -45,14 +42,10 @@ export default function SignUpPage() {
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
-        // alert("Account created successfully! Please login.");
         navigate("/");
       } else {
-        //  alert("Username already taken");
       }
-    } catch (err) {
-      //alert("Signup failed");
-    }
+    } catch (err) {}
   }
 
   function checkPassword(pw) {
@@ -75,7 +68,6 @@ export default function SignUpPage() {
         </h2>
 
         <form onSubmit={submit} className="space-y-4">
-          {/* Full Name */}
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Full name
@@ -89,7 +81,6 @@ export default function SignUpPage() {
             />
           </label>
 
-          {/* Email */}
           <label className="block">
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Email
@@ -103,7 +94,6 @@ export default function SignUpPage() {
             />
           </label>
 
-          {/* Password */}
           <div>
             <label className="block">
               <div className="flex justify-between">
@@ -132,7 +122,6 @@ export default function SignUpPage() {
               />
             </label>
 
-            {/* Animated password rule collapse */}
             <Collapse in={visible}>
               <Paper
                 className="w-full max-w-sm"
@@ -178,7 +167,6 @@ export default function SignUpPage() {
             </Collapse>
           </div>
 
-          {/* Submit + Login link */}
           <div className="flex items-center justify-between">
             <button
               type="submit"

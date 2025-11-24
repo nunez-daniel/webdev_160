@@ -58,7 +58,6 @@ export const useCart = create((set, get) => ({
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
       }
-      // Defensive: some endpoints redirect to login and return HTML. Detect and handle.
       const ct = response.headers.get("content-type") || "";
       if (response.redirected || ct.includes("text/html")) {
         const html = await response.text();

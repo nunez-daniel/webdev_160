@@ -48,7 +48,6 @@ export default function ProductForm({
           setForm({ name: "", cost: "", stock: "", imageUrl: "", weight: "" });
         } catch (err) {
           console.error(err);
-          // alert("Failed to save product: " + (err.message || err));
         }
       }}
       className={
@@ -93,7 +92,6 @@ export default function ProductForm({
         value={form.weight}
         onChange={(e) => setForm({ ...form, weight: e.target.value })}
       />
-      {/* If there are additional attributes later (brand, category, description) add inputs here. */}
       <div className={layout === "stack" ? "flex gap-2 pt-2" : undefined}>
         <Button type="submit" disabled={submitting}>
           {initial ? "Save" : "Create"}

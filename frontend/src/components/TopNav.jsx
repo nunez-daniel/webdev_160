@@ -34,7 +34,6 @@ import { useCart } from "@/lib/cartStore";
 import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
 
-/** Cart summary renders fee/total using local computed subtotal */
 function CartSummary() {
   const { items = [], remove, updateQty, checkoutLink } = useCart();
 
@@ -244,9 +243,7 @@ export default function TopNav() {
           setIsAdmin(true);
         }
       })
-      .catch(() => {
-        /* ignore */
-      });
+      .catch(() => {});
 
     return () => {
       mounted = false;
@@ -355,7 +352,6 @@ export default function TopNav() {
               <Search className="h-4 w-4" />
             </Button>
 
-            {/* Mobile Map Button */}
             <Button
               variant="ghost"
               size="sm"
@@ -390,9 +386,6 @@ export default function TopNav() {
               </SheetContent>
             </Sheet>
 
-            {/* Map/Robot Tracking (mobile only) remains as a separate button for small screens */}
-
-            {/* Three-dash menu for extra actions */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -400,7 +393,6 @@ export default function TopNav() {
                   size="sm"
                   className="bg-white text-green-600 hover:bg-green-600 hover:text-white"
                 >
-                  {/* simple three-dash icon */}
                   <svg
                     className="h-4 w-4"
                     viewBox="0 0 20 20"
@@ -464,14 +456,11 @@ export default function TopNav() {
 
                         window.location.href = "/";
                       } catch (e) {
-                        // If backend call fails, still clear local state and send to login
                         try {
                           const cart = useCart.getState();
                           if (cart && typeof cart.reset === "function")
                             cart.reset();
-                        } catch (er) {
-                          /* ignore */
-                        }
+                        } catch (er) {}
                         window.location.href = "/";
                       }
                     }}
