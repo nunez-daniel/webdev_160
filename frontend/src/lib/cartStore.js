@@ -1,31 +1,10 @@
 import { create } from "zustand";
-import { getFeeProductId } from "@/lib/config";
 
 const API_BASE_URL = "http://localhost:8080";
-
-
 
 function money(n) {
   return Math.round((Number(n) || 0) * 100) / 100;
 }
-
-let toastFunction = null;
-
-export const setToastFunction = (fn) => {
-  toastFunction = fn;
-};
-
-
-
-const showToast = (title, description, variant = "destructive") => {
-  if (toastFunction) {
-    toastFunction({
-      title,
-      description,
-      variant,
-    });
-  }
-};
 
 export const useCart = create((set, get) => ({
   items: [],
@@ -105,18 +84,13 @@ export const useCart = create((set, get) => ({
   },
 
   add: async (product, qty = 1) => {
-    try {
-      await get().apiFetch('/cart/add', {
-        method: 'POST',
-        body: JSON.stringify({
-          productId: Number(product.id),
-          quantity: qty,
-        }),
-      });
-    } catch (err) {
-      showToast("Failed to Add to Cart", err.message || "An error occurred while adding the item to your cart.");
-      throw err;
-    }
+    await get().apiFetch("/cart/add", {
+      method: "POST",
+      body: JSON.stringify({
+        productId: Number(product.id),
+        quantity: qty,
+      }),
+    });
   },
 
   remove: async (id) => {
@@ -131,18 +105,13 @@ export const useCart = create((set, get) => ({
       return get().remove(id);
     }
 
-    try {
-      await get().apiFetch('/changeStock', {
-        method: 'PUT',
-        body: JSON.stringify({
-          productId: Number(id),
-          quantity: safeQty,
-        }),
-      });
-    } catch (err) {
-      showToast("Failed to Update Quantity", err.message || "An error occurred while updating the item quantity.");
-      throw err;
-    }
+    await get().apiFetch("/changeStock", {
+      method: "PUT",
+      body: JSON.stringify({
+        productId: Number(id),
+        quantity: safeQty,
+      }),
+    });
   },
 
   clear: async () => {
@@ -151,66 +120,95 @@ export const useCart = create((set, get) => ({
 
   // Reset local cart state (use after logout)
   reset: () =>
-      set({
-        items: [],
-        saved: [],
-        backendTotals: {
-          subtotal: 0,
-          total: 0,
-          weight: 0,
-          under_twenty_lbs: false,
-        },
-        error: null,
-        isLoading: false,
-      }),
+    set({
+      items: [],
+      saved: [],
+      backendTotals: {
+        subtotal: 0,
+        total: 0,
+        weight: 0,
+        under_twenty_lbs: false,
+      },
+      error: null,
+      isLoading: false,
+    }),
 
   checkoutLink: async () => {
     const { totals } = get();
     if (totals().count === 0) return;
 
-    try
-    {
+    try {
+      set({ isLoading: true, error: null });
+
       const response = await fetch(`${API_BASE_URL}/new-cart`, {
-        method : 'GET',
-        credentials : 'include',
+        method: "GET",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
+      if (response.status === 401 || response.status === 403) {
+        set({ error: "You must be logged in to checkout", isLoading: false });
+        return;
+      }
+
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("User please login");
-        }
+        const text = await response.text();
+        set({
+          error: `Checkout failed: ${response.status} ${response.statusText} - ${text}`,
+          isLoading: false,
+        });
+        return;
       }
 
-      const data = await response.json();
+      const ct = response.headers.get("content-type") || "";
+      if (response.redirected || ct.includes("text/html")) {
+        const html = await response.text();
+        set({
+          error: "Not authenticated (received HTML login page)",
+          isLoading: false,
+        });
+        return;
+      }
 
-      if (data.status === "SUCCESS" && data.sessionUrl)
-      {
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        const txt = await response.text();
+        set({
+          error: `Invalid response from server: ${txt}`,
+          isLoading: false,
+        });
+        return;
+      }
+
+      if (data && data.status === "SUCCESS" && data.sessionUrl) {
         window.location.href = data.sessionUrl;
-      } else
-      {
-        throw new Error(data.message);
+        return;
       }
 
-
-    }catch (err) {
-      showToast("Checkout Failed", err.message || "An error occurred while processing your checkout.");
-      throw err;
+      // If we get here, show a helpful message
+      const msg =
+        (data && (data.message || data.error)) || "Unknown checkout error";
+      set({ error: `Checkout failed: ${msg}`, isLoading: false });
+      return;
+    } catch (err) {
+      // TODO logging to user temp ...
+      console.error("Checkout error:", err);
     }
-
   },
 
   saveForLater: (id) =>
-      set((s) => {
-        const item = s.items.find((i) => i.id === id);
-        if (!item) return {};
-        return {
-          items: s.items.filter((i) => i.id !== id),
-          saved: [{ ...item }, ...s.saved],
-        };
-      }),
+    set((s) => {
+      const item = s.items.find((i) => i.id === id);
+      if (!item) return {};
+      return {
+        items: s.items.filter((i) => i.id !== id),
+        saved: [{ ...item }, ...s.saved],
+      };
+    }),
 
   moveToCart: (id) => {
     const prod = get().saved.find((x) => x.id === id);
@@ -218,40 +216,47 @@ export const useCart = create((set, get) => ({
 
     // page default is add to cart not ATC quantity which I think we prefer
     get()
-        .add(prod, 1)
-        .then(() => {
-          set((s) => ({
-            saved: s.saved.filter((x) => x.id !== id),
-          }));
-        })
-        .catch(() => {
-          console.error("Error adding to cart");
-        });
+      .add(prod, 1)
+      .then(() => {
+        set((s) => ({
+          saved: s.saved.filter((x) => x.id !== id),
+        }));
+      })
+      .catch(() => {
+        console.error("Error adding to cart");
+      });
   },
 
   // TODO... to implement the use of Boolean for over 20 or not
   totals: () => {
     const { items, backendTotals } = get();
+    const count = items.reduce((n, i) => n + i.qty, 0);
 
-    const feeProductId = getFeeProductId();
-
-    const fixedFeeItem = items.find((i) => i.id === feeProductId);
-    const fixedFeeAmount = fixedFeeItem ? money(fixedFeeItem.price * fixedFeeItem.qty) : 0;
-    const count = items.filter(i => i.id !== feeProductId).reduce((n, i) => n + i.qty, 0);
-
-    const rawBackendSubtotal = money(backendTotals.subtotal);
-    const displaySubtotal = money(rawBackendSubtotal - fixedFeeAmount);
+    const subtotal = money(backendTotals.subtotal);
     const total = money(backendTotals.total);
-    const displayFees = money(Math.max(0, total - displaySubtotal));
+    const fees = money(Math.max(0, total - subtotal));
 
     return {
       count,
-      subtotal: displaySubtotal,
-      fees: displayFees,
+      subtotal,
+      fees,
       total,
       weight: backendTotals.weight,
       under_twenty_lbs: backendTotals.under_twenty_lbs,
     };
   },
-  
+
+  // Get quantity of a specific product in cart
+  getProductQuantity: (productId) => {
+    const { items } = get();
+    const item = items.find(
+      (item) =>
+        // Some DTOs use `productId`, others embed `product.id`, and some old responses put the
+        // product id into `id` as a string — check all variants defensively.
+        Number(item?.productId) === Number(productId) ||
+        Number(item?.product?.id) === Number(productId) ||
+        Number(item?.id) === Number(productId)
+    );
+    return item ? item.qty : 0;
+  },
 }));
