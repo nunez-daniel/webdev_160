@@ -264,7 +264,7 @@ export default function ProductDetailPage() {
                                   console.error("Add failed:", error);
                                   const msg = (error && error.message) || "Failed to add to cart";
                                   if (msg.toLowerCase().includes("login") || msg.includes("401") || msg.includes("403")) {
-                                    alert("Please log in to add items to your cart");
+                                    //alert("Please log in to add items to your cart");
                                   } else if (msg.toLowerCase().includes("bad request") || msg.toLowerCase().includes("not enough stock")) {
                                     const text = msg.replace(/^Bad request:\s*/i, "");
                                     setDialogMessage(text || "Not enough stock or weight of cart exceeded");

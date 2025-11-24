@@ -1,10 +1,10 @@
-// ProtectedRoute.js (Your original code, now functional)
+
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import authUtil from "@/lib/authUtil"; 
 import ErrorPage from "@/pages/ErrorPage"
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, isLoading } = authUtil(); 
 
     if (isLoading) {
@@ -12,10 +12,10 @@ const ProtectedRoute = () => {
     }
 
     return isAuthenticated ? (
-    <Outlet /> 
-) : (
-    // Render the unauthorized page directly
-    <ErrorPage /> 
+      children
+    ) : (
+
+      <ErrorPage /> 
 );
 };
 

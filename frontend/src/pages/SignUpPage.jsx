@@ -179,7 +179,7 @@ export default function SignUpPage() {
                 Create account
               </button>
               <Link
-                  to="/login"
+                  to="/"
                   className="text-sm text-indigo-600 hover:underline"
               >
                 Already have an account?
