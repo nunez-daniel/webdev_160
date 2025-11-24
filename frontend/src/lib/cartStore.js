@@ -253,19 +253,5 @@ export const useCart = create((set, get) => ({
       under_twenty_lbs: backendTotals.under_twenty_lbs,
     };
   },
-
-
-  // Get quantity of a specific product in cart
-  getProductQuantity: (productId) => {
-    const { items } = get();
-    const item = items.find(
-        (item) =>
-            // Some DTOs use `productId`, others embed `product.id`, and some old responses put the
-            // product id into `id` as a string — check all variants defensively.
-            Number(item?.productId) === Number(productId) ||
-            Number(item?.product?.id) === Number(productId) ||
-            Number(item?.id) === Number(productId)
-    );
-    return item ? item.qty : 0;
-  },
+  
 }));
