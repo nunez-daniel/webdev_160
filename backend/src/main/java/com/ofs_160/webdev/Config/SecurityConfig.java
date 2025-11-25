@@ -54,7 +54,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/products").hasAnyAuthority("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/delivery/{orderId}/{carId}").hasAnyAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET,"/loaded/{carId}").hasAnyAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/create/car").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/create/car").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/delivery/robot-car").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/delivery/auto-assign").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/delivery/start/{carId}").hasAnyAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/delivery/stop/{carId}").hasAnyAuthority("ADMIN")
 
                         .requestMatchers(HttpMethod.POST,"/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET,"/webhook").permitAll()

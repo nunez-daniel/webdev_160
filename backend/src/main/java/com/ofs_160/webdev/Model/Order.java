@@ -2,6 +2,7 @@ package com.ofs_160.webdev.Model;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -44,7 +45,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "delivery_car_id")
-    @JsonBackReference("car_orders")
+    @JsonIgnoreProperties({"orders"}) // Ignore orders list to prevent circular reference, but include car details
     private DeliveryCar deliveryCar;
 
 }

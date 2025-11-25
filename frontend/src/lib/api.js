@@ -267,3 +267,98 @@ export async function fetchOrdersInCar(carId) {
   if (!text || text.trim() === "") return [];
   return JSON.parse(text);
 }
+
+export async function fetchCurrentUser() {
+  const res = await fetch(`${BASE}/me`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Unable to load user info.");
+  const text = await res.text();
+  if (!text || text.trim() === "") return null;
+  return JSON.parse(text);
+}
+
+export async function fetchMyOrders() {
+  const res = await fetch(`${BASE}/orders`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Unable to load orders.");
+  const text = await res.text();
+  if (!text || text.trim() === "") return [];
+  return JSON.parse(text);
+}
+
+export async function createDeliveryCar() {
+  const res = await fetch(`${BASE}/create/car`, {
+    method: "POST",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Unable to create delivery car.");
+  return await res.json();
+}
+
+export async function assignOrderToCar(orderId, carId) {
+  const res = await fetch(`${BASE}/delivery/${orderId}/${carId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    let errorMessage = "Unable to assign order to car.";
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage = errorJson.message || errorMessage;
+    } catch {
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+  return await res.json();
+}
+
+export async function startDelivery(carId, orderIds) {
+  const res = await fetch(`${BASE}/delivery/start/${carId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { 
+      Accept: "application/json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(orderIds || [])
+  });
+  if (!res.ok) throw new Error("Unable to start delivery.");
+  return await res.json();
+}
+
+export async function stopDelivery(carId) {
+  const res = await fetch(`${BASE}/delivery/stop/${carId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Unable to stop delivery.");
+  return await res.json();
+}
+
+export async function autoAssignOrders() {
+  const res = await fetch(`${BASE}/delivery/auto-assign`, {
+    method: "POST",
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Unable to auto-assign orders.");
+  return await res.json();
+}
+
+export async function getRobotCar() {
+  const res = await fetch(`${BASE}/delivery/robot-car`, {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Unable to get robot car.");
+  return await res.json();
+}
