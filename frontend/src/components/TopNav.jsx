@@ -167,7 +167,19 @@ export default function TopNav() {
 
   function goSearch(term) {
     const finalTerm = term || value;
-    if (!finalTerm.trim()) return;
+    const isEmptySearch = !finalTerm.trim();
+
+
+    if (isEmptySearch) {
+      if (location.pathname !== "/catalog") {
+        navigate("/catalog"); 
+      } else {
+        setSearchParams({});
+      }
+      
+      setOpen(false);
+      return; 
+    }
 
     if (location.pathname !== "/catalog") {
       navigate(`/catalog?q=${encodeURIComponent(finalTerm)}`);
