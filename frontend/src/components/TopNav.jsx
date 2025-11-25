@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getFeeProductId } from "@/lib/config";
@@ -33,6 +33,8 @@ import {
 import { useCart } from "@/lib/cartStore";
 import { BASE } from "@/lib/api";
 import { fetchSuggestions } from "@/lib/api";
+
+
 
 function CartSummary() {
   const { checkoutLink, totals } = useCart();
@@ -161,6 +163,7 @@ export default function TopNav() {
   const location = useLocation();
   const [, setSearchParams] = useSearchParams();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCust, setIsCust] = useState(false);
 
   function goSearch(term) {
     const finalTerm = term || value;
@@ -171,7 +174,7 @@ export default function TopNav() {
     } else {
       setSearchParams({ q: finalTerm });
     }
-    setValue("");
+    //setValue("");
     setOpen(false);
   }
 
@@ -201,27 +204,61 @@ export default function TopNav() {
     }
   }
 
-  const [recording, setRecording] = useState(false);
-  function handleClick() {
-    if (!("webkitSpeechRecognition" in window)) {
-      return;
-    }
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setValue("");
-      setValue(transcript);
-    };
-    if (!recording) {
-      recognition.start();
-      setRecording(true);
-    } else {
-      recognition.stop();
-      setRecording(false);
-    }
+const [recording, setRecording] = useState(false);
+const recognitionRef = useRef(null); 
+const timeoutRef = useRef(null);
+const transcriptRef = useRef("");
+
+function handleClick(e) {
+  if (!("webkitSpeechRecognition" in window)) {
+    alert("Speech Recognition is not supported.");
+    return;
   }
+
+  if (recording) {
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
+    clearTimeout(timeoutRef.current);
+
+    return;
+  }
+
+  transcriptRef.current = "";
+  const recognition = new window.webkitSpeechRecognition();
+  recognitionRef.current = recognition; 
+  recognition.interimResults = false;
+  recognition.lang = "en-US";
+
+  setRecording(true); 
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    setValue(transcript);
+    transcriptRef.current = transcript;
+  };
+
+  recognition.onend = () => {
+    setRecording(false);
+    clearTimeout(timeoutRef.current);
+    recognitionRef.current = null;
+    const finalTranscript = transcriptRef.current;
+    if (finalTranscript.trim()) {
+      goSearch(finalTranscript);
+    }
+  };
+  
+  recognition.start();
+  const durationInMs = 5000; 
+  timeoutRef.current = setTimeout(() => {
+
+    if (recognitionRef.current) {
+      console.log(`Recording stopped after ${durationInMs / 1000} seconds.`);
+      recognitionRef.current.stop();
+
+    }
+  }, durationInMs);
+}
 
   useEffect(() => {
     if (value.trim().length > 0) {
@@ -244,7 +281,8 @@ export default function TopNav() {
       setLoading(false);
     }
   }, [value]);
-
+  
+  
   useEffect(() => {
     let mounted = true;
     fetch("http://localhost:8080/me", { credentials: "include" })
@@ -256,6 +294,46 @@ export default function TopNav() {
         }
       })
       .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+    useEffect(() => {
+    let mounted = true;
+    fetch("http://localhost:8080/me", { credentials: "include" })
+        .then((res) => res.text())
+        .then((text) => {
+          if (!mounted) return;
+
+          if (typeof text === "string" && text.toUpperCase().includes("CUSTOMER")) {
+            setIsCust(true);
+          }
+        })
+        .catch(() => {
+          /* ignore */
+        });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+    useEffect(() => {
+    let mounted = true;
+    fetch("http://localhost:8080/me", { credentials: "include" })
+        .then((res) => res.text())
+        .then((text) => {
+          if (!mounted) return;
+          // backend returns a string containing role or authorities; check for ADMIN
+          if (typeof text === "string" && text.toUpperCase().includes("CUSTOMER")) {
+            setIsCust(true);
+          }
+        })
+        .catch(() => {
+          /* ignore */
+        });
 
     return () => {
       mounted = false;
@@ -450,6 +528,7 @@ export default function TopNav() {
               </PopoverTrigger>
               <PopoverContent className="w-48 p-2 bg-white text-gray-800">
                 <div className="flex flex-col">
+                    {(isCust || isAdmin) && (
                   <Button
                       variant="ghost"
                       size="default"
@@ -457,7 +536,8 @@ export default function TopNav() {
                       onClick={() => navigate("/order-history")}
                   >
                     Orders
-                  </Button>
+                  </Button>)}
+                    {(isCust || isAdmin) && (
                   <Button
                       variant="ghost"
                       size="default"
@@ -465,7 +545,7 @@ export default function TopNav() {
                       onClick={() => navigate("/map")}
                   >
                     Track Delivery
-                  </Button>
+                  </Button>)}
                   {isAdmin && (
                       <Button
                           variant="ghost"
@@ -477,6 +557,7 @@ export default function TopNav() {
                       </Button>
                   )}
                   <Separator />
+                    {isCust && (
                   <Button
                       variant="ghost"
                       size="default"
@@ -512,6 +593,19 @@ export default function TopNav() {
                   >
                     Sign out
                   </Button>
+                    )}
+                    {!isCust && !isAdmin && (
+                    <Button
+                        variant="ghost"
+                        size="default"
+                        className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                        onClick={async () => {
+                            window.location.href = "/";
+                          }
+                        }
+                    >
+                      Sign In
+                    </Button>)}
                 </div>
               </PopoverContent>
             </Popover>
@@ -521,3 +615,4 @@ export default function TopNav() {
     </header>
 );
 }
+

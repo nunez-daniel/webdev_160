@@ -1,3 +1,4 @@
+import { toast } from "@/lib/use-toast.js"
 export const BASE = "http://localhost:8080";
 
 export async function fetchProducts(params = {}) {
@@ -222,6 +223,11 @@ export async function registerUser({ full_name, email, password }) {
   });
 
   if (response.ok) {
+    toast({
+      title: "Success!",
+      description: "Registration successful. You can now log in.",
+      variant: "success", // Assuming you have a 'success' variant for styling
+    });
     return true;
   }
 
