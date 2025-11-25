@@ -10,14 +10,8 @@ export async function fetchProducts(params = {}) {
   if (search) url.searchParams.set("search", search);
 
   const res = await fetch(url.toString(), {
-    credentials: "include",
     headers: { Accept: "application/json" },
   });
-
-  if (!res.ok) {
-    throw new Error("Unable to load products. Please try again.");
-  }
-
   const ct = res.headers.get("content-type") || "";
   if (res.redirected || ct.includes("text/html")) {
     await res.text();
@@ -25,6 +19,8 @@ export async function fetchProducts(params = {}) {
   }
 
   const productArray = await res.json();
+
+  if (!res.ok) throw new Error("Unable to load products. Please try again.");
 
   let filteredProducts = productArray;
   if (search && search.trim()) {
