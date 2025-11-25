@@ -592,6 +592,19 @@ function handleClick(e) {
                   >
                     Sign out
                   </Button>
+                    )}
+                    {!isCust && !isAdmin && (
+                    <Button
+                        variant="ghost"
+                        size="default"
+                        className="justify-start bg-white text-green-600 hover:bg-green-600 hover:text-white"
+                        onClick={async () => {
+                            window.location.href = "/";
+                          }
+                        }
+                    >
+                      Sign In
+                    </Button>)}
                 </div>
               </PopoverContent>
             </Popover>
@@ -601,3 +614,4 @@ function handleClick(e) {
     </header>
   );
 }
+
