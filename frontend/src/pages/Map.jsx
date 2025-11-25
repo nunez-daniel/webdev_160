@@ -20,9 +20,9 @@ import { Badge } from "@/components/ui/badge";
 import { fetchOrdersByStatus, fetchAllOrders, fetchCurrentUser, fetchMyOrders, createDeliveryCar, assignOrderToCar, autoAssignOrders, startDelivery, stopDelivery, getRobotCar } from "@/lib/api";
 
 const BASE = "http://localhost:8080";
-// Store location: San Francisco, CA (37.7749° N, 122.4194° W)
+// Store location: San Jose State University, CA (37.3352° N, 121.8811° W)
 // This is the starting point for all delivery routes
-const STORE_COORDS = { lat: 37.7749, lng: -122.4194 };
+const STORE_COORDS = { lat: 37.3352, lng: -121.8811 };
 const TOTAL_DELIVERY_MINUTES = 45;
 
 if (typeof window !== "undefined") {
@@ -699,7 +699,7 @@ export default function MapPage() {
   useEffect(() => {
     if (!mapInstanceRef.current && mapRef.current) {
       mapInstanceRef.current = L.map(mapRef.current).setView(
-        [37.7749, -122.4194],
+        [STORE_COORDS.lat, STORE_COORDS.lng],
         12
       );
 

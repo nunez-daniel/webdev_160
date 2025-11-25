@@ -107,6 +107,14 @@ public class ProductService {
 
         for (CartItem item : userCart.getItemsInCart())
         {
+            // Skip items without products or fee products (fees don't have stock)
+            if (item.getProduct() == null) {
+                continue;
+            }
+            if (item.getProduct().getId() == customFeeId) {
+                continue;
+            }
+
             int requestedQuantity = item.getQty();
             int currentStock = item.getProduct().getStock();
 
@@ -225,13 +233,26 @@ public class ProductService {
     public void deductStock(List<OrderItem> orderItems) {
         for (OrderItem item : orderItems)
         {
-
+            // First try to find by name with lock (for stock deduction, we need the lock)
             Product product = productRepository.findByNameWithLock(item.getProductName());
 
             if (product == null)
             {
-                // check is inside db
-                throw new RuntimeException("Product is not found: " + item.getProductName());
+                // If not found, try finding by active name (maybe product was deactivated)
+                product = productRepository.findByNameAndActiveTrue(item.getProductName());
+                if (product == null) {
+                    throw new RuntimeException("Product is not found: " + item.getProductName());
+                }
+            }
+
+            // Skip stock deduction for fee product (fees don't have stock)
+            if (product.getId() == customFeeId) {
+                continue;
+            }
+
+            // Check if product is active
+            if (!product.isActive()) {
+                throw new RuntimeException("Product is inactive: " + item.getProductName());
             }
 
             int requestedQuantity = Math.toIntExact(item.getQuantity());
@@ -239,7 +260,7 @@ public class ProductService {
 
             if (currentStock < requestedQuantity)
             {
-                throw new RuntimeException("INSUFFICIENT STOCK: " +  product.getName());
+                throw new RuntimeException("INSUFFICIENT STOCK: " + product.getName() + " (requested: " + requestedQuantity + ", available: " + currentStock + ")");
             }
 
 
