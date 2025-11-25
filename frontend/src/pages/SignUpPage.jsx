@@ -51,8 +51,7 @@ export default function SignUpPage() {
         }, 1500);
       } else {
       }
-    } catch {
-    }
+    } catch {}
   }
 
   function checkPassword(pw) {
