@@ -8,22 +8,22 @@ Once installed make sure to have a docker desktop installation
 Navigate to downloaded code and run the commands based on OS they will setup docker and load premade sql database into your environment
 
 # 1. MAC AND WINDOWS COMMAND
-cd webdev_160
-docker compose -f docker-compose.dev.yml up --build -d
+```cd webdev_160```
+```docker compose -f docker-compose.dev.yml up --build -d```
 
 
 # 2.MAC COMMAND TO LOAD DATA 
 
-for file in DatabaseData/*.sql; do
+```for file in DatabaseData/*.sql; do
     docker exec -i mysql_db mysql -u root -pPassword123 ofs_db < "$file"
-done
+done```
 
 
 # 2.WINDOWS COMMAND TO LOAD DATA
 
-for %%f in (DatabaseData\*.sql) do (
+```for %%f in (DatabaseData\*.sql) do (
     type "%%f" | docker exec -i mysql_db mysql -u root -pPassword123 ofs_db
-)
+)```
 
 
 
