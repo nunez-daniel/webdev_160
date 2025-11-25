@@ -15,8 +15,10 @@ docker compose -f docker-compose.dev.yml up --build -d
 
 # 2.MAC COMMAND TO LOAD DATA 
 for file in DatabaseData/*.sql; do
-    docker exec -i mysql_db mysql -u root -pPassword123 ofs_db < "$file"
+  docker exec -i mysql_db \
+    mysql -u root -pPassword123 ofs_db < "$file"
 done
+
 # 2.WINDOWS COMMAND TO LOAD DATA
 for %%f in (DatabaseData\*.sql) do (
     type "%%f" | docker exec -i mysql_db mysql -u root -pPassword123 ofs_db
