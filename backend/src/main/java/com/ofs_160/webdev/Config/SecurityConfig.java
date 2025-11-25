@@ -56,6 +56,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/loaded/{carId}").hasAnyAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET,"/create/car").hasAnyAuthority("ADMIN")
 
+                        // check options key
+                        .requestMatchers(HttpMethod.POST,"/chat").hasAnyAuthority("ADMIN", "CUSTOMER")
+
                         .requestMatchers(HttpMethod.POST,"/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET,"/webhook").permitAll()
 
