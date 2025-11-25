@@ -42,13 +42,16 @@ export default function SignUpPage() {
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
-        navigate("/");
+        toast({
+          title: "ACCOUNT CREATED SUCCESSFULLY",
+          description: "Welcome! Redirecting you to login...",
+        });
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
       } else {
-        // Intentionally empty - registration succeeded but no additional action needed
       }
-    } catch {
-      // Intentionally empty - error handling is done elsewhere
-    }
+    } catch {}
   }
 
   function checkPassword(pw) {

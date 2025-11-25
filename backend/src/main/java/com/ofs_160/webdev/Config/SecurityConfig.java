@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/products", "/products/{id}", "products/{productId}/image").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers(HttpMethod.POST,"/login").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/logout").hasAnyAuthority("CUSTOMER", "ADMIN")
                         .requestMatchers(HttpMethod.POST,"/signup").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/orders").hasAnyAuthority("CUSTOMER", "ADMIN")
@@ -59,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,"/delivery/auto-assign").hasAnyAuthority("ADMIN")
                         .requestMatchers(HttpMethod.POST,"/delivery/start/{carId}").hasAnyAuthority("ADMIN")
                         .requestMatchers(HttpMethod.POST,"/delivery/stop/{carId}").hasAnyAuthority("ADMIN")
+
+                        // check options key
+                        .requestMatchers(HttpMethod.POST,"/chat").hasAnyAuthority("ADMIN", "CUSTOMER")
 
                         .requestMatchers(HttpMethod.POST,"/webhook").permitAll()
                         .requestMatchers(HttpMethod.GET,"/webhook").permitAll()

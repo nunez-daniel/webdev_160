@@ -78,11 +78,6 @@ export default function UserSettings() {
 
       const text = await response.text();
 
-      if (!text || text.trim() === "") {
-        setOrders([]);
-        return;
-      }
-
       try {
         const data = JSON.parse(text);
         setOrders(data || []);
