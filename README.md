@@ -1,5 +1,63 @@
 # CS 160 OFS Grocery Store
 
+
+## DOCKER SETUP
+
+Clone or download the code from the github repository
+Once installed make sure to have a docker desktop installation
+Navigate to downloaded code and run the commands based on OS they will setup docker and load premade sql database into your environment
+
+# 1. MAC AND WINDOWS COMMAND
+cd webdev_160
+docker compose -f docker-compose.dev.yml up --build -d
+
+
+# 2.MAC COMMAND TO LOAD DATA 
+
+for file in DatabaseData/*.sql; do
+    docker exec -i mysql_db mysql -u root -pPassword123 ofs_db < "$file"
+done
+
+
+# 2.WINDOWS COMMAND TO LOAD DATA
+
+for %%f in (DatabaseData\*.sql) do (
+    type "%%f" | docker exec -i mysql_db mysql -u root -pPassword123 ofs_db
+)
+
+
+
+
+Once you’ve ran the two commands you are ready to navigate to http://localhost:5173/
+
+Admin Accounts in Database that will already exist:
+
+<LIST ACCOUNT AND PASSWORD HERE>
+Test@Test.com:Test@Test.com1
+
+Fee Product that will exist in the database default is 65 can change in application.properties file in backend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## NON DOCKER
 ## Database Setup
 
 This is a general outline of the steps NOT FINAL.
@@ -40,5 +98,11 @@ $ npm run dev
 ## Webhook Listener Stripe using default keys
 
 $ stripe listen --forward-to localhost:8080/webhook
+
+
+
+
+
+
 
 
