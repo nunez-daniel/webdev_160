@@ -109,10 +109,9 @@ public class OrderController {
                     Thread.sleep(RETRY_DELAY_MS);
                 }
             } catch (InterruptedException e) {
-                // Restore interrupted status
                 Thread.currentThread().interrupt(); 
                 System.err.println("Thread interrupted during order status wait: " + e.getMessage());
-                break; // Exit the loop on interrupt
+                break; 
             }
         }
 
