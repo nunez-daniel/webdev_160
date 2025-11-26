@@ -20,6 +20,9 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    private static final int MAX_RETRIES = 5;
+    private static final long RETRY_DELAY_MS = 1000;
+
 
     @GetMapping("/orders")
     public ResponseEntity<List<Order>> getMyOrders(Principal principal)
@@ -92,16 +95,36 @@ public class OrderController {
     @GetMapping("/order-status")
     public ResponseEntity<String> getOrderStatus(@RequestParam("session_id") String sessionId) {
 
-        // Check if a permanent order was created in the database
-        Order order = orderService.findByStripeSessionId(sessionId);
+        Order order = null;
+        int attempt = 0;
 
-        if (order == null)
-        {
+        while (order == null && attempt < MAX_RETRIES) {
+            try {
+                // Check if a permanent order was created in the database
+                order = orderService.findByStripeSessionId(sessionId);
+
+                if (order == null) {
+                    attempt++;
+                    System.out.println("Order not found on attempt " + attempt + ". Waiting " + RETRY_DELAY_MS + "ms for webhook to complete.");
+                    Thread.sleep(RETRY_DELAY_MS);
+                }
+            } catch (InterruptedException e) {
+                // Restore interrupted status
+                Thread.currentThread().interrupt(); 
+                System.err.println("Thread interrupted during order status wait: " + e.getMessage());
+                break; // Exit the loop on interrupt
+            }
+        }
+
+        if (order == null) {
+ 
+            System.err.println("Order not found for session ID " + sessionId + " after " + MAX_RETRIES + " attempts. Redirecting to failure page.");
+            
             return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
                     .header("Location", "http://localhost:5173/stock-insufficient")
                     .build();
-        } else
-        {
+        } else {
+            // Order found! The webhook completed successfully.
             return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
                     .header("Location", "http://localhost:5173/order-history")
                     .build();

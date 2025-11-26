@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -55,5 +56,32 @@ public class DeliveryController {
 
     }
 
+    @PostMapping("/delivery/start/{carId}")
+    public ResponseEntity<DeliveryCar> startDelivery(@PathVariable int carId, @RequestBody(required = false) List<Long> orderIds)
+    {
+        DeliveryCar car = deliveryService.startDelivery(carId, orderIds);
+        return ResponseEntity.ok(car);
+    }
+
+    @PostMapping("/delivery/auto-assign")
+    public ResponseEntity<List<Order>> autoAssignOrders()
+    {
+        List<Order> assignedOrders = deliveryService.autoAssignOrders();
+        return ResponseEntity.ok(assignedOrders);
+    }
+
+    @GetMapping("/delivery/robot-car")
+    public ResponseEntity<DeliveryCar> getRobotCar()
+    {
+        DeliveryCar robotCar = deliveryService.getOrCreateRobotCar();
+        return ResponseEntity.ok(robotCar);
+    }
+
+    @PostMapping("/delivery/stop/{carId}")
+    public ResponseEntity<DeliveryCar> stopDelivery(@PathVariable int carId)
+    {
+        DeliveryCar car = deliveryService.stopDelivery(carId);
+        return ResponseEntity.ok(car);
+    }
 
 }

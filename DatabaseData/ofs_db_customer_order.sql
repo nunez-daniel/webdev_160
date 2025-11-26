@@ -42,7 +42,7 @@ CREATE TABLE `customer_order` (
   KEY `FKq1y78wr5ybdy5oaj0956bt2rb` (`delivery_car_id`),
   CONSTRAINT `FKf9abd30bhiqvugayxlpq8ryq9` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`),
   CONSTRAINT `FKq1y78wr5ybdy5oaj0956bt2rb` FOREIGN KEY (`delivery_car_id`) REFERENCES `delivery_car` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

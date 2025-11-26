@@ -24,19 +24,18 @@ DROP TABLE IF EXISTS `delivery_car`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `delivery_car` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `lat` double NOT NULL,
-  `lng` double NOT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
 --
 -- Dumping data for table `delivery_car`
 --
 
 LOCK TABLES `delivery_car` WRITE;
 /*!40000 ALTER TABLE `delivery_car` DISABLE KEYS */;
-INSERT INTO `delivery_car` VALUES (1,0,0),(2,0,0);
+INSERT INTO `delivery_car` VALUES (1,'Robot #1','IDLE'),(2,'Robot #2','IDLE');
 /*!40000 ALTER TABLE `delivery_car` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

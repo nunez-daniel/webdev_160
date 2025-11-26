@@ -5,16 +5,18 @@ import LoginPage from "@/pages/LoginPage";
 import SignUpPage from "@/pages/SignUpPage";
 import CartPage from "@/pages/CartPage";
 import AppLayout from "@/layouts/AppLayout";
-import Map from "@/pages/Map";
+import MapPage from "@/pages/Map";
 import UserSettings from "@/pages/UserSettings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminGuard from "@/components/AdminGuard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RouteErrorBoundary from "@/components/RouteErrorBoundary";
+import StockInsufficientPage from "@/pages/StockInsufficientPage";
 
 const router = createBrowserRouter([
   { path: "/", element: <LoginPage /> },
   { path: "/signup", element: <SignUpPage /> },
+  { path: "/stock-insufficient", element: <StockInsufficientPage /> },
   {
     path: "/",
     element: <AppLayout />,
@@ -41,7 +43,7 @@ const router = createBrowserRouter([
       { path: "map", 
         element: (
           <ProtectedRoute>
-            <Map /> 
+            <MapPage /> 
           </ProtectedRoute>
         ),
       },

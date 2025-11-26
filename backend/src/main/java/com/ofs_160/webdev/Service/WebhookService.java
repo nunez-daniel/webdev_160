@@ -89,6 +89,9 @@ public class WebhookService {
             orderItem.setUnitPrice(unitPrice);
 
             Product internalProduct = productRepository.findByNameAndActiveTrue((name));
+            if (internalProduct == null) {
+                throw new RuntimeException("Product not found or inactive: " + name);
+            }
             orderItem.setWeight(internalProduct.getWeight());
             orderItem.setProductId((long) internalProduct.getId());
 
