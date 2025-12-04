@@ -8,10 +8,12 @@ import { Paper, Collapse } from "@mui/material";
 
 export default function SignUpPage() {
   const [full_name, setName] = useState("");
+  const [isNameValid, setIsNameValid] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordShown, setPasswordShown] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [isEmailValid, setIsEmailValid] = useState(true);
 
   const [checks, setChecks] = useState({
     lengthCheck: false,
@@ -19,6 +21,16 @@ export default function SignUpPage() {
     numberCheck: false,
     noSpaceCheck: true,
   });
+
+  function checkName(name) {
+    const regex = /^[a-zA-Z\s-]+$/;
+    return name.trim().length > 0 && regex.test(name);
+  }
+
+  function checkEmailFormat(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return email.length === 0 || emailRegex.test(email);
+  }
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,7 +50,24 @@ export default function SignUpPage() {
       setVisible(true);
       return;
     }
-
+    if (!isNameValid) {
+      toast({
+        title: "Invalid Full Name",
+        description:
+            "Full name can only contain letters, spaces, hyphens",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!isEmailValid) {
+      toast({
+        title: "Invalid Email Format",
+        description:
+            "Please enter a valid email address with a domain extension (e.g., customer@ofs.com).",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
       const user = await registerUser({ full_name, email, password });
       if (user) {
@@ -83,7 +112,10 @@ export default function SignUpPage() {
               type="text"
               value={full_name}
               maxLength={100}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setIsNameValid(checkName(e.target.value));
+              }}
               required
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
@@ -108,10 +140,20 @@ export default function SignUpPage() {
               type="email"
               value={email}
               maxLength={100}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setIsEmailValid(checkEmailFormat(e.target.value));
+              }}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  !isEmailValid ? 'border-red-500 ring-red-500' : ''
+              }`}
             />
+            {!isEmailValid && email.length > 0 && (
+                <div className="text-xs mt-1 text-red-600">
+                  Email must include a proper domain (e.g., user@domain.com).
+                </div>
+            )}
             {email.length >= 90 && (
               <div
                 className={`text-xs mt-1 text-right ${
