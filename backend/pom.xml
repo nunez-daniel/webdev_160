@@ -83,6 +83,11 @@
 			<version>0.18.2</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api -->
+		<dependency>
+				<groupId>jakarta.validation</groupId>
+				<artifactId>jakarta.validation-api</artifactId>
+		</dependency>
 		<!--&lt;!&ndash; For Maven (pom.xml) &ndash;&gt;
 		<dependency>
 			<groupId>org.springdoc</groupId>
