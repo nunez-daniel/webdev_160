@@ -2,34 +2,60 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Send, X } from "lucide-react";
 
+
+const FIXED_OFFSET_NUM = 16; 
+const FIXED_OFFSET_STR = `${FIXED_OFFSET_NUM}px`; 
+const CHAT_WIDTH = 320;
+const CHAT_HEIGHT = 400;
+
 const API_BASE_URL = "http://localhost:8080";
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState(() => {
-    // Initialize position snapped to bottom-right edge
-    return {
-      x: window.innerWidth - 56,
-      y: window.innerHeight - 56,
-    };
-  });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
   const widgetRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
+
+  const snapToEdge = () => {
+    // Snap the button position to the bottom-right corner (56 button size)
+    setPosition({
+      x: window.innerWidth - 56 - FIXED_OFFSET_NUM,
+      y: window.innerHeight - 56 - FIXED_OFFSET_NUM,
+    });
+  };
+
+  const adjustPositionForChat = () => {
+    let newX = window.innerWidth - CHAT_WIDTH - FIXED_OFFSET_NUM;
+    let newY = window.innerHeight - CHAT_HEIGHT - FIXED_OFFSET_NUM;
+    
+    setPosition({ x: Math.max(FIXED_OFFSET_NUM, newX), y: Math.max(FIXED_OFFSET_NUM, newY) });
+  };
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  useEffect(() => {
+    snapToEdge(); 
+  }, []); 
+
+
 
   const handleMouseDown = (e) => {
+    if (!isOpen) return; 
+
     setIsDragging(true);
     const rect = widgetRef.current.getBoundingClientRect();
     setDragOffset({
@@ -38,108 +64,58 @@ export default function ChatWidget() {
     });
   };
 
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-
-    const newX = e.clientX - dragOffset.x;
-    const newY = e.clientY - dragOffset.y;
-
-    const maxX = window.innerWidth - (isOpen ? 320 : 56);
-    const maxY = window.innerHeight - (isOpen ? 400 : 56);
-
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY)),
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    if (!isOpen) {
-      // Snap to bottom-right corner when closed and drag is released
-      snapToEdge();
-    }
-  };
-
-  const snapToEdge = () => {
-    // Always snap to bottom-right corner
-    setPosition({
-      x: window.innerWidth - 56,
-      y: window.innerHeight - 56,
-    });
-  };
-
-  const adjustPositionForChat = () => {
-    // When opening chat, ensure it's fully visible and positioned optimally
-    let newX = position.x;
-    let newY = position.y;
-
-    const chatWidth = 320;
-    const chatHeight = 400;
-
-    // If current position would make chat go off right edge, move left
-    if (newX + chatWidth > window.innerWidth) {
-      newX = window.innerWidth - chatWidth - 10; // 10px margin
-    }
-
-    // If current position would make chat go off bottom edge, move up
-    if (newY + chatHeight > window.innerHeight) {
-      newY = window.innerHeight - chatHeight - 10; // 10px margin
-    }
-
-    // If chat would still go off left edge, move right
-    if (newX < 0) {
-      newX = 10; // 10px margin from left
-    }
-
-    // If chat would still go off top edge, move down
-    if (newY < 0) {
-      newY = 10; // 10px margin from top
-    }
-
-    // Ensure the button position is also valid after adjustment
-    // The button should be positioned relative to the chat
-    // For now, keep the button at the same position but ensure it's visible
-
-    setPosition({ x: Math.max(0, newX), y: Math.max(0, newY) });
-  };
+  // Drag logic moved into useEffect for cleaner separation
 
   const toggleChat = () => {
-    if (isOpen) {
-      // Closing the chat - snap to edge
-      snapToEdge();
-    } else {
-      // Opening the chat - adjust position to be visible
+    if (!isOpen) {
       adjustPositionForChat();
+    } else {
+      snapToEdge(); // Snap back to fixed button position when closing
     }
     setIsOpen(!isOpen);
   };
+  
 
   useEffect(() => {
-    const handleResize = () => {
-      // Reposition widget if window is resized
-      setPosition((prev) => ({
-        x: Math.min(prev.x, window.innerWidth - (isOpen ? 320 : 56)),
-        y: Math.min(prev.y, window.innerHeight - (isOpen ? 400 : 56)),
-      }));
+    const handleMouseUp = () => {
+        setIsDragging(false);
+
+        document.body.style.userSelect = 'auto'; 
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [isOpen]);
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault(); 
 
-  useEffect(() => {
+        const newX = e.clientX - dragOffset.x;
+        const newY = e.clientY - dragOffset.y;
+
+        const maxX = window.innerWidth - CHAT_WIDTH;
+        const maxY = window.innerHeight - CHAT_HEIGHT;
+
+        setPosition({
+            x: Math.max(FIXED_OFFSET_NUM, Math.min(newX, maxX - FIXED_OFFSET_NUM)),
+            y: Math.max(FIXED_OFFSET_NUM, Math.min(newY, maxY - FIXED_OFFSET_NUM)),
+        });
+    };
+
     if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
+        document.body.style.userSelect = 'none';
+        
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+        
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+            // Ensure style is always reset on cleanup
+            document.body.style.userSelect = 'auto'; 
+        };
     }
-  }, [isDragging, dragOffset]);
+}, [isDragging, dragOffset]); 
 
+
+  
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -185,6 +161,7 @@ export default function ChatWidget() {
     }
   };
 
+
   return (
     <div
       ref={widgetRef}
@@ -192,12 +169,14 @@ export default function ChatWidget() {
       style={{
         left: position.x,
         top: position.y,
-        cursor: isDragging ? "grabbing" : isOpen ? "default" : "grab",
+        cursor: isDragging ? "grabbing" : isOpen ? "grab" : "pointer",
+        bottom: isOpen ? 'auto' : FIXED_OFFSET_STR,
+        right: isOpen ? 'auto' : FIXED_OFFSET_STR,
       }}
     >
       {!isOpen ? (
+        // The fixed button state
         <Button
-          onMouseDown={handleMouseDown}
           onClick={toggleChat}
           className="h-14 w-14 rounded-full bg-green-600 hover:bg-green-700 focus:bg-green-700 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-lg hover:shadow-xl transition-all duration-200 border-0"
           title="Chat with us"
@@ -205,7 +184,14 @@ export default function ChatWidget() {
           <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       ) : (
-        <div className="bg-white border border-gray-300 rounded-lg shadow-lg w-80 h-96 flex flex-col">
+        // The chat box state
+        <div
+          className="bg-white border border-gray-300 rounded-lg shadow-lg flex flex-col"
+          style={{
+            width: `${CHAT_WIDTH}px`,
+            height: `${CHAT_HEIGHT}px`,
+          }}
+        >
           <div
             className="bg-green-600 text-white p-3 rounded-t-lg cursor-grab flex justify-between items-center"
             onMouseDown={handleMouseDown}
