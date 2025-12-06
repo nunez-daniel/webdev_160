@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
   Package,
@@ -21,6 +21,17 @@ export default function UserSettings() {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("fromStripeSuccess") === "1") {
+      sessionStorage.setItem("fromStripeSuccess", "true");
+
+      // remove the flag from the URL
+      navigate("/order-history", { replace: true });
+    }
+  }, [location.search, navigate]);
 
   useEffect(() => {
     fetchUserData();
@@ -122,7 +133,18 @@ export default function UserSettings() {
     <div className="w-full h-full flex flex-col overflow-auto">
       <div className="px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
+          <Button variant="ghost" onClick={() => {const fromStripeSuccess =
+            sessionStorage.getItem("fromStripeSuccess") === "true";
+
+            if (fromStripeSuccess) {
+              // already completed checkout, skip past Stripe
+              sessionStorage.removeItem("fromStripeSuccess");
+              navigate("/catalog", { replace: true }); 
+            } else {
+              // Normal case (this still lets users go back to checkout if they never finished)
+              navigate(-1);
+            }
+          }}>
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back
           </Button>

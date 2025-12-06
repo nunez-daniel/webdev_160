@@ -125,7 +125,8 @@ public class OrderController {
         } else {
             // Order found! The webhook completed successfully.
             return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
-                    .header("Location", "http://localhost:5173/order-history")
+                    .header("Location", "http://localhost:5173/order-history?fromStripeSuccess=1")
+                    //fromStripeSuccess flag on success
                     .build();
         }
     }
